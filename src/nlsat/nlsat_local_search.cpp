@@ -134,7 +134,7 @@ namespace nlsat {
         var & m_step;
         var m_outer_step;
         unsigned m_num_arith_opt, m_num_bool_opt;
-        const unsigned max_step = UINT_MAX;
+        const unsigned max_step = 20;
         int m_cc_mode;
         std::chrono::steady_clock::time_point m_start_time;
         int m_time_label;
@@ -387,125 +387,6 @@ namespace nlsat {
             );
         }
 
-        // void init_arith_var_poly_bound(){
-        //     LSTRACE(tout << "start of init poly bound\n";);
-        //     for(clause_index c_idx: m_unit_clauses){
-        //         if(m_unit_var_clauses.contains(c_idx)){
-        //             continue;
-        //         }
-        //         nra_clause const * cls = m_nra_clauses[c_idx];
-        //         SASSERT(cls->size() == 1);
-        //         // no arith var
-        //         if(cls->m_vars.empty()){
-        //             continue;
-        //         }
-        //         SASSERT(cls->arith_size() == 1);
-        //         nra_literal const * lit = m_nra_literals[cls->m_literals[0]];
-        //         polynomial_ref curr_p(m_pm);
-        //         curr_p = get_atom_polys(lit->get_atom());
-        //         LSTRACE(tout << "show poly: "; m_pm.display(tout, curr_p); tout << std::endl;);
-        //         for(var v: lit->m_vars){
-        //             unsigned deg = m_pm.degree(curr_p, v);
-        //             LSTRACE(tout << "degree of var " << v << std::endl;
-        //                 tout << deg << std::endl;
-        //             );
-        //             // degree == 1
-        //             if(deg != 1){
-        //                 continue;
-        //             }
-        //             // const coeff
-        //             if(m_pm.nonzero_const_coeff(curr_p, v, deg)){
-        //                 // coeff
-        //                 poly * const_coeff = m_pm.coeff(curr_p, v, deg);
-        //                 SASSERT(m_pm.is_const(const_coeff) && !m_pm.is_zero(const_coeff));
-        //                 // x^1
-        //                 poly * var_term = m_pm.mk_polynomial(v, deg);
-        //                 // coeff * x^1
-        //                 poly * var_const_term  = m_pm.mul(var_term, const_coeff);
-        //                 // left poly
-        //                 poly * res_poly = m_pm.sub(curr_p, var_const_term);
-        //                 // -left poly / coeff
-        //                 poly * res_poly_div = m_pm.exact_div(res_poly, const_coeff);
-        //                 res_poly_div = m_pm.neg(res_poly_div);
-        //                 nra_arith_var * m_var = m_arith_vars[v];
-        //                 poly_bound_state curr_state = convert_poly_bound_state(const_coeff, lit->get_atom()->get_kind(), lit->sign());
-        //                 m_var->push_poly_bound(res_poly_div, curr_state);
-        //                 m_poly_bound++;
-        //                 LSTRACE(tout << "show poly bound atom:\n";
-        //                     m_solver.display(tout, *lit->get_atom()); tout << std::endl;
-        //                     tout << "show poly bound for var " << v << ":\n";
-        //                     m_pm.display(tout, res_poly_div); tout << std::endl;
-        //                     display_poly_bound_state(tout, curr_state);
-        //                 );
-
-        //             }
-        //         }
-        //     }
-        //     LSTRACE(tout << "end of init poly bound\n";);
-        // }
-
-        poly_bound_state convert_poly_bound_state(poly const * const_coeff, atom::kind k, bool sign) const {
-            SASSERT(m_pm.is_const(const_coeff) && !m_pm.is_zero(const_coeff));
-            if(!sign){
-                if(m_pm.is_pos(const_coeff)){
-                    switch(k){
-                        case atom::kind::EQ:
-                            return EQ;
-                        case atom::kind::GT:
-                            return GT;
-                        case atom::kind::LT:
-                            return LT;
-                        default:
-                            UNREACHABLE();
-                    }
-                }
-                else if(m_pm.is_neg(const_coeff)){
-                    switch(k){
-                        case atom::kind::EQ:
-                            return EQ;
-                        case atom::kind::GT:
-                            return LT;
-                        case atom::kind::LT:
-                            return GT;
-                        default:
-                            UNREACHABLE();
-                    }
-                }
-                else {
-                    UNREACHABLE();
-                }
-            }
-            else {
-                if(m_pm.is_pos(const_coeff)){
-                    switch(k){
-                        case atom::kind::EQ:
-                            return NEQ;
-                        case atom::kind::GT:
-                            return LE;
-                        case atom::kind::LT:
-                            return GE;
-                        default:
-                            UNREACHABLE();
-                    }
-                }
-                else if(m_pm.is_neg(const_coeff)){
-                    switch(k){
-                        case atom::kind::EQ:
-                            return NEQ;
-                        case atom::kind::GT:
-                            return GE;
-                        case atom::kind::LT:
-                            return LE;
-                        default:
-                            UNREACHABLE();
-                    }
-                }
-                else {
-                    UNREACHABLE();
-                }
-            }
-        }
-
         void init_arith_infeasible_set(){
             // m_var_init_st.reset();
             m_var_value_fixed.resize(m_arith_vars.size(), false);
@@ -565,111 +446,6 @@ namespace nlsat {
             return true;
         }
 
-        var find_unassigned_var(nra_clause const * cls) const {
-            SASSERT(cls->get_left_vars() == 1);
-            for(var v: cls->m_vars){
-                if(m_assignment.is_assigned(v)){
-                    continue;
-                }
-                return v;
-            }
-            return null_var;
-        }
-
-        var random_unassigned_var() {
-            var res = null_var;
-            unsigned curr = 1;
-            for(var v = 0; v < m_num_vars; v++){
-                if(m_assignment.is_assigned(v)){
-                    continue;
-                }
-                // 1/curr
-                if(rand_int() % curr == 0){
-                    res = v;
-                }
-                curr++;
-            }
-            return res;
-        }
-
-        bool is_assigned_literal(nra_literal const * l) const {
-            for(var v: l->m_vars){
-                if(!m_assignment.is_assigned(v)){
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        // return false for ICP
-        bool process_clause(nra_clause const * cls, var x){
-            nra_arith_var const * curr_arith = m_arith_vars[x];
-            for(literal_index l: cls->m_literals){
-                nra_literal const * curr_literal = m_nra_literals[l];
-                if(is_assigned_literal(curr_literal)){
-                    continue;
-                }
-                else {
-                    SASSERT(curr_literal->m_vars.contains(x));
-                    interval_set_ref curr_st(m_ism), union_st(m_ism);
-                    curr_st = m_evaluator.infeasible_intervals(curr_literal->get_atom(), curr_literal->sign(), nullptr, x);
-                    if(curr_arith->m_infeasible_st != nullptr){
-                        m_ism.inc_ref(curr_arith->m_infeasible_st);
-                    }
-                    union_st = m_ism.mk_union(curr_st, curr_arith->m_infeasible_st);
-                    // stuck
-                    if(m_ism.is_full(union_st)){
-                        continue;
-                    }
-                    // select arith for var
-                    scoped_anum w(m_am);
-                    m_ism.peek_in_complement(union_st, false, w, true);
-                    m_assignment.set(x, w);
-                    return true;
-                }
-            }
-            // random select
-            if(m_ism.is_full(curr_arith->m_infeasible_st)){
-                return false;
-            }
-            if(m_ism.contains_zero(curr_arith->m_infeasible_st)){
-                m_assignment.set(x, m_zero);
-            }
-            else {
-                scoped_anum w(m_am);
-                m_ism.peek_in_complement(curr_arith->m_infeasible_st, false, w, true);
-                m_assignment.set(x, w);
-            }
-            return true;
-        }
-
-        void update_unit_var_clauses(var x){
-            for(clause_index i = 0; i < m_num_clauses; i++){
-                nra_clause * cls = m_nra_clauses[i];
-                cls->dec_left_vars(x);
-                if(cls->get_left_vars() == 0 && m_unit_var_clauses.contains(i)){
-                    m_unit_var_clauses.erase(i);
-                }
-                else if(cls->get_left_vars() == 1){
-                    m_unit_var_clauses.insert_if_not_there(i);
-                }
-            }
-        }
-
-        var random_select_one_from_table(var_table const & vec){
-            SASSERT(!vec.empty());
-            var res = null_var;
-            unsigned curr = 1;
-            for(auto ele: vec){
-                if(rand_int() % curr == 0){
-                    res = ele;
-                }
-                curr++;
-            }
-            SASSERT(res != null_var);
-            return res;
-        }
-        
         // TODO: var value propagation CNC
         bool init_assignment(bool first_init){
             LSTRACE(tout << "start of init assignment\n";);
@@ -696,41 +472,6 @@ namespace nlsat {
                         m_assignment.set(v, w);
                     }
                 }
-
-                // LSTRACE(tout << "use value propagation\n";);
-                // unsigned m_num_assigned_vars = 0;
-                // while(m_num_assigned_vars < m_num_vars){
-                //     var x;
-                //     if(!m_unit_var_clauses.empty()){
-                //         unsigned cls_idx = random_select_one_from_table(m_unit_var_clauses);
-                //         nra_clause const * cls = m_nra_clauses[cls_idx];
-                //         SASSERT(cls->get_left_vars() == 1);
-                //         x = find_unassigned_var(cls);
-                //         SASSERT(x != null_var);
-                //         if(!process_clause(cls, x)){
-                //             return false;
-                //         }
-                //     }
-                //     else {
-                //         // random select and choose value
-                //         x = random_unassigned_var();
-                //         SASSERT(x != null_var);
-                //         nra_arith_var const * curr_arith = m_arith_vars[x];
-                //         if(m_ism.is_full(curr_arith->m_infeasible_st)){
-                //             return false;
-                //         }
-                //         if(m_ism.contains_zero(curr_arith->m_infeasible_st)){
-                //             m_assignment.set(x, m_zero);
-                //         }
-                //         else {
-                //             scoped_anum w(m_am);
-                //             m_ism.peek_in_complement(curr_arith->m_infeasible_st, false, w, true);
-                //             m_assignment.set(x, w);
-                //         }
-                //     }
-                //     update_unit_var_clauses(x);
-                //     m_num_assigned_vars++;
-                // }
                 
                 // init use swap
                 use_swap = false;
@@ -951,29 +692,6 @@ namespace nlsat {
             return l->sign() != b->get_value();
         }
 
-        // given delta, check sat status of arith literal
-        bool is_arith_sat(anum const & w, nra_literal const * l) const {
-            SASSERT(l->is_arith());
-            ineq_atom const * a = l->get_atom();
-            switch(a->get_kind()){
-                // ==
-                case atom::kind::EQ:
-                    return m_am.is_zero(w) != l->sign();
-
-                // >
-                case atom::kind::GT:
-                    return m_am.is_pos(w) != l->sign();
-
-                // <
-                case atom::kind::LT:
-                    return m_am.is_neg(w) != l->sign();
-
-                default:
-                UNREACHABLE();
-            }
-            UNREACHABLE();
-        }
-
         void set_const_anum(){
             m_am.set(m_zero, 0);
             m_am.set(m_one, 1);
@@ -1009,7 +727,7 @@ namespace nlsat {
             double res = dura.count();
             LSTRACE(tout << "Time Elapsed: " << res << std::endl;
                 tout << "m_time_label: " << m_time_label << std::endl;
-                std::cout << "elapsed: " << res << " s" << std::endl;
+                // std::cout << "elapsed: " << res << " s" << std::endl;
             );
             int curr_floor = floor(res);
             if(curr_floor >= m_time_label){
@@ -1490,9 +1208,9 @@ namespace nlsat {
         }
 
         var pick_critical_nra_move(anum & best_value){
-            LSTRACE(tout << "start of pick nra move\n";
+            TRACE("nlsat_ls2", tout << "start of pick nra move\n";
                 show_ls_assignment(tout);
-                display_clause_weight(tout);
+                // display_clause_weight(tout);
             );
             LSTRACE(tout << "show time of start picking nra move\n";
                 TimeElapsed();
@@ -1558,9 +1276,10 @@ namespace nlsat {
             reset_arith_operation();
             LSTRACE(tout << "LEVEL I: consider literals in unsat clauses\n";);
             SASSERT(!m_unsat_clauses.empty());
+            TRACE("nlsat_ls2", tout << "number of unsat clauses: " << m_unsat_clauses.size() << "\n");
             for(clause_index cls_idx: m_unsat_clauses){
                 nra_clause const * curr_clause = m_nra_clauses[cls_idx];
-                LSTRACE(tout << "consider clause: "; m_solver.display(tout, *curr_clause->get_clause()); tout << std::endl;);
+                TRACE("nlsat_ls2", tout << "consider clause: "; m_solver.display(tout, *curr_clause->get_clause()); tout << std::endl;);
                 for(literal_index lit_idx: curr_clause->m_arith_literals){
                     nra_literal const * curr_literal = m_nra_literals[lit_idx];
                     add_literal_arith_operation(curr_literal);
@@ -1643,28 +1362,6 @@ namespace nlsat {
             }
             LSTRACE(tout << "LEVEL II stuck\n";);
 
-            // // no untabu decreasing operation
-            // // Level III.
-            // // choose best from arith operation, move it
-            // LSTRACE(tout << "LEVEL III: consider best operation for unsat and sat (may increase)\n";);
-            // LSTRACE(display_arith_operations(tout););
-            // if(best_arith_index_level1 != null_var){
-            //     LSTRACE(tout << "LEVEL III: choose var " << best_arith_index_level1 << std::endl;
-            //         tout << "show value: "; m_am.display(tout, best_value_level1); tout << std::endl;
-            //     );
-            //     m_am.set(best_value, best_value_level1);
-            //     return best_arith_index_level1;
-            // }
-            // if(best_arith_index_level2 != null_var){
-            //     LSTRACE(tout << "LEVEL III: choose var " << best_arith_index_level2 << std::endl;
-            //         tout << "show value: "; m_am.display(tout, best_value_level2); tout << std::endl;
-            //     );
-            //     m_am.set(best_value, best_value_level2);
-            //     return best_arith_index_level2;
-            // }
-            // LSTRACE(tout << "LEVEL III stuck\n";);
-            
-
             // update clause weight
             if(rand_int() % 10000 > smooth_probability){
                 update_clause_weight();
@@ -1691,21 +1388,6 @@ namespace nlsat {
             }
             return p;
             // return nullptr;
-        }
-
-        // get variables in unsat unit clauses
-        void get_unsat_unit_vars(var_table & vec){
-            vec.reset();
-            for(clause_index cls_idx: m_unsat_clauses){
-                if(m_unit_clauses.contains(cls_idx)){
-                    nra_clause const * cls = m_nra_clauses[cls_idx];
-                    for(var v: cls->m_vars){
-                        if(!vec.contains(v)){
-                            vec.insert(v);
-                        }
-                    }
-                }
-            }
         }
 
         void reset_arith_operation(){
@@ -1981,7 +1663,7 @@ namespace nlsat {
         void critical_nra_move(var v, anum const & value){
             scoped_anum old_value(m_am);
             m_am.set(old_value, m_assignment.value(v));
-            LSTRACE(tout << "start of critical nra move\n";
+            TRACE("nlsat_ls2", tout << "start of critical nra move\n";
                 tout << "var: " << v << std::endl;
                 tout << "value: "; m_am.display(tout, old_value);
                 tout << "->";
@@ -2213,7 +1895,7 @@ namespace nlsat {
          */
         void random_walk(){
             SASSERT(!m_unsat_clauses.empty());
-            LSTRACE(tout << "start of random walk\n";);
+            TRACE("nlsat_ls2", tout << "start of random walk\n";);
             reset_arith_operation();
             m_bool_operation_index.reset();
             
@@ -2283,6 +1965,7 @@ namespace nlsat {
         }
 
         void no_operation_random_walk(){
+            TRACE("nlsat_ls2", tout << "Perform no_operation_random_walk\n";);
             SASSERT(!m_unsat_clauses.empty());
             clause_index c_idx = m_unsat_clauses[rand_int() % m_unsat_clauses.size()];
             nra_clause const * cls = m_nra_clauses[c_idx];
@@ -2322,6 +2005,7 @@ namespace nlsat {
                 interval_set_ref old_value_interval(m_ism);
                 // [old_value, old_value]
                 old_value_interval = m_ism.mk_point_interval(old_value);
+                TRACE("nlsat_ls2", tout << "m_var_value_fixed[picked_v] = " << m_var_value_fixed[picked_v] << std::endl;);
                 if(m_var_value_fixed[picked_v]){
                     m_ism.peek_in_complement(old_value_interval, false, w, true);
                 }
@@ -2341,6 +2025,7 @@ namespace nlsat {
                     else {
                         anum_vector sample_values;
                         // m_ism.peek_in_complement(curr_st, false, w, true);
+                        TRACE("nlsat_ls2", tout << "curr_st = " << curr_st << std::endl;);
                         m_ism.peek_in_complement_heuristic(curr_st, sample_values);
                         bool still_stuck = true;
                         SASSERT(!sample_values.empty());
@@ -2379,6 +2064,7 @@ namespace nlsat {
 
         // v is the arith var we need to move
         bool cad_move(nra_literal const * l, var & picked_v, anum & w){
+            TRACE("nlsat_ls2", tout << "perform cad_move\n";);
             var before_var = picked_v;
             LSTRACE(tout << "enter cad move\n";
                 tout << "var: " << picked_v << std::endl;
@@ -2898,33 +2584,6 @@ namespace nlsat {
             LSTRACE(tout << "end of add swap operation\n";);
         }
 
-
-        // TRACE
-        // std::ostream & check_solution_sat(std::ostream & out){
-        //     show_ls_assignment(out);
-        //     for(literal_index i = 0; i < m_nra_literals.size(); i++){
-        //         m_solver.display(out, m_nra_literals[i]->m_literal); out << std::endl;
-        //         nra_literal const * l = m_nra_literals[i];
-        //         if(l->is_bool()){
-        //             out << "bool value: " << (m_bool_vars[l->get_bool_index()]->get_value() ? "true" : "false") << std::endl;
-        //         }
-        //         else {
-        //             ineq_atom const * aa = l->get_atom();
-        //             SASSERT(aa->size() > 0);
-        //             scoped_anum curr(m_am);
-        //             m_am.set(curr, 1);
-        //             for(unsigned i = 0; i < aa->size(); i++){
-        //                 poly * p = aa->p(i);
-        //                 scoped_anum p_value(m_am);
-        //                 m_pm.eval(p, m_assignment, p_value);
-        //                 m_am.mul(curr, p_value, curr);
-        //             }
-        //             out << "value: "; m_am.display(out, curr); out << std::endl;
-        //         }
-        //     }
-        //     return out;
-        // }
-
         void propagate_sub_values(){
             for(auto ele: m_sub_value){
                 var v = ele.m_var;
@@ -2942,6 +2601,9 @@ namespace nlsat {
          * Local Search
          */
         local_search_result local_search(){
+            enable_trace("nlsat_ls2");
+            TRACE("nlsat_ls2", tout << "max_step = " << max_step << std::endl;);
+            TRACE("nlsat_ls2", tout << "m_pair_cm = " << m_pair_cm << std::endl;);
             SPLIT_LINE(tout);
             LSTRACE(tout << "local search begin\n";
                 std::cout << "local search begin\n";
@@ -3017,7 +2679,7 @@ namespace nlsat {
                     // pick arith variable and next value
                     scoped_anum next_value(m_am);
                     var picked_v = pick_critical_nra_move(next_value);
-                    LSTRACE(tout << "picked arith var: " << picked_v << std::endl;
+                    TRACE("nlsat_ls2", tout << "picked arith var: " << picked_v << std::endl;
                             tout << "picked arith value: "; m_am.display(tout, next_value); tout << std::endl;
                     );
                     if(picked_v != null_var){

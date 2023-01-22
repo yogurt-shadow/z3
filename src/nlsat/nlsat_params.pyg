@@ -15,7 +15,7 @@ def_module_params('nlsat',
                           ('inline_vars', BOOL, False, "inline variables that can be isolated from equations (not supported in incremental mode)"),
                           ('seed', UINT, 0, "random seed."),
                           ('factor', BOOL, True, "factor polynomials produced during conflict resolution."),
-                          ('local_search', BOOL, False, "local search for nra.")   
-                          ('local_search_simplify', BOOL, False, "local search simplify for nra.")
+                          ('local_search', BOOL, True, "local search for nra."),
+                          ('local_search_simplify', BOOL, True, "local search simplify for nra.")
                           ))         
                 
