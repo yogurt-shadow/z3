@@ -3,6 +3,7 @@ z3_add_component(nlsat_tactic
     goal2nlsat.cpp
     nlsat_tactic.cpp
     qfnra_nlsat_tactic.cpp
+    qfnra_ls_tactic.cpp
   COMPONENT_DEPENDENCIES
     arith_tactics
     nlsat
@@ -10,4 +11,5 @@ z3_add_component(nlsat_tactic
   TACTIC_HEADERS
     nlsat_tactic.h
     qfnra_nlsat_tactic.h
+    qfnra_ls_tactic.h
 )
