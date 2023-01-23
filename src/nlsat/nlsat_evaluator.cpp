@@ -509,7 +509,7 @@ namespace nlsat {
         interval_set_ref infeasible_intervals(ineq_atom const * a, bool neg, clause const* cls, var x){
             sign_table & table = m_sign_table_tmp;
             table.reset();
-            TRACE("nsat_evaluator", m_solver.display(tout, *a) << "\n";);
+            TRACE("nlsat_evaluator", m_solver.display(tout, *a) << "\n";);
             unsigned num_ps = a->size();
             for (unsigned i = 0; i < num_ps; i++) {
                 add(a->p(i), x, table);

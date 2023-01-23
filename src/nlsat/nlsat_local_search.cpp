@@ -134,7 +134,7 @@ namespace nlsat {
         var & m_step;
         var m_outer_step;
         unsigned m_num_arith_opt, m_num_bool_opt;
-        const unsigned max_step = 20;
+        const unsigned max_step = UINT_MAX;
         int m_cc_mode;
         std::chrono::steady_clock::time_point m_start_time;
         int m_time_label;
@@ -818,13 +818,6 @@ namespace nlsat {
             return r();
         }
 
-        void set_abs_anum(anum & res, anum const & w){
-            m_am.set(res, w);
-            if(m_am.is_neg(w)){
-                m_am.neg(res);
-            }
-        }
-
         void sat_clause(nra_clause * cls){
             cls->set_sat_status(true);
             clause_index m_index = cls->get_index();
@@ -1008,7 +1001,7 @@ namespace nlsat {
                     m_am.set(m_arith_value, m_nra_operation_value_level1[i]);
                 }
                 int curr_score = get_arith_critical_score(m_arith_index, m_arith_value);
-                LSTRACE(tout << "show score in pick nra move: " << curr_score << std::endl;);
+                TRACE("nlsat_ls", tout << "show score in pick nra move: " << curr_score << std::endl;);
                 nra_arith_var const * curr_arith = m_arith_vars[m_arith_index];
                 // compare arith score and last move
                 if(curr_score > best_score || (curr_score == best_score && curr_arith->get_last_move() < best_last_move)){
@@ -1185,12 +1178,14 @@ namespace nlsat {
             }
             m_literal_added.insert(l->get_index());
             for(var v: l->m_vars){
+                TRACE("nlsat_ls", tout << "consider variable " << v << std::endl;);
                 nra_arith_var const * curr_arith = m_arith_vars[v];
-                if(m_step <= curr_arith->get_tabu()){
-                    continue;
-                }
+                // if(m_step <= curr_arith->get_tabu()){
+                //     continue;
+                // }
                 interval_set_ref curr_st(m_ism);
                 curr_st = m_evaluator.infeasible_intervals(l->get_atom(), l->sign(), nullptr, v);
+                TRACE("nlsat_ls", tout << curr_st << std::endl;);
                 if(m_ism.is_full(curr_st)){
                     continue;
                 }
@@ -1286,10 +1281,10 @@ namespace nlsat {
                 }
             }
             // loop operation arith variables
-            LSTRACE(display_arith_operations_level1(tout););
+            TRACE("nlsat_ls2", display_arith_operations_level1(tout););
             literal_index best_literal_index;
             // anum best_value_level1;
-            best_arith_score = 1;
+            best_arith_score = -10;
             best_arith_index = select_best_from_arith_operations_level1(best_arith_score, best_value, best_literal_index);
             // var best_arith_index_level1 = select_best_from_arith_operations(INT_MIN, best_value_level1, best_literal_index_level1);
             // untabu decreasing arith variable exists
@@ -1304,7 +1299,7 @@ namespace nlsat {
                 );
                 return best_arith_index;
             }
-            LSTRACE(tout << "LEVEL I stuck\n";);
+            TRACE("nlsat_ls2", tout << "LEVEL I stuck\n";);
 
             best_arith_score = 1;
             best_arith_index = select_best_from_arith_operations_level2(best_arith_score, best_value, best_literal_index);
@@ -1377,7 +1372,7 @@ namespace nlsat {
             return null_var;
         }
 
-        // pick var with coeff !=0, move to zero
+        // Obtain the product of polynomials in a.
         poly * get_atom_polys(ineq_atom const * a) const {
             LSTRACE(tout << "size: " << a->size() << std::endl;);
             SASSERT(a->size() > 0);
@@ -2601,7 +2596,7 @@ namespace nlsat {
          * Local Search
          */
         local_search_result local_search(){
-            enable_trace("nlsat_ls2");
+            // enable_trace("nlsat_ls2");
             TRACE("nlsat_ls2", tout << "max_step = " << max_step << std::endl;);
             TRACE("nlsat_ls2", tout << "m_pair_cm = " << m_pair_cm << std::endl;);
             SPLIT_LINE(tout);
