@@ -116,6 +116,7 @@ namespace nlsat {
          * Random
          */
         unsigned m_rand_seed;
+        random_gen m_rand;
 
         /**
          * Solution
@@ -814,8 +815,7 @@ namespace nlsat {
         }
 
         unsigned rand_int(){
-            random_gen r(m_rand_seed++);
-            return r();
+            return m_rand();
         }
 
         void sat_clause(nra_clause * cls){
@@ -891,8 +891,10 @@ namespace nlsat {
                 }
                 // Score for pure bool variables are calculated before
                 nra_bool_var const * curr_bool = m_bool_vars[m_curr_operation];
-                if(curr_bool->get_score() > best_score || (curr_bool->get_score() == best_score && curr_bool->get_last_move() < best_last_move)){
-                    best_score = curr_bool->get_score();
+                int score = curr_bool->get_score();
+                // int score = get_bool_critical_score(m_curr_operation);
+                if(score > best_score || (score == best_score && curr_bool->get_last_move() < best_last_move)){
+                    best_score = score;
                     best_last_move = curr_bool->get_last_move();
                     best_bool_var_index = m_curr_operation;
                 }
@@ -930,10 +932,11 @@ namespace nlsat {
             }
             // reset is chosen to false
             reset_chosen_bool();
-            int best_bool_score = 1;
+            int best_bool_score = INT_MIN;
             bool_var best_bool_var_index = select_best_from_bool_operations(best_bool_score);
             // untabu decreasing bool variable exists
             if(best_bool_var_index != null_var){
+                TRACE("nlsat_ls_stat", tout << "bool score: " << best_bool_score << std::endl;);
                 LSTRACE(tout << "end of pick bool move\n";);
                 LSTRACE(tout << "show time of end picking bool move\n";
                     TimeElapsed();
@@ -947,6 +950,8 @@ namespace nlsat {
             else {
                 smooth_clause_weight();
             }
+            return null_var;
+
             random_walk();
             LSTRACE(tout << "end of pick bool move\n";);
             LSTRACE(tout << "show time of end picking bool move\n";
@@ -1155,7 +1160,7 @@ namespace nlsat {
                     continue;
                 }
                 insert_in_complement_level1(v, union_st, index_code);
-                insert_in_complement_level2(v, union_st, index_code);
+                // insert_in_complement_level2(v, union_st, index_code);
             }
         }
 
@@ -1180,9 +1185,10 @@ namespace nlsat {
             for(var v: l->m_vars){
                 TRACE("nlsat_ls", tout << "consider variable " << v << std::endl;);
                 nra_arith_var const * curr_arith = m_arith_vars[v];
-                // if(m_step <= curr_arith->get_tabu()){
-                //     continue;
-                // }
+                /* try removing tabu 
+                if(m_step <= curr_arith->get_tabu()){
+                    continue;
+                } */
                 interval_set_ref curr_st(m_ism);
                 curr_st = m_evaluator.infeasible_intervals(l->get_atom(), l->sign(), nullptr, v);
                 TRACE("nlsat_ls", tout << curr_st << std::endl;);
@@ -1272,8 +1278,9 @@ namespace nlsat {
             LSTRACE(tout << "LEVEL I: consider literals in unsat clauses\n";);
             SASSERT(!m_unsat_clauses.empty());
             TRACE("nlsat_ls2", tout << "number of unsat clauses: " << m_unsat_clauses.size() << "\n");
-            for(clause_index cls_idx: m_unsat_clauses){
-                nra_clause const * curr_clause = m_nra_clauses[cls_idx];
+            for (int cstep = 0; cstep < 20; cstep++) {
+                int cls_idx = rand_int() % m_unsat_clauses.size();
+                nra_clause const * curr_clause = m_nra_clauses[m_unsat_clauses[cls_idx]];
                 TRACE("nlsat_ls2", tout << "consider clause: "; m_solver.display(tout, *curr_clause->get_clause()); tout << std::endl;);
                 for(literal_index lit_idx: curr_clause->m_arith_literals){
                     nra_literal const * curr_literal = m_nra_literals[lit_idx];
@@ -1284,8 +1291,9 @@ namespace nlsat {
             TRACE("nlsat_ls2", display_arith_operations_level1(tout););
             literal_index best_literal_index;
             // anum best_value_level1;
-            best_arith_score = -10;
+            best_arith_score = INT_MIN;
             best_arith_index = select_best_from_arith_operations_level1(best_arith_score, best_value, best_literal_index);
+            TRACE("nlsat_ls_stat", tout << "arith score: " << best_arith_score << std::endl);
             // var best_arith_index_level1 = select_best_from_arith_operations(INT_MIN, best_value_level1, best_literal_index_level1);
             // untabu decreasing arith variable exists
             if(best_arith_index != null_var){
@@ -1299,9 +1307,10 @@ namespace nlsat {
                 );
                 return best_arith_index;
             }
-            TRACE("nlsat_ls2", tout << "LEVEL I stuck\n";);
+            TRACE("nlsat_ls_stat", tout << "LEVEL I stuck\n";);
+            return null_var;
 
-            best_arith_score = 1;
+            best_arith_score = INT_MIN;
             best_arith_index = select_best_from_arith_operations_level2(best_arith_score, best_value, best_literal_index);
             if(best_arith_index != null_var) {
                 LSTRACE(
@@ -1480,6 +1489,58 @@ namespace nlsat {
             LSTRACE(tout << "end of get arith critical score, score: " << res_score << std::endl;
                 TimeElapsed();
             );
+            return res_score;
+        }
+
+        // get score for critical bool move
+        int get_bool_critical_score(var b){
+            int res_score = 0;
+            nra_bool_var * m_bool_var = m_bool_vars[b];
+
+            // loop all literal-clause pairs in this arith variable
+            // literal 0 1 3 4 1 ...
+            // clause  0 0 1 1 1 ...
+            SASSERT(m_bool_var->m_literals.size() == m_bool_var->m_lit_cls.size());
+            int make_break = 0; 
+
+            for(unsigned i = 0; i < m_bool_var->m_literals.size(); i++){
+                literal_index l_idx = m_bool_var->m_literals[i];
+                clause_index c_idx = m_bool_var->m_lit_cls[i];
+                nra_literal * curr_literal = m_nra_literals[l_idx];
+                nra_clause const * curr_clause = m_nra_clauses[c_idx];
+                LSTRACE(
+                    tout << "consider literal: "; m_solver.display(tout, curr_literal->m_literal); tout << std::endl;
+                    tout << "consider clause: "; m_solver.display(tout, *curr_clause->get_clause()); tout << std::endl;
+                );
+                SASSERT(curr_literal->is_bool());
+                bool before_sat, after_sat;
+                before_sat = is_literal_sat(curr_literal);
+                after_sat = !before_sat;
+                make_break += (after_sat - before_sat);
+                LSTRACE(
+                    tout << "bool value: "; tout << (before_sat ? "true" : "false"); tout << "->"; tout << (after_sat ? "true" : "false"); tout << std::endl;
+                );
+
+                // the end of a clause block (claus block means an area of the same clause index)
+                // time to count clause count
+                if(i == m_bool_var->m_literals.size() - 1 || (c_idx != m_bool_var->m_lit_cls[i + 1])){
+                    LSTRACE(tout << "end for clause "; m_solver.display(tout, *curr_clause->get_clause()); tout << std::endl;);
+                    unsigned before_sat_count = curr_clause->get_sat_count();
+                    LSTRACE(tout << "show make break: " << make_break << std::endl;);
+                    unsigned after_sat_count = before_sat_count + make_break;
+                    LSTRACE(tout << "sat count in get score: " << before_sat_count << "->" << after_sat_count << std::endl;);
+                    SASSERT(after_sat_count >= 0);
+                    // unsat --> sat
+                    if(before_sat_count == 0 && after_sat_count > 0){
+                        res_score += curr_clause->get_weight();
+                    }
+                    // sat --> unsat
+                    else if(before_sat_count > 0 && after_sat_count == 0){
+                        res_score -= curr_clause->get_weight();
+                    }
+                    make_break = 0;
+                }
+            }
             return res_score;
         }
 
@@ -2597,25 +2658,25 @@ namespace nlsat {
          */
         local_search_result local_search(){
             // enable_trace("nlsat_ls2");
+            m_rand.set_seed(42);
+            enable_trace("nlsat_ls_stat");
             TRACE("nlsat_ls2", tout << "max_step = " << max_step << std::endl;);
             TRACE("nlsat_ls2", tout << "m_pair_cm = " << m_pair_cm << std::endl;);
             SPLIT_LINE(tout);
-            LSTRACE(tout << "local search begin\n";
-                std::cout << "local search begin\n";
-            );
+            TRACE("nlsat_ls_stat", tout << "local search begin\n";);
             SPLIT_LINE(tout);
             no_improve_cnt = 0;
             m_start_time = std::chrono::steady_clock::now();
             m_step = 0;
             // ICP returns false
             if(!init_solution(true)){
-                LSTRACE(std::cout << "ICP returns false\n";);
-                LSTRACE(tout << "ICP returns false\n";);
+                TRACE("nlsat_ls_stat", tout << "ICP returns false\n";);
                 m_bool_result.reset();
                 return std::make_pair(l_false, m_bool_result);
             }
             m_outer_step = 1;
             for(m_step = 1; m_step < max_step; m_step++){
+                std::cout << m_step << std::endl;
                 m_stuck_ratio = 1.0 * m_stuck / m_step;
                 LSTRACE(tout << "step: " << m_step << std::endl;
                     tout << "no improve cnt: " << no_improve_cnt << std::endl;
@@ -2623,9 +2684,9 @@ namespace nlsat {
                 // Succeed
                 if(m_unsat_clauses.empty()){
                     SPLIT_LINE(std::cout);
-                    LSTRACE(
-                        std::cout << "local search succeed\n";
+                    TRACE("nlsat_ls_stat",
                         tout << "local search succeed\n";
+                        tout << "number of steps: " << m_step << std::endl;
                     );
                     SPLIT_LINE(std::cout);
                     
@@ -2637,7 +2698,7 @@ namespace nlsat {
                 // Fail
                 if(TimeElapsed() > m_cutoff && m_step % 100 == 0){
                     SPLIT_LINE(std::cout);
-                    LSTRACE(std::cout << "local search failed\n";);
+                    TRACE("nlsat_ls_stat", tout << "local search failed\n";);
                     SPLIT_LINE(std::cout);
 
                     m_bool_result.reset();
@@ -2655,10 +2716,10 @@ namespace nlsat {
                     enter_bool_mode();
                 }
                 // Search
-                if(is_bool_search){
+                if(rand_int() % 2 == 0){
                     // pick bool variable
                     bool_var picked_b = pick_critical_bool_move();
-                    LSTRACE(tout << "picked bool var: " << picked_b << std::endl;);
+                    TRACE("nlsat_ls_stat", tout << "picked bool var: " << picked_b << std::endl;);
                     if(picked_b != null_var){
                         critical_bool_move(picked_b);
                     }
@@ -2669,12 +2730,14 @@ namespace nlsat {
                     else {
                         no_improve_cnt_bool++;
                     }
+                    TRACE("nlsat_ls_stat",
+                            tout << "number of unsatisfied clauses: " << m_unsat_clauses.size() << std::endl;);
                 }
                 else {
                     // pick arith variable and next value
                     scoped_anum next_value(m_am);
                     var picked_v = pick_critical_nra_move(next_value);
-                    TRACE("nlsat_ls2", tout << "picked arith var: " << picked_v << std::endl;
+                    TRACE("nlsat_ls_stat", tout << "picked arith var: " << picked_v << std::endl;
                             tout << "picked arith value: "; m_am.display(tout, next_value); tout << std::endl;
                     );
                     if(picked_v != null_var){
@@ -2687,6 +2750,8 @@ namespace nlsat {
                     else {
                         no_improve_cnt_nra++;
                     }
+                    TRACE("nlsat_ls_stat",
+                            tout << "number of unsatisfied clauses: " << m_unsat_clauses.size() << std::endl;);
                 }
                 // update improvement
                 if(update_solution_info()){
@@ -2713,7 +2778,7 @@ namespace nlsat {
             }
             m_bool_result.reset();
             SPLIT_LINE(std::cout);
-            LSTRACE(std::cout << "local search failed\n";);
+            TRACE("nlsat_ls_stat", tout << "local search failed\n";);
             SPLIT_LINE(std::cout);
             return std::make_pair(l_undef, m_bool_result);
         }
