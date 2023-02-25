@@ -68,5 +68,4 @@ z3_add_component(api
     opt
     portfolio
     realclosure
-    extra_cmds
 )

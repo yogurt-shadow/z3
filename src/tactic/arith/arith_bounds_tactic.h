@@ -27,8 +27,6 @@ Notes:
     for assembling bounds, but it does not have a way to check for
     subsumption of atoms. 
 
-## Tactic arith-bounds
-
 --*/
 #pragma once
 #include "tactic/tactic.h"

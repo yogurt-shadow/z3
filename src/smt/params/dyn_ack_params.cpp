@@ -29,7 +29,7 @@ void dyn_ack_params::updt_params(params_ref const & _p) {
     m_dack_gc_inv_decay = p.dack_gc_inv_decay();
 }
 
-#define DISPLAY_PARAM(X) out << #X"=" << X << '\n';
+#define DISPLAY_PARAM(X) out << #X"=" << X << std::endl;
 
 void dyn_ack_params::display(std::ostream & out) const {
     DISPLAY_PARAM((unsigned)m_dack);

@@ -13,34 +13,7 @@ Author:
 
     Christoph (cwinter) 2012-10-26
 
-Tactic Documentation
-
-## Tactic quasi-macro-finder
-
-### Short Description
-dentifies and applies quasi-macros.
-
-### Long Description
-
-A quasi macro defines a function symbol that contains more arguments than the number of bound variables it defines.
-The additional arguments are functions of the bound variables.
- 
-### Example
-
-```z3
-(declare-fun f (Int Int Int) Int)
-(declare-fun p (Int) Bool)
-(declare-const a Int)
-
-(assert (forall ((x Int) (y Int)) (= (f x y 1) (* 2 x y))))
-(assert (p (f 8 a (+ a 8))))
-(apply quasi-macros)
-```
-
-### Notes
-
-* Supports proofs and cores
-
+Notes:
 
 --*/
 #pragma once

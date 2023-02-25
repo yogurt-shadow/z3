@@ -7,33 +7,13 @@ Module Name:
 
 Abstract:
 
-    
+    Tactic for bounding unbounded variables.
 
 Author:
 
     Leonardo de Moura (leonardo) 2011-06-30.
 
-Tactic Documentation:
-
-## Tactic add-bounds
-
-### Short Description
-
-Tactic for bounding unbounded variables.
-
-### Long Description
-
-The tactic creates a stronger sub-goal by adding bounds to variables.
-The new goal may not be satisfiable even if the original goal is.
-
-### Example
-
-```z3
-(declare-const x Int)
-(declare-const y Int)
-(assert (> (+ x y) 10))
-(apply add-bounds)
-```
+Revision History:
 
 --*/
 #pragma once

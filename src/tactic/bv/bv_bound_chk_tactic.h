@@ -1,26 +1,18 @@
  /*++
-Copyright (c) 2016 Microsoft Corporation
+ Copyright (c) 2016 Microsoft Corporation
 
-Module Name:
+ Module Name:
 
-   bv_bound_chk_tactic.h
+  bv_bound_chk_tactic.h
 
-Author:
+ Abstract:
 
-  Mikolas Janota
 
-Tactic Documentation
+ Author:
 
-## Tactic bv_bound_chk
+ Mikolas Janota
 
-### Short Description
-
-Attempts to detect inconsistencies of bounds on bv expressions.
-
-### Notes 
-
-* does not support proofs, does not support cores
-
+ Revision History:
  --*/
 #pragma once
 

@@ -212,10 +212,6 @@ namespace {
             return m_context.get_trail(max_level);
         }
 
-        void register_on_clause(void* ctx, user_propagator::on_clause_eh_t& on_clause) override {
-            m_context.register_on_clause(ctx, on_clause);
-        }
-
         void user_propagate_init(
             void*                ctx, 
             user_propagator::push_eh_t&   push_eh,
@@ -293,7 +289,7 @@ namespace {
             m_context.get_model(m);
         }
 
-        proof * get_proof_core() override {
+        proof * get_proof() override {
             return m_context.get_proof();
         }
 
@@ -329,10 +325,6 @@ namespace {
         void get_units_core(expr_ref_vector& units) override {
             m_context.get_units(units);
         }
-
-        expr* congruence_next(expr* e) override { return m_context.congruence_next(e); }
-        expr* congruence_root(expr* e) override { return m_context.congruence_root(e); }
-
 
         expr_ref_vector cube(expr_ref_vector& vars, unsigned cutoff) override {
             ast_manager& m = get_manager();

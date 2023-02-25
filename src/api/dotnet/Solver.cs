@@ -538,18 +538,31 @@ namespace Microsoft.Z3
             this.BacktrackLevel = uint.MaxValue;
         }
 
+        internal class DecRefQueue : IDecRefQueue
+        {
+            public DecRefQueue() : base() { }
+            public DecRefQueue(uint move_limit) : base(move_limit) { }
+            internal override void IncRef(Context ctx, IntPtr obj)
+            {
+                Native.Z3_solver_inc_ref(ctx.nCtx, obj);
+            }
+
+            internal override void DecRef(Context ctx, IntPtr obj)
+            {
+                Native.Z3_solver_dec_ref(ctx.nCtx, obj);
+            }
+        };
+
         internal override void IncRef(IntPtr o)
         {
-            Native.Z3_solver_inc_ref(Context.nCtx, o);
+            Context.Solver_DRQ.IncAndClear(Context, o);
+            base.IncRef(o);
         }
 
         internal override void DecRef(IntPtr o)
         {
-            lock (Context)
-            {
-                if (Context.nCtx != IntPtr.Zero)
-                    Native.Z3_solver_dec_ref(Context.nCtx, o);
-            }
+            Context.Solver_DRQ.Add(o);
+            base.DecRef(o);
         }
 
         private Status lboolToStatus(Z3_lbool r) 

@@ -13,20 +13,12 @@ Author:
 
     Nikolaj Bjorner (nbjorner) 2012-9-6
 
-Tactic Documentation:
+Notes:
 
-## Tactic unit-subsume-simplify
-
-### Short Description
-
-implify goal using subsumption based on unit propagation
-
-### Long Description
-
-Background: PDR generates several clauses that subsume each-other.
-Simplify a goal assuming it is a conjunction of clauses.
-Subsumed clauses are simplified by using unit-propagation 
-It uses the default SMT solver.
+    Background: PDR generates several clauses that subsume each-other.
+    Simplify a goal assuming it is a conjunction of clauses.
+    Subsumed clauses are simplified by using unit-propagation 
+    It uses the smt_context for the solver.
 
 --*/
 #pragma once

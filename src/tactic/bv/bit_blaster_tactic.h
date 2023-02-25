@@ -1,33 +1,21 @@
  /*++
 Copyright (c) 2011 Microsoft Corporation
  
-Module Name:
+ Module Name:
  
     bit_blaster_tactic.h
  
-Author:
+ Abstract:
  
-   Leonardo (leonardo) 2011-10-25
+    Apply bit-blasting to a given goal.
  
-Tactic Documentation:
-
-## Tactic bit-blast
-
-### Short Description
-
-Apply bit-blasting to a given goal.
-
-### Example
-
-```z3
-(declare-const x (_ BitVec 8))
-(declare-const y (_ BitVec 8))
-(assert (bvule x y))
-(apply bit-blast)
-```
-
+ Author:
+ 
+    Leonardo (leonardo) 2011-10-25
+ 
+ Notes:
+ 
  --*/
-
 #pragma once
  
 #include "util/params.h"

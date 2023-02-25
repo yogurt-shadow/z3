@@ -42,7 +42,7 @@ void theory_arith_params::updt_params(params_ref const & _p) {
 }
 
 
-#define DISPLAY_PARAM(X) out << #X"=" << X << '\n';
+#define DISPLAY_PARAM(X) out << #X"=" << X << std::endl;
 
 void theory_arith_params::display(std::ostream & out) const {
     DISPLAY_PARAM(m_arith_eq2ineq);

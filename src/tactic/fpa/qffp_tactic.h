@@ -13,17 +13,8 @@ Author:
 
     Christoph (cwinter) 2012-01-16
 
-Tactic Documentation:
+Notes:
 
-## Tactic qffp
-
-### Short Description 
-Tactic for QF_FP formulas
-
-## Tactic qffpbv
-
-### Short Description 
-Tactic for QF_FPBV formulas
 
 --*/
 #pragma once

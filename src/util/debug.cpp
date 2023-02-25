@@ -77,7 +77,7 @@ bool is_debug_enabled(const char * tag) {
 
 #if !defined(_WINDOWS) && !defined(NO_Z3_DEBUGGER)
 void invoke_gdb() {
-    std::string buffer;
+    char buffer[1024];
     int * x = nullptr;
     for (;;) {
         std::cerr << "(C)ontinue, (A)bort, (S)top, (T)hrow exception, Invoke (G)DB\n";
@@ -101,9 +101,9 @@ void invoke_gdb() {
             throw default_exception("assertion violation");
         case 'G':
         case 'g':
-            buffer = "gdb -nw /proc/" + std::to_string(getpid()) + "/exe " + std::to_string(getpid());
+            sprintf(buffer, "gdb -nw /proc/%d/exe %d", getpid(), getpid());
             std::cerr << "invoking GDB...\n";
-            if (system(buffer.c_str()) == 0) {
+            if (system(buffer) == 0) {
                 std::cerr << "continuing the execution...\n";
             }
             else {

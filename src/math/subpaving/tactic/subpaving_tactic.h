@@ -15,8 +15,6 @@ Author:
 
 Revision History:
 
-## Tactic subpaving
-
 --*/
 #pragma once
 

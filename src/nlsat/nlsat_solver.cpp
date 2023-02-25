@@ -33,6 +33,7 @@ Revision History:
 #include "nlsat/nlsat_evaluator.h"
 #include "nlsat/nlsat_explain.h"
 #include "nlsat/nlsat_params.hpp"
+#include "nlsat/nlsat_local_search.h"
 
 #define NLSAT_EXTRA_VERBOSE
 
@@ -123,6 +124,12 @@ namespace nlsat {
         atom_vector            m_var2eq;     // var -> to asserted equality
         var_vector             m_perm;       // var -> var permutation of the variables
         var_vector             m_inv_perm;
+
+        // ^ pure bool var
+        unsigned               m_num_pure_bools;
+        bool_var_vector        m_pure_bool_vars;
+        bool_var_vector        m_pure_bool_convert;
+
         // m_perm:     internal -> external
         // m_inv_perm: external -> internal
         struct perm_display_var_proc : public display_var_proc {
@@ -136,8 +143,14 @@ namespace nlsat {
             std::ostream& operator()(std::ostream & out, var x) const override {
                 if (m_proc == nullptr)
                     m_default_display_var(out, x);
-                else
+                // wzh
+                else if(x == null_var){
+                    out << " null_var " << std::endl;
+                }
+                // hzw
+                else{
                     (*m_proc)(out, m_perm[x]);
+                }
                 return out;
             }
         };
@@ -171,6 +184,12 @@ namespace nlsat {
         };
 
         explain                m_explain;
+
+        // wzh ls
+        ls_helper              m_lsh;
+        bool                   m_local_search;
+        bool                   m_ls_simplify;
+        // hzw ls
 
         bool_var               m_bk;       // current Boolean variable we are processing
         var                    m_xk;       // current arith variable we are processing
@@ -217,6 +236,20 @@ namespace nlsat {
         unsigned               m_stages;
         unsigned               m_irrational_assignments; // number of irrational witnesses
 
+        // wzh ls
+        unsigned m_ls_solved;
+        unsigned m_ls_pair_cm;
+        unsigned m_ls_step;
+        unsigned m_ls_stuck;
+        double m_ls_stuck_ratio;
+        unsigned m_cad_move, m_cad_succeed;
+        unsigned m_poly_bound;
+        // hzw ls
+
+        // basic information
+        unsigned m_num_clauses;
+        unsigned m_num_literals;
+
         imp(solver& s, ctx& c):
             m_ctx(c),
             m_solver(s),
@@ -237,6 +270,9 @@ namespace nlsat {
             m_display_var(m_perm),
             m_display_assumption(nullptr),
             m_explain(s, m_assignment, m_cache, m_atoms, m_var2eq, m_evaluator),
+            // wzh ls
+            m_lsh(s, m_am, m_pm, m_cache, m_ism, m_evaluator, m_assignment, m_bvalues, m_clauses, m_atoms, m_pure_bool_vars, m_pure_bool_convert, m_random_seed, m_ls_step, m_ls_stuck, m_ls_stuck_ratio, m_sub_values),
+            // hzw ls
             m_scope_lvl(0),
             m_lemma(s),
             m_lazy_clause(s),
@@ -277,6 +313,11 @@ namespace nlsat {
             m_explain.set_minimize_cores(min_cores);
             m_explain.set_factor(p.factor());
             m_am.updt_params(p.p);
+
+            // wzh ls
+            m_local_search = p.local_search();
+            m_ls_simplify = p.local_search_simplify();
+            // hzw ls
         }
 
         void reset() {
@@ -570,6 +611,7 @@ namespace nlsat {
             if (a == nullptr)
                 return;
             TRACE("nlsat_verbose", display(tout << "del: b" << a->m_bool_var << " " << a->ref_count() << " ", *a) << "\n";);
+            // ls del atom
             if (a->is_ineq_atom())
                 del(to_ineq_atom(a));
             else
@@ -1444,8 +1486,13 @@ namespace nlsat {
             save_new_stage_trail();
             if (m_xk == null_var)
                 m_xk = 0;
-            else
+            else{
                 m_xk++;
+            }
+            TRACE("wzh", tout << "[debug] select next arith var: " << m_xk << " ";
+                m_display_var(tout, m_xk);
+                tout << std::endl;
+            );
         }
 
         /**
@@ -1519,8 +1566,15 @@ namespace nlsat {
                     clause * conflict_clause;
                     if (m_xk == null_var)
                         conflict_clause = process_clauses(m_bwatches[m_bk]);
-                    else 
+                    else {
+                        sort_clauses_by_degree(m_watches[m_xk].size(), m_watches[m_xk].data());
+                        TRACE("wzh", tout << "[dynamic] show clauses for var " << m_xk << " ";
+                            m_display_var(tout, m_xk);
+                            tout << std::endl;
+                            display_clauses_ptr(tout, m_watches[m_xk]);
+                        );
                         conflict_clause = process_clauses(m_watches[m_xk]);
+                    }
                     if (conflict_clause == nullptr)
                         break;
                     if (!resolve(*conflict_clause)) 
@@ -1540,6 +1594,16 @@ namespace nlsat {
                 }
             }
         }
+
+        // wzh
+        std::ostream & display_clauses_ptr(std::ostream & out, clause_vector const & cls) const {
+            for(clause * c: cls){
+                display(out, c);
+                out << std::endl;
+            }
+            return out;
+        }
+        // hzw
 
 
         lbool search_check() {
@@ -1591,12 +1655,153 @@ namespace nlsat {
                     }
                 }
             }
+            TRACE("wzh", tout << "return search check: " << lbool2str(r) << std::endl;);
             return r;
         }
+
+        // wzh 
+        std::string lbool2str(lbool r) const {
+            if(r == l_true){
+                return "l_true";
+            }
+            if(r == l_false){
+                return "l_false";
+            }
+            return "l_undef";
+        }
+        // hzw
+
+        // wzh ls
+        lbool convert_bool(bool b) const {
+            return b ? l_true : l_false;
+        }
+
+        // convert >=, <= to ==
+        // del_clause(c, m_clauses);
+        // !(235 skoC + 42 skoS > 0)
+        // !(235 skoC + 42 skoS < 0)
+        // ---------------------------
+        // 235 skoC + 42 skoS = 0
+        // TODO: delete corresponding literal var
+        void simplify_equational_clauses(){
+            LSTRACE(tout << "start of simplify clauses\n";
+                display_atoms(tout);
+            );
+            var_vector m_ge_clauses, m_le_clauses;
+            vector<poly_vector> m_ge_polys, m_le_polys;
+            for(unsigned i = 0; i < m_clauses.size(); i++){
+                clause const & cls = *m_clauses[i];
+                // unit clause
+                if(cls.size() == 1){
+                    literal l = cls[0];
+                    if(m_atoms[l.var()] != nullptr){
+                        atom * a = m_atoms[l.var()];
+                        SASSERT(a->is_ineq_atom());
+                        ineq_atom * aa = to_ineq_atom(a);
+                        // >=
+                        if(l.sign() && aa->m_kind == atom::LT){
+                            m_ge_clauses.push_back(i);
+                            poly_vector ps;
+                            for(unsigned j = 0; j < aa->size(); j++){
+                                ps.push_back(aa->p(j));;
+                            }
+                            m_ge_polys.push_back(ps);
+                        }
+                        // <=
+                        else if(l.sign() && aa->m_kind == atom::GT){
+                            m_le_clauses.push_back(i);
+                            poly_vector ps;
+                            for(unsigned j = 0; j < aa->size(); j++){
+                                ps.push_back(aa->p(j));
+                            }
+                            m_le_polys.push_back(ps);
+                        }
+                    }
+                }
+            }
+            vector<var_pair> m_eq_clauses;
+            for(unsigned i = 0; i < m_ge_polys.size(); i++){
+                for(unsigned j = 0; j < m_le_polys.size(); j++){
+                    if(is_polys_equal(m_ge_polys[i], m_le_polys[j])){
+                        // { >=, <= }
+                        m_eq_clauses.push_back(std::make_pair(m_ge_clauses[i], m_le_clauses[j]));
+                    }
+                }
+            }
+            clause_vector m_le_cls;
+            for(unsigned i = 0; i < m_eq_clauses.size(); i++){
+                m_le_cls.push_back(m_clauses[m_eq_clauses[i].second]);
+                // transfer !< to ==
+                clause & cls = *(m_clauses[m_eq_clauses[i].first]);
+                literal & l = cls[0];
+                l.neg();
+                m_atoms[l.var()]->m_kind = atom::EQ;
+            }
+            for(unsigned i = 0; i < m_le_cls.size(); i++){
+                del_clause(m_le_cls[i], m_clauses);
+            }
+            collect_equal_clauses();
+            LSTRACE(tout << "end of simplify clauses\n";
+                display_atoms(tout);
+            );
+        }
+
+        var_vector m_equal_clauses;
+
+        void collect_equal_clauses(){
+            m_equal_clauses.reset();
+            for(clause_index i = 0; i < m_clauses.size(); i++){
+                clause const & cls = *(m_clauses[i]);
+                if(cls.size() == 1){
+                    literal l = cls[0];
+                    if(m_atoms[l.var()] != nullptr){
+                        atom * a = m_atoms[l.var()];
+                        SASSERT(a->is_ineq_atom());
+                        ineq_atom * aa = to_ineq_atom(a);
+                        if(!l.sign() && aa->m_kind == atom::EQ){
+                            m_equal_clauses.push_back(i);
+                        }
+                    }
+                }
+            }
+        }
+
+        std::ostream & display_atoms(std::ostream & out) const {
+            out << "display atoms\n";
+            for(bool_var b = 0; b < m_atoms.size(); b++){
+                // dead bool var
+                if(m_dead[b]){
+                    out << "b: " << b << "  " << "[DEAD]\n";
+                } else {
+                    out << "b: " << b << "  "; display_atom(out, b); out << std::endl;
+                }
+            }
+            return out;
+        }
+
+        bool is_polys_equal(poly_vector const & p1, poly_vector const & p2) const {
+            if(p1.size() != p2.size()){
+                return false;
+            }
+            for(unsigned i = 0; i < p1.size(); i++){
+                if(!m_pm.eq(p1[i], p2[i])){
+                    return false;
+                }
+            }
+            return true;
+        }
+        // hzw ls
+
 
         lbool check() {
             TRACE("nlsat_smt2", display_smt2(tout););
             TRACE("nlsat_fd", tout << "is_full_dimensional: " << is_full_dimensional() << "\n";);
+            LSTRACE(tout << "enter check in solver\n";
+                std::cout << "enter check in solver\n";
+            );
+            TRACE("wzh", display_clauses(tout););
+            TRACE("nlsat", tout << "starting search...\n"; display(tout); tout << "\nvar order:\n"; display_vars(tout););
+            // wzh ls
             init_search();
             m_explain.set_full_dimensional(is_full_dimensional());
             bool reordered = false;
@@ -1605,7 +1810,69 @@ namespace nlsat {
                 if (!simplify()) 
                     return l_false;
             }
-            
+
+            if(m_local_search){
+                // if(m_ls_simplify){
+                if(false){
+                    LSTRACE(
+                        std::cout << "enable local search simplify\n";
+                        tout << "before local search simplify\n";
+                        display_clauses(tout);
+                    );
+                    simplify_equational_clauses();
+                    if (!local_search_simplify()) {
+                        return l_false;
+                    }
+                    LSTRACE(
+                        tout << "after local search simplify\n";
+                        display_clauses(tout);
+                    );
+                }
+                else {
+                    LSTRACE(std::cout << "disable local search simplify\n";);
+                }
+                init_pure_bool();
+                TRACE("nlsat_ls", std::cout << "enable local search" << std::endl;);
+                m_lsh.set_var_num(num_vars());
+                auto res = m_lsh.local_search();
+                LSTRACE(std::cout << "local search exit\n";
+                    tout << "local search exit\n";
+                );
+                if(res == l_true){
+                    // assignment copy(m_assignment);
+                    TRACE("nlsat_ls", std::cout << "[ls] solved by local search\n";
+                        display_assignment(tout);
+                    );
+                    // reset();
+                    // m_assignment(copy);
+                    m_ls_solved = 1;
+                    return l_true;
+                }
+                // ICP returns unsat
+                else if(res == l_false){
+                    m_ls_solved = 1;
+                    return l_false;
+                }
+                else if(res == l_undef) {
+                    m_ls_solved = 0;
+                    TRACE("nlsat_ls", 
+                        tout << "[ls] local search failed\n";
+                        std::cout << "[ls] local search failed\n";
+                    );
+                    // for nra local search, we return unknown if we failed
+                    // return l_undef;
+                    return l_undef;
+                }
+                else {
+                    UNREACHABLE();
+                }
+            }
+            else {
+                TRACE("nlsat_ls", std::cout << "disable local search" << std::endl;
+                    tout << "disable local search" << std::endl;
+                );
+            }
+            // hzw ls      
             if (!can_reorder()) {
 
             }
@@ -1617,6 +1884,23 @@ namespace nlsat {
                 heuristic_reorder();
                 reordered = true;
             }
+            TRACE("wzh", tout << "[debug] after reorder, show static order:\n";
+                for(var i = 0; i < num_vars(); i++){
+                    tout << "var: " << i << " ";
+                    m_display_var(tout, i);
+                    tout << std::endl;
+                }
+            );
+            TRACE("wzh", tout << "[debug] after debug order, show static order:\n";
+                for(var i = 0; i < num_vars(); i++){
+                    tout << "var: " << i << " ";
+                    m_display_var(tout, i);
+                    tout << std::endl;
+                }
+            );
+
+            TRACE("wzh", tout << "show var order:\n"; display_vars(tout););
+            
             sort_watched_clauses();
             lbool r = search_check();
             CTRACE("nlsat_model", r == l_true, tout << "model before restore order\n"; display_assignment(tout););
@@ -1639,6 +1923,27 @@ namespace nlsat {
                 m_bvalues[i] = l_undef;
             }
             m_assignment.reset();
+            TRACE("wzh", tout << "exit init search" << std::endl;);
+            m_num_clauses = m_clauses.size();
+            m_num_literals = m_atoms.size();
+        }
+
+        void init_pure_bool() {
+            m_num_pure_bools = 0;
+            m_pure_bool_vars.reset();
+            for(bool_var b = 0; b < m_atoms.size(); b++){
+                if(m_atoms[b] == nullptr && !m_dead[b]){
+                    m_pure_bool_vars.push_back(b);
+                }
+            }
+            m_num_pure_bools = m_pure_bool_vars.size();
+            m_pure_bool_convert.reset();
+            if(m_num_pure_bools > 0) {
+                m_pure_bool_convert.resize(m_pure_bool_vars.back() + 1, null_var);
+            }
+            for(unsigned i = 0; i < m_pure_bool_vars.size(); i++) {
+                m_pure_bool_convert[m_pure_bool_vars[i]] = i;
+            }
         }
 
         lbool check(literal_vector& assumptions) {
@@ -1772,6 +2077,11 @@ namespace nlsat {
             TRACE("nlsat_resolve", tout << "b_lvl: " << b_lvl << ", is_marked(b): " << is_marked(b) << ", m_num_marks: " << m_num_marks << "\n";);
             if (!is_marked(b)) {
                 mark(b);
+                CTRACE("wzh", b_lvl == scope_lvl(), tout << "[debug] same level" << std::endl;);
+                TRACE("wzh", tout << "[debug] current m_xk: " << m_xk << " ";
+                    m_display_var(tout, m_xk);
+                    tout << std::endl;
+                );
                 if (b_lvl == scope_lvl() /* same level */ && max_var(b) == m_xk /* same stage */) {
                     TRACE("nlsat_resolve", tout << "literal is in the same level and stage, increasing marks\n";);
                     m_num_marks++;
@@ -2028,14 +2338,18 @@ namespace nlsat {
                 }
 
                 // m_lemma is an implicating clause after backtracking current scope level.
-                if (found_decision)
+                if (found_decision){
+                    TRACE("wzh", tout << "[debug] found decision" << std::endl;);
                     break;
+                }
 
                 // If lemma only contains literals from previous stages, then we can stop.
                 // We make progress by returning to a previous stage with additional information (new lemma)
                 // that forces us to select a new partial interpretation
-                if (only_literals_from_previous_stages(m_lemma.size(), m_lemma.data()))
+                if (only_literals_from_previous_stages(m_lemma.size(), m_lemma.data())){
+                    TRACE("wzh", tout << "[debug] all literals from previous stages" << std::endl;);
                     break;
+                }
                 
                 // Conflict does not depend on the current decision, and it is still in the current stage.
                 // We should find
@@ -2123,6 +2437,7 @@ namespace nlsat {
                 
             }
             NLSAT_VERBOSE(display(verbose_stream(), *new_cls) << "\n";);
+            TRACE("wzh", tout << "[debug] enter process lemma" << std::endl;);
             if (!process_clause(*new_cls, true)) {
                 TRACE("nlsat", tout << "new clause triggered another conflict, restarting conflict resolution...\n";
                       display(tout, *new_cls) << "\n";
@@ -2223,11 +2538,29 @@ namespace nlsat {
         // -----------------------
 
         void collect_statistics(statistics & st) {
+            LSTRACE(std::cout << "collect statistics\n";);
+
             st.update("nlsat conflicts", m_conflicts);
             st.update("nlsat propagations", m_propagations);
             st.update("nlsat decisions", m_decisions);
             st.update("nlsat stages", m_stages);
             st.update("nlsat irrational assignments", m_irrational_assignments);
+            // wzh ls
+            st.update("nlsat local search solved", m_ls_solved);
+            st.update("nlsat enable pair cm", m_ls_pair_cm);
+            st.update("nlsat local search step", m_ls_step);
+            st.update("nlsat local search stuck", m_ls_stuck);
+            st.update("nlsat local search stuck ratio", m_ls_stuck_ratio);
+            st.update("nlsat local search cad move", m_cad_move);
+            st.update("nlsat local search cad succeed", m_cad_succeed);
+            st.update("nlsat local seaech poly bound", m_poly_bound);
+            // hzw ls
+            // basic
+            st.update("nlsat clauses number", m_num_clauses);
+            st.update("nlsat literals number", m_num_literals);
+            st.update("nlsat arith vars", num_vars());
+            st.update("nlsat bool vars", m_num_pure_bools);
+            // basic
         }
 
         void reset_statistics() {
@@ -2236,6 +2569,21 @@ namespace nlsat {
             m_decisions              = 0;
             m_stages                 = 0;
             m_irrational_assignments = 0;
+            // wzh ls
+            m_ls_solved = 0;
+            m_ls_pair_cm = 0;
+            m_ls_step = 0;
+            m_ls_stuck = 0;
+            m_ls_stuck_ratio = 0.0;
+            m_cad_move = 0;
+            m_cad_succeed = 0;
+            m_poly_bound = 0;
+            // hzw ls
+            // basic
+            m_num_clauses = 0;
+            m_num_literals = 0;
+            m_num_pure_bools = 0;
+            // basic
         }
 
         // -----------------------
@@ -2681,6 +3029,42 @@ namespace nlsat {
             return true;
         }
 
+        substitute_value_vector m_sub_values;
+
+        bool local_search_simplify() {
+            m_sub_values.reset();
+            polynomial_ref p(m_pm), q(m_pm);
+            var v;
+            init_var_signs();
+            SASSERT(m_learned.empty());
+            bool change = true;
+            while (change) {
+                change = false;
+                for (clause* c : m_clauses) {
+                    if (solve_var(*c, v, p, q)) {
+                        LSTRACE(tout << "loop clause in local search simplify\n";
+                            display(tout, *c); tout << std::endl;
+                        );
+                        q = -q;
+                        m_sub_values.push_back(substitute_value(v, p, q));
+                        // v = q / p
+                        TRACE("nlsat", tout << "p: " << p << "\nq: " << q << "\n x" << v << "\n";);
+                        m_patch_var.push_back(v);
+                        m_patch_num.push_back(q);
+                        m_patch_denom.push_back(p);
+                        // we do not delete simplify clauses in ls_simplify
+                        // del_clause(c, m_clauses);
+                        if (!substitute_var(v, p, q))
+                            return false;
+                        TRACE("nlsat", display(tout << "simplified\n"););
+                        change = true;
+                        break;
+                    }
+                }
+            }
+            return true;
+        }
+
         void fix_patch() {
             for (unsigned i = m_patch_var.size(); i-- > 0; ) {
                 var v = m_patch_var[i];
@@ -2701,6 +3085,10 @@ namespace nlsat {
         }
 
         bool substitute_var(var x, poly* p, poly* q) {
+            LSTRACE(tout << "substitute var, var: " << x << std::endl;
+                tout << "p: "; m_pm.display(tout, p); tout << std::endl;
+                tout << "q: "; m_pm.display(tout, q); tout << std::endl;
+            );
             bool is_sat = true;
             polynomial_ref pr(m_pm);
             polynomial_ref_vector ps(m_pm);
@@ -2711,7 +3099,10 @@ namespace nlsat {
             unsigned num_atoms = m_atoms.size();
             for (unsigned j = 0; j < num_atoms; ++j) {
                 atom* a = m_atoms[j];
-                if (a && a->is_ineq_atom()) {
+                LSTRACE(tout << "[before debug] atom index: " << j << std::endl;
+                    tout << "show atom: "; display_atom(tout, j); tout << std::endl;
+                );
+                if (a && a->is_ineq_atom() && !m_dead[j]) {
                     ineq_atom const& a1 = *to_ineq_atom(a);
                     unsigned sz = a1.size();
                     ps.reset();
@@ -2741,11 +3132,17 @@ namespace nlsat {
                     }        
                     if (!change) continue;
                     literal l = mk_ineq_literal(k, ps.size(), ps.data(), even.data()); 
+                    LSTRACE(tout << "display literal: \n";
+                        display(tout, l); tout << std::endl;
+                    );
                     lits.push_back(l);
                     if (a1.m_bool_var != l.var()) {                        
                         b2l.insert(a1.m_bool_var, l);
                     }
                 }
+                LSTRACE(tout << "[after debug] atom index: " << j << std::endl;
+                    tout << "show atom: "; display_atom(tout, j); tout << std::endl;
+                );
             }
             is_sat = update_clauses(b2l);
             return is_sat;
@@ -3289,6 +3686,12 @@ namespace nlsat {
             return display(out, c, m_display_var);
         }
 
+        // wzh ls
+        std::ostream & display_var(std::ostream & out, var v) const {
+            return m_display_var(out, v);
+        }
+        // hzw ls
+
         std::ostream& display_smt2(std::ostream & out, unsigned num, literal const * ls, display_var_proc const & proc) const {
             if (num == 0) {
                 out << "false";
@@ -3470,6 +3873,14 @@ namespace nlsat {
                 display_smt2(out, *c) << "\n";
             }
             out << "))\n" << std::endl;
+            return out;
+        }
+
+        std::ostream & display_clauses(std::ostream & out) const {
+            out << "display clauses\n";
+            for(unsigned i = 0; i < m_clauses.size(); i++){
+                display(out, m_clauses[i]);
+            }
             return out;
         }
     };
@@ -3699,6 +4110,16 @@ namespace nlsat {
         return m_imp->display(out, a, m_imp->m_display_var);
     }
 
+    // wzh ls
+    std::ostream& solver::display(std::ostream & out, clause const & c) const {
+        return m_imp->display(out, c);
+    }
+
+    std::ostream & solver::display_var(std::ostream & out, var v) const {
+        return m_imp->display_var(out, v);
+    }
+    // hzw ls
+
     display_var_proc const & solver::display_proc() const {
         return m_imp->m_display_var;
     }
@@ -3728,6 +4149,4 @@ namespace nlsat {
     void solver::collect_statistics(statistics & st) {
         return m_imp->collect_statistics(st);
     }
-
-
 };

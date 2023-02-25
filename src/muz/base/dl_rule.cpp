@@ -41,7 +41,7 @@ Revision History:
 #include "ast/rewriter/expr_replacer.h"
 #include "ast/rewriter/bool_rewriter.h"
 #include "ast/rewriter/expr_safe_replace.h"
-#include "ast/converters/generic_model_converter.h"
+#include "tactic/generic_model_converter.h"
 #include "ast/scoped_proof.h"
 #include "ast/datatype_decl_plugin.h"
 #include "ast/ast_util.h"
@@ -1013,31 +1013,28 @@ namespace datalog {
         }
     }
 
-    void rule::display(context & ctx, std::ostream & out, bool compact) const {
+    void rule::display(context & ctx, std::ostream & out) const {
         ast_manager & m = ctx.get_manager();
-        if (!compact)
-            out << m_name.str () << ":\n";
+        out << m_name.str () << ":\n";
         output_predicate(ctx, m_head, out);
         if (m_tail_size == 0) {
-            out << ".";
-            if (!compact)
-                out << "\n";
+            out << ".\n";
             return;
         }
         out << " :- ";
         for (unsigned i = 0; i < m_tail_size; i++) {
             if (i > 0)
                 out << ",";
-            if (!compact)
-                out << "\n";
-            out << " ";
+            out << "\n ";
             if (is_neg_tail(i))
                 out << "not ";
             app * t = get_tail(i);
-            if (ctx.is_predicate(t)) 
+            if (ctx.is_predicate(t)) {
                 output_predicate(ctx, t, out);
-            else 
+            }
+            else {
                 out << mk_pp(t, m);
+            }
         }
         out << '.';
         if (ctx.output_profile()) {
@@ -1045,10 +1042,10 @@ namespace datalog {
             output_profile(out);
             out << '}';
         }
-        if (!compact)
-            out << '\n';
-        if (m_proof) 
+        out << '\n';
+        if (m_proof) {
             out << mk_pp(m_proof, m) << '\n';
+        }
     }
 
 

@@ -160,7 +160,7 @@ namespace datalog {
                 SASSERT(cycle_len>=2);
                 result=src;
 
-                permute_by_cycle(result, cycle_len, permutation_cycle);
+                permutate_by_cycle(result, cycle_len, permutation_cycle);
             }
 
             /**

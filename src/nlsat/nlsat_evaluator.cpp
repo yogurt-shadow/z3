@@ -286,23 +286,22 @@ namespace nlsat {
             }
             
             bool check_invariant() const {
-                DEBUG_CODE(
-                    SASSERT(m_sections.size() == m_sorted_sections.size());
-                    for (unsigned i = 0; i < m_sorted_sections.size(); i++) {
-                        SASSERT(m_sorted_sections[i] < m_sections.size());
-                        SASSERT(m_sections[m_sorted_sections[i]].m_pos == i);
-                    }
-                    unsigned total_num_sections = 0;
-                    unsigned total_num_signs = 0;
-                    for (unsigned i = 0; i < m_info.size(); i++) {
-                        SASSERT(m_info[i].m_first_section <= m_poly_sections.size());
-                        SASSERT(m_info[i].m_num_roots == 0 || m_info[i].m_first_section < m_poly_sections.size());
-                        SASSERT(m_info[i].m_first_sign < m_poly_signs.size());
-                        total_num_sections += m_info[i].m_num_roots;
-                        total_num_signs += m_info[i].m_num_roots + 1;
-                    }
-                    SASSERT(total_num_sections == m_poly_sections.size());
-                    SASSERT(total_num_signs == m_poly_signs.size()););
+                SASSERT(m_sections.size() == m_sorted_sections.size());
+                for (unsigned i = 0; i < m_sorted_sections.size(); i++) {
+                    SASSERT(m_sorted_sections[i] < m_sections.size());
+                    SASSERT(m_sections[m_sorted_sections[i]].m_pos == i);
+                }
+                unsigned total_num_sections = 0;
+                unsigned total_num_signs = 0;
+                for (unsigned i = 0; i < m_info.size(); i++) {
+                    SASSERT(m_info[i].m_first_section <= m_poly_sections.size());
+                    SASSERT(m_info[i].m_num_roots == 0 || m_info[i].m_first_section < m_poly_sections.size());
+                    SASSERT(m_info[i].m_first_sign < m_poly_signs.size());
+                    total_num_sections += m_info[i].m_num_roots;
+                    total_num_signs += m_info[i].m_num_roots + 1;
+                }
+                SASSERT(total_num_sections == m_poly_sections.size());
+                SASSERT(total_num_signs == m_poly_signs.size());
                 return true;
             }
 
@@ -487,6 +486,130 @@ namespace nlsat {
             }
             return sign;
         }
+
+        // wzh ls
+        sign sign_at(ineq_atom const * a, sign_table const & t, unsigned c) const {
+            auto sign = sign_pos;
+            unsigned num_ps = a->size();
+            for (unsigned i = 0; i < num_ps; i++) {
+                ::sign curr_sign = t.sign_at(i, c);
+                TRACE("nlsat_evaluator_bug", tout << "sign of i: " << i << " at cell " << c << "\n"; 
+                      m_pm.display(tout, a->p(i)); 
+                      tout << "\nsign: " << curr_sign << "\n";);
+                if (a->is_even(i) && curr_sign < 0)
+                    curr_sign = sign_pos;
+                sign = sign * curr_sign;
+                if (is_zero(sign)) 
+                    break;
+            }
+            return sign;
+        }
+
+
+        interval_set_ref infeasible_intervals(ineq_atom const * a, bool neg, clause const* cls, var x){
+            sign_table & table = m_sign_table_tmp;
+            table.reset();
+            TRACE("nsat_evaluator", m_solver.display(tout, *a) << "\n";);
+            unsigned num_ps = a->size();
+            for (unsigned i = 0; i < num_ps; i++) {
+                add(a->p(i), x, table);
+                TRACE("nlsat_evaluator_bug", tout << "table after:\n"; m_pm.display(tout, a->p(i)); tout << "\n"; table.display_raw(tout);); 
+                
+            }
+            TRACE("nlsat_evaluator", 
+                  tout << "sign table for:\n"; 
+                  for (unsigned i = 0; i < num_ps; i++) { m_pm.display(tout, a->p(i)); tout << "\n"; }
+                  table.display(tout););
+
+            interval_set_ref result(m_ism);
+            interval_set_ref set(m_ism);
+            literal jst(a->bvar(), neg);
+            atom::kind k = a->get_kind();
+            
+            anum dummy;
+            bool prev_sat         = true;
+            bool prev_inf         = true;
+            bool prev_open        = true;
+            unsigned prev_root_id = UINT_MAX;
+            
+            unsigned num_cells = table.num_cells();
+            for (unsigned c = 0; c < num_cells; c++) {
+                TRACE("nlsat_evaluator",
+                      tout << "cell: " << c << "\n";
+                      tout << "prev_sat: " << prev_sat << "\n";
+                      tout << "prev_inf: " << prev_inf << "\n";
+                      tout << "prev_open: " << prev_open << "\n";
+                      tout << "prev_root_id: " << prev_root_id << "\n";
+                      tout << "processing cell: " << c << "\n";
+                      tout << "interval_set so far:\n" << result << "\n";);
+                int sign = sign_at(a, table, c);
+                TRACE("nlsat_evaluator", tout << "sign: " << sign << "\n";);
+                if (satisfied(sign, k, neg)) {
+                    // current cell is satisfied
+                    if (!prev_sat) {
+                        SASSERT(c > 0);
+                        // add interval
+                        bool curr_open;
+                        unsigned curr_root_id;
+                        if (table.is_section(c)) {
+                            curr_open    = true;
+                            curr_root_id = table.get_root_id(c);
+                        }
+                        else {
+                            SASSERT(table.is_section(c-1));
+                            curr_open    = false;
+                            curr_root_id = table.get_root_id(c-1);
+                        }
+                        set = m_ism.mk(prev_open, prev_inf, table.get_root(prev_root_id),
+                                       curr_open, false,    table.get_root(curr_root_id), jst, cls);
+                        result = m_ism.mk_union(result, set);   
+                        prev_sat = true;
+                    }
+                }
+                else {
+                    // current cell is not satisfied
+                    if (prev_sat) {
+                        if (c == 0) {
+                            if (num_cells == 1) {
+                                // (-oo, oo)
+                                result = m_ism.mk(true, true, dummy, true, true, dummy, jst, cls); 
+                            }
+                            else {
+                                // save -oo as beginning of infeasible interval
+                                prev_open    = true;
+                                prev_inf     = true;
+                                prev_root_id = UINT_MAX;
+                            }
+                        }
+                        else { 
+                            SASSERT(c > 0);
+                            prev_inf     = false;
+                            if (table.is_section(c)) {
+                                prev_open    = false;
+                                prev_root_id = table.get_root_id(c); 
+                                TRACE("nlsat_evaluator", tout << "updated prev_root_id: " << prev_root_id << " using cell: " << c << "\n";);
+                            }
+                            else {
+                                SASSERT(table.is_section(c-1));
+                                prev_open    = true;
+                                prev_root_id = table.get_root_id(c-1);
+                                TRACE("nlsat_evaluator", tout << "updated prev_root_id: " << prev_root_id << " using cell: " << (c - 1) << "\n";);
+                            }
+                        }
+                        prev_sat = false;
+                    }
+                    if (c == num_cells - 1) {
+                        // last cell add interval with  (prev, oo)
+                        set = m_ism.mk(prev_open, prev_inf, table.get_root(prev_root_id),
+                                       true, true, dummy, jst, cls);
+                        result = m_ism.mk_union(result, set);
+                    } 
+                }
+            }
+            TRACE("nlsat_evaluator", tout << "interval_set: " << result << "\n";);
+            return result;
+        }
+        // hzw ls
         
         interval_set_ref infeasible_intervals(ineq_atom * a, bool neg, clause const* cls) {
             sign_table & table = m_sign_table_tmp;
@@ -688,6 +811,12 @@ namespace nlsat {
     interval_set_ref evaluator::infeasible_intervals(atom * a, bool neg, clause const* cls) {
         return m_imp->infeasible_intervals(a, neg, cls);
     }
+
+    // wzh ls
+    interval_set_ref evaluator::infeasible_intervals(ineq_atom const * a, bool neg, clause const* cls, var v) {
+        return m_imp->infeasible_intervals(a, neg, cls, v);
+    }
+    // hzw ls
 
     void evaluator::push() {
         // do nothing

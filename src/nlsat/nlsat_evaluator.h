@@ -53,6 +53,10 @@ namespace nlsat {
         */
         interval_set_ref infeasible_intervals(atom * a, bool neg, clause const* cls);
 
+        // wzh ls
+        interval_set_ref infeasible_intervals(ineq_atom const * a, bool neg, clause const* cls, var v);
+        // hzw ls
+
         void push();
         void pop(unsigned num_scopes);
     };

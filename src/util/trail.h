@@ -98,21 +98,20 @@ public:
     }
 };
 
-template<typename V>
-class restore_vector : public trail {
-    V& m_vector;
-    unsigned m_old_size;
+template<typename T, bool CallDestructors=true>
+class restore_size_trail : public trail {
+    vector<T, CallDestructors> & m_vector;
+    unsigned                     m_old_size;
 public:
-    restore_vector(V& v):
+    restore_size_trail(vector<T, CallDestructors> & v, unsigned sz):
         m_vector(v),
-        m_old_size(v.size())
-    {}
-    
-    restore_vector(V& v, unsigned sz):
+        m_old_size(sz) {
+    }
+    restore_size_trail(vector<T, CallDestructors> & v):
         m_vector(v),
-        m_old_size(sz)
-    {}
-    
+        m_old_size(v.size()) {
+    }
+
     void undo() override {
         m_vector.shrink(m_old_size);
     }

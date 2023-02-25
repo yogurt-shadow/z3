@@ -13,12 +13,14 @@ Author:
  
     Nikolaj Bjorner (nbjorner) 2013-11-4
 
+Notes:
+
 --*/
 #include "ast/normal_forms/defined_names.h"
 #include "ast/rewriter/rewriter_def.h"
 #include "ast/scoped_proof.h"
 #include "tactic/tactical.h"
-#include "params/tactic_params.hpp"
+#include "tactic/tactic_params.hpp"
 
 
 
@@ -179,7 +181,7 @@ public:
     void collect_param_descrs(param_descrs & r) override {
         insert_max_memory(r);
         insert_max_steps(r);
-        r.insert("max_inflation", CPK_UINT, "(default: infinity) multiplicative factor of initial term size.", "4294967295");
+        r.insert("max_inflation", CPK_UINT, "(default: infinity) multiplicative factor of initial term size.");
     }
     
     void operator()(goal_ref const & in, goal_ref_buffer & result) override {

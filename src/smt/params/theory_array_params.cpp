@@ -25,7 +25,7 @@ void theory_array_params::updt_params(params_ref const & _p) {
     m_array_extensional = p.array_extensional();
 }
 
-#define DISPLAY_PARAM(X) out << #X"=" << X << '\n';
+#define DISPLAY_PARAM(X) out << #X"=" << X << std::endl;
 
 void theory_array_params::display(std::ostream & out) const {
     DISPLAY_PARAM(m_array_mode);

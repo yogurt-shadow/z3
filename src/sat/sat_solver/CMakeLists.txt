@@ -1,8 +1,6 @@
 z3_add_component(sat_solver
   SOURCES
     inc_sat_solver.cpp
-    sat_smt_preprocess.cpp
-    sat_smt_solver.cpp
   COMPONENT_DEPENDENCIES
     aig_tactic
     arith_tactics

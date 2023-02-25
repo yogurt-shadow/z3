@@ -840,8 +840,9 @@ void bound_propagator::explain(var x, bound * b, unsigned ts, assumption_vector 
             break;
         }
     }
-    for (var_bound& vb : todo)
-        vb.second->m_mark = false;
+    unsigned sz = todo.size();
+    for (unsigned i = 0; i < sz; i++)
+        todo[i].second->m_mark = false;
     todo.reset();
 }
 

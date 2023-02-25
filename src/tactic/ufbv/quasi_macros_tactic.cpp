@@ -17,13 +17,11 @@ Notes:
 
 --*/
 #include "tactic/tactical.h"
-#include "ast/converters/generic_model_converter.h"
+#include "tactic/generic_model_converter.h"
 #include "ast/macros/macro_manager.h"
 #include "ast/macros/macro_finder.h"
 #include "ast/macros/quasi_macros.h"
-#include "ast/recfun_decl_plugin.h"
 #include "tactic/ufbv/quasi_macros_tactic.h"
-
 
 class quasi_macros_tactic : public tactic {
 
@@ -43,12 +41,6 @@ class quasi_macros_tactic : public tactic {
 
             bool produce_proofs = g->proofs_enabled();
             bool produce_unsat_cores = g->unsat_core_enabled();
-
-            recfun::util rec(m());
-            if (!rec.get_rec_funs().empty()) {
-                result.push_back(g.get());
-                return;
-            }
                             
             macro_manager mm(m_manager);
             quasi_macros qm(m_manager, mm);

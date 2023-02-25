@@ -59,6 +59,7 @@ set(Z3_DOTNET_ASSEMBLY_SOURCES_IN_SRC_TREE
     Context.cs
     DatatypeExpr.cs
     DatatypeSort.cs
+    Deprecated.cs
     EnumSort.cs
     Expr.cs
     FiniteDomainExpr.cs
@@ -75,6 +76,7 @@ set(Z3_DOTNET_ASSEMBLY_SOURCES_IN_SRC_TREE
     FuncInterp.cs
     Global.cs
     Goal.cs
+    IDecRefQueue.cs
     IntExpr.cs
     IntNum.cs
     IntSort.cs
@@ -87,7 +89,6 @@ set(Z3_DOTNET_ASSEMBLY_SOURCES_IN_SRC_TREE
     NativeFuncInterp.cs
     NativeModel.cs
     NativeSolver.cs
-    OnClause.cs
     Optimize.cs
     ParamDescrs.cs
     Params.cs

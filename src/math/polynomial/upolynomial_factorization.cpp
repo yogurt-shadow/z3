@@ -27,7 +27,7 @@ Notes:
 #include "math/polynomial/upolynomial_factorization_int.h"
 #include "util/prime_generator.h"
 
-using std::endl;
+using namespace std;
 
 namespace upolynomial {
 

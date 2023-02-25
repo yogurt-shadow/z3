@@ -42,6 +42,7 @@ private:
     };
 
     friend struct def_manager;
+    ast_manager&        m;
     solver&             m_solver;
     app_ref_vector      m_proxies;
     unsigned            m_num_proxies;
@@ -68,11 +69,11 @@ private:
     app* fresh_proxy();
     void elim_proxies(expr_ref_vector &v);
 public:
-    iuc_solver(solver &s, unsigned iuc, unsigned iuc_arith,
+    iuc_solver(solver &solver, unsigned iuc, unsigned iuc_arith,
                bool print_farkas_stats, bool old_hyp_reducer,
                bool split_literals = false) :
-        solver(s.get_manager()),
-        m_solver(s),
+        m(solver.get_manager()),
+        m_solver(solver),
         m_proxies(m),
         m_num_proxies(0),
         m_base_defs(*this),
@@ -122,8 +123,6 @@ public:
     void set_phase(phase* p) override { m_solver.set_phase(p); }
     void move_to_front(expr* e) override { m_solver.move_to_front(e); }
     expr_ref_vector cube(expr_ref_vector&, unsigned) override { return expr_ref_vector(m); }
-    expr* congruence_root(expr* e) override { return e; }
-    expr* congruence_next(expr* e) override { return e; }
     void get_levels(ptr_vector<expr> const& vars, unsigned_vector& depth) override { m_solver.get_levels(vars, depth); }
     expr_ref_vector get_trail(unsigned max_level) override { return m_solver.get_trail(max_level); }
 
@@ -151,7 +150,7 @@ public:
 
     void get_unsat_core(expr_ref_vector &r) override;
     void get_model_core(model_ref &m) override {m_solver.get_model(m);}
-    proof *get_proof_core() override {return m_solver.get_proof_core();}
+    proof *get_proof() override {return m_solver.get_proof();}
     std::string reason_unknown() const override { return m_solver.reason_unknown(); }
     void set_reason_unknown(char const* msg) override { m_solver.set_reason_unknown(msg); }
     void get_labels(svector<symbol> &r) override { m_solver.get_labels(r); }

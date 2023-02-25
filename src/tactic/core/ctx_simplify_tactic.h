@@ -13,30 +13,7 @@ Author:
 
     Leonardo (leonardo) 2011-10-26
 
-Tactic Documentation:
-
-## Tactic ctx-simplify
-
-### Short Description:
-
-The tactic performs simplifies sub-formulas using context built up by walking assertions and sub-formulas.
-
-### Example
- 
-```z3
-  (declare-const p Bool)
-  (declare-const q Bool)
-  (declare-const r Bool)
-  (declare-fun f (Bool) Bool)
-  (assert p)
-  (assert (or (f p) (and r (or (not r) q))))
-  (apply ctx-simplify)
-```
-
-### Notes
-
-* supports proof terms with limited features
-
+Notes:
 
 --*/
 #pragma once

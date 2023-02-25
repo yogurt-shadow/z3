@@ -13,7 +13,7 @@ Author:
 
     Leonardo (leonardo) 2012-10-20
 
-## Tactic echo
+Notes:
 
 --*/
 #pragma once

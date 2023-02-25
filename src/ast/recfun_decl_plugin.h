@@ -72,6 +72,7 @@ namespace recfun {
         case_def(ast_manager & m,
                  family_id fid,
                  def * d,
+                 std::string & name,
                  unsigned case_index,
                  sort_ref_vector const & arg_sorts,
                  expr_ref_vector const& guards,
@@ -116,14 +117,13 @@ namespace recfun {
         func_decl_ref       m_decl; //!< generic declaration
         expr_ref            m_rhs;  //!< definition
         family_id           m_fid;
-        bool                m_is_macro;
 
         def(ast_manager &m, family_id fid, symbol const & s, unsigned arity, sort *const * domain, sort* range, bool is_generated);
 
         // compute cases for a function, given its RHS (possibly containing `ite`).
         void compute_cases(util& u, replace& subst, is_immediate_pred &, 
                            bool is_macro, unsigned n_vars, var *const * vars, expr* rhs);
-        void add_case(unsigned case_index, expr_ref_vector const& conditions, expr* rhs, bool is_imm = false);
+        void add_case(std::string & name, unsigned case_index, expr_ref_vector const& conditions, expr* rhs, bool is_imm = false);
         bool contains_ite(util& u, expr* e); // expression contains a test over a def?
         bool contains_def(util& u, expr* e); // expression contains a def
     public:
@@ -138,7 +138,6 @@ namespace recfun {
 
         bool is_fun_macro() const { return m_cases.size() == 1; }
         bool is_fun_defined() const { return !is_fun_macro(); }
-        bool is_macro() const { return m_is_macro; }
 
         def* copy(util& dst, ast_translation& tr);
 
@@ -166,7 +165,6 @@ namespace recfun {
             mutable scoped_ptr<util> m_util;
             def_map                  m_defs;       // function->def
             case_def_map             m_case_defs;  // case_pred->def
-            bool                     m_has_rec_defs = false;
             
             ast_manager & m() { return *m_manager; }
 
@@ -189,8 +187,6 @@ namespace recfun {
         
             func_decl * mk_func_decl(decl_kind k, unsigned num_parameters, parameter const * parameters, 
                                      unsigned arity, sort * const * domain, sort * range) override;
-
-            void get_op_names(svector<builtin_name> & op_names, symbol const & logic) override;
             
             promise_def mk_def(symbol const& name, unsigned n, sort *const * params, sort * range, bool is_generated = false);
 
@@ -204,13 +200,11 @@ namespace recfun {
 
             bool has_def(func_decl* f) const { return m_defs.contains(f); }
             bool has_defs() const;
-            bool has_rec_defs() const { return m_has_rec_defs; }
             def const& get_def(func_decl* f) const { return *(m_defs[f]); }
             promise_def get_promise_def(func_decl* f) const { return promise_def(&u(), m_defs[f]); }
             def& get_def(func_decl* f) { return *(m_defs[f]); }
-            bool has_case_def(func_decl* f) const { return m_case_defs.contains(f); }            
+            bool has_case_def(func_decl* f) const { return m_case_defs.contains(f); }
             case_def& get_case_def(func_decl* f) { SASSERT(has_case_def(f)); return *(m_case_defs[f]); }
-            bool is_defined(func_decl* f) {return has_case_def(f) && !get_def(f).get_cases().empty(); }
 
             func_decl_ref_vector get_rec_funs() {
                 func_decl_ref_vector result(m());
@@ -253,8 +247,6 @@ namespace recfun {
 
         //<! don't use native theory if recursive function declarations are not populated with defs
         bool has_defs() const { return m_plugin->has_defs(); }
-
-        bool has_rec_defs() const { return m_plugin->has_rec_defs(); }
 
         //<! add a function declaration
         def * decl_fun(symbol const & s, unsigned n_args, sort *const * args, sort * range, bool is_generated);

@@ -22,6 +22,7 @@ Revision History:
 #include "nlsat/nlsat_scoped_literal_vector.h"
 #include "math/polynomial/polynomial_cache.h"
 #include "math/polynomial/algebraic_numbers.h"
+#include <iostream>
 
 namespace nlsat {
     class evaluator;

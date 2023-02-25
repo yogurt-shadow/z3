@@ -27,7 +27,7 @@ Revision History:
 #include "tactic/core/nnf_tactic.h"
 #include "tactic/core/simplify_tactic.h"
 #include "ast/rewriter/th_rewriter.h"
-#include "ast/converters/generic_model_converter.h"
+#include "tactic/generic_model_converter.h"
 #include "ast/ast_smt2_pp.h"
 #include "ast/ast_pp.h"
 #include "ast/rewriter/expr_replacer.h"
@@ -911,11 +911,11 @@ public:
 
     void collect_param_descrs(param_descrs & r) override {
         r.insert("complete", CPK_BOOL, 
-                 "add constraints to make sure that any interpretation of a underspecified arithmetic operators is a function. The result will include additional uninterpreted functions/constants: /0, div0, mod0, 0^0, neg-root", "true");
+                 "(default: true) add constraints to make sure that any interpretation of a underspecified arithmetic operators is a function. The result will include additional uninterpreted functions/constants: /0, div0, mod0, 0^0, neg-root");
         r.insert("elim_root_objects", CPK_BOOL,
-                 "eliminate root objects.", "true");
+                 "(default: true) eliminate root objects.");
         r.insert("elim_inverses", CPK_BOOL,
-                 "eliminate inverse trigonometric functions (asin, acos, atan).", "true");
+                 "(default: true) eliminate inverse trigonometric functions (asin, acos, atan).");
         th_rewriter::get_param_descrs(r);
     }
     

@@ -516,8 +516,13 @@ namespace smt {
 
     template<typename Ext>
     void theory_arith<Ext>::display_bounds_in_smtlib() const {
+        char buffer[128];
         static int id = 0;
-        std::string buffer = "arith_" + std::to_string(id) + ".smt2";
+#ifdef _WINDOWS
+        sprintf_s(buffer, Z3_ARRAYSIZE(buffer), "arith_%d.smt", id);
+#else
+        sprintf(buffer, "arith_%d.smt", id);
+#endif
         std::ofstream out(buffer);
         display_bounds_in_smtlib(out);
         out.close();

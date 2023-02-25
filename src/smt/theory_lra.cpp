@@ -43,7 +43,7 @@
 #include "smt/smt_model_generator.h"
 #include "smt/arith_eq_adapter.h"
 #include "util/nat_set.h"
-#include "ast/converters/generic_model_converter.h"
+#include "tactic/generic_model_converter.h"
 #include "ast/ast_pp.h"
 #include "ast/ast_ll_pp.h"
 #include "util/cancel_eh.h"
@@ -454,12 +454,6 @@ class theory_lra::imp {
                     st.to_ensure_var().push_back(n1);
                     st.to_ensure_var().push_back(n2);       
                 }
-                else if (a.is_power(n, n1, n2)) {                    
-                    found_unsupported(n);
-                    if (!ctx().relevancy()) mk_power_axiom(n, n1, n2);
-                    st.to_ensure_var().push_back(n1);
-                    st.to_ensure_var().push_back(n2);
-                }
                 else if (!a.is_div0(n)) {
                     found_unsupported(n);
                 }
@@ -549,7 +543,7 @@ class theory_lra::imp {
     }
 
     enode * mk_enode(app * n) {
-        TRACE("arith", tout << mk_bounded_pp(n, m) << " internalized: " << ctx().e_internalized(n) << "\n";);
+        TRACE("arith", tout << expr_ref(n, m) << " internalized: " << ctx().e_internalized(n) << "\n";);
         if (reflect(n))
             for (expr* arg : *n)
                 if (!ctx().e_internalized(arg))
@@ -1100,16 +1094,6 @@ public:
             mk_is_int_axiom(n);            
         else if (m.is_ite(n))
             mk_ite_axiom(n);
-        else if (a.is_power(n, n1, n2))
-            mk_power_axiom(n, n1, n2);
-    }
-
-    void mk_power_axiom(expr* p, expr* x, expr* y) {
-        rational r;
-        if (a.is_extended_numeral(x, r) && r.is_unsigned() && r.is_pos()) {
-            expr_ref zero(a.mk_real(0), m);
-            mk_axiom(~mk_literal(a.mk_le(p, zero)));
-        }
     }
 
     //  n < 0 || rem(a, n) =  mod(a, n)
@@ -1531,7 +1515,7 @@ public:
         }
             
         if (num_candidates > 0) {
-            ctx().push_trail(restore_vector(m_assume_eq_candidates, old_sz));
+            ctx().push_trail(restore_size_trail<std::pair<theory_var, theory_var>, false>(m_assume_eq_candidates, old_sz));
         }
 
         return delayed_assume_eqs();
@@ -1565,61 +1549,6 @@ public:
 
     bool has_delayed_constraints() const {
         return !m_asserted_atoms.empty();
-    }
-
-    final_check_status eval_power(expr* e) {
-        expr* x, * y;
-        VERIFY(a.is_power(e, x, y));
-        enode* n = get_enode(e);
-        enode* xn = get_enode(x);
-        enode* yn = get_enode(y);
-        if (!n || !xn || !yn)
-            return FC_GIVEUP;
-        rational valx, valy, valn;
-        theory_var v = n->get_th_var(get_id());
-        if (!get_value(xn, valx))
-            return FC_GIVEUP;
-        if (!get_value(yn, valy))
-            return FC_GIVEUP;
-        if (!get_value(n, valn))
-            return FC_GIVEUP;
-
-        verbose_stream() << valx << " " << valy << " " << valn << "\n";
-        // TBD - check that values align so return FC_DONE.
-
-        if (valn < 0 && valx > 0 && valy > 0) {
-            mk_axiom(mk_literal(a.mk_le(x, a.mk_numeral(rational(0), x->get_sort()))),
-                     ~mk_literal(a.mk_le(e, a.mk_numeral(rational(0), e->get_sort()))));
-            return FC_CONTINUE;
-        }
-
-        // add tangent lemmas for power:
-        // establish equality using algebraic numerals
-
-        // appears to be useless:
-        if (false && !valy.is_int() && numerator(valy) == 1 && denominator(valy) > 0) {
-            rational d = denominator(valy);
-            if (!d.is_unsigned())
-                return FC_GIVEUP;
-            unsigned den = d.get_unsigned();
-            // e = x^{1/y}
-            // => e^y = x
-
-            ptr_vector<expr> es;
-            for (unsigned i = 0; i < den; ++i)
-                es.push_back(e);
-            expr* em = a.mk_mul(es.size(), es.data());            
-            mk_axiom(~mk_literal(m.mk_eq(y, a.mk_real(valy))), mk_literal(m.mk_eq(em, x)));
-            return FC_CONTINUE;
-            
-        }
-        return FC_GIVEUP;
-    }
-
-    final_check_status eval_unsupported(expr* e) {
-        if (a.is_power(e)) 
-            return eval_power(e);        
-        return FC_GIVEUP;
     }
 
     final_check_status final_check_eh() {
@@ -1671,23 +1600,10 @@ public:
                 return FC_CONTINUE;
             }
             for (expr* e : m_not_handled) {
-                if (!ctx().is_relevant(e) && false)
-                    continue;
-                st = FC_DONE;
-                switch (eval_unsupported(e)) {
-                case FC_CONTINUE:
-                    st = FC_CONTINUE;
-                    break;
-                case FC_GIVEUP:
-                    if (st != FC_CONTINUE) 
-                        st = FC_GIVEUP;
-                    break;
-                default:
-                    break;
-                }
-                if (st == FC_CONTINUE)
-                    break;
-            }
+                (void) e; // just in case TRACE() is a no-op
+                TRACE("arith", tout << "unhandled operator " << mk_pp(e, m) << "\n";);        
+                st = FC_GIVEUP;
+            }                
             return st;
         case l_false:
             get_infeasibility_explanation_and_set_conflict();
@@ -1859,6 +1775,7 @@ public:
                     hi = floor(hi/mul);
                     lo = ceil(lo/mul);
                 }
+                std::cout << mk_pp(p, m) << " " << mk_pp(n, m) << " " << hi << " " << lo << " " << div_r << "\n";
                 literal p_le_r1  = mk_literal(a.mk_le(p, a.mk_numeral(hi, true)));
                 literal p_ge_r1  = mk_literal(a.mk_ge(p, a.mk_numeral(lo, true)));
                 literal n_le_div = mk_literal(a.mk_le(n, a.mk_numeral(div_r, true)));

@@ -2,6 +2,7 @@ z3_add_component(ufbv_tactic
   SOURCES
     macro_finder_tactic.cpp
     quasi_macros_tactic.cpp
+    ufbv_rewriter.cpp
     ufbv_rewriter_tactic.cpp
     ufbv_tactic.cpp
   COMPONENT_DEPENDENCIES

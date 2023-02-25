@@ -128,8 +128,9 @@ struct cofactor_elim_term_ite::imp {
                     fr.m_first   = false;
                     bool visited = true;
                     if (is_app(t)) {
-                        for (expr* arg : *to_app(t)) 
-                            visit(arg, form_ctx, visited);
+                        unsigned num_args = to_app(t)->get_num_args();
+                        for (unsigned i = 0; i < num_args; i++)
+                            visit(to_app(t)->get_arg(i), form_ctx, visited);
                     }
                     // ignoring quantifiers
                     if (!visited)
@@ -137,13 +138,16 @@ struct cofactor_elim_term_ite::imp {
                 }
                 
                 if (is_app(t)) {
-                    for (expr* arg : *to_app(t)) {
-                        if (m_has_term_ite.is_marked(arg)) {
-                            m_has_term_ite.mark(t);
-                            TRACE("cofactor", tout << "saving candidate: " << form_ctx << "\n" << mk_bounded_pp(t, m) << "\n";);
-                            save_candidate(t, form_ctx);
+                    unsigned num_args = to_app(t)->get_num_args();
+                    unsigned i;
+                    for (i = 0; i < num_args; i++) {
+                        if (m_has_term_ite.is_marked(to_app(t)->get_arg(i)))
                             break;
-                        }
+                    }
+                    if (i < num_args) {
+                        m_has_term_ite.mark(t);
+                        TRACE("cofactor", tout << "saving candidate: " << form_ctx << "\n" << mk_bounded_pp(t, m) << "\n";);
+                        save_candidate(t, form_ctx);
                     }
                 }
                 else {
@@ -280,14 +284,16 @@ struct cofactor_elim_term_ite::imp {
         }
         expr * best = nullptr;
         unsigned best_occs = 0;
-        for (auto const& [k, v] : occs) {
+        obj_map<expr, unsigned>::iterator it  = occs.begin();
+        obj_map<expr, unsigned>::iterator end = occs.end();
+        for (; it != end; ++it) {
             if ((!best) ||
-                (get_depth(k) < get_depth(best))  ||
-                (get_depth(k) == get_depth(best) && v > best_occs) ||
+                (get_depth(it->m_key) < get_depth(best))  ||
+                (get_depth(it->m_key) == get_depth(best) && it->m_value > best_occs) ||
                 // break ties by giving preference to equalities
-                (get_depth(k) == get_depth(best) && v == best_occs && m.is_eq(k) && !m.is_eq(best))) {
-                best = k;
-                best_occs = v;                
+                (get_depth(it->m_key) == get_depth(best) && it->m_value == best_occs && m.is_eq(it->m_key) && !m.is_eq(best))) {
+                best = it->m_key;
+                best_occs = it->m_value;
             }
         }
         visited.reset();
@@ -438,6 +444,7 @@ struct cofactor_elim_term_ite::imp {
 
                 if (m_cache.find(s, t))
                     return true;
+                unsigned step = 0;
                 TRACE("cofactor_ite", tout << "cofactor target:\n" << mk_ismt2_pp(s, m) << "\n";);
                 expr_ref curr(m);
                 curr = s;
@@ -450,6 +457,7 @@ struct cofactor_elim_term_ite::imp {
                         t = curr.get();
                         return true;
                     }
+                    step++;
                     expr_ref pos_cofactor(m);
                     expr_ref neg_cofactor(m);
                     m_cofactor.set_cofactor_atom(c);
@@ -459,7 +467,7 @@ struct cofactor_elim_term_ite::imp {
                     m_cofactor.set_cofactor_atom(neg_c);
                     m_cofactor(curr, neg_cofactor);
                     curr = m.mk_ite(c, pos_cofactor, neg_cofactor);
-                    TRACE("cofactor", tout << "cofactor_ite step\n" << mk_ismt2_pp(curr, m) << "\n";);
+                    TRACE("cofactor", tout << "cofactor_ite step: " << step << "\n" << mk_ismt2_pp(curr, m) << "\n";);
                 }
             }
             return false;
@@ -513,6 +521,7 @@ struct cofactor_elim_term_ite::imp {
         }
         
         void cofactor(expr * t, expr_ref & r) {
+            unsigned step = 0;
             TRACE("cofactor", tout << "cofactor target:\n" << mk_ismt2_pp(t, m) << "\n";);
             expr_ref curr(m);
             curr = t;
@@ -523,6 +532,7 @@ struct cofactor_elim_term_ite::imp {
                     r = curr.get();
                     return;
                 }
+                step++;
                 expr_ref pos_cofactor(m);
                 expr_ref neg_cofactor(m);
                 m_cofactor.set_cofactor_atom(c);
@@ -544,7 +554,7 @@ struct cofactor_elim_term_ite::imp {
                     curr = m.mk_ite(c, pos_cofactor, neg_cofactor);
                 }
                 TRACE("cofactor", 
-                      tout << "cofactor_ite step\n";
+                      tout << "cofactor_ite step: " << step << "\n";
                       tout << "cofactor: " << mk_ismt2_pp(c, m) << "\n";
                       tout << mk_ismt2_pp(curr, m) << "\n";);
             }

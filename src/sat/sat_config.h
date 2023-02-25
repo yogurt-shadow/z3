@@ -175,11 +175,9 @@ namespace sat {
 
         // drat proofs
         bool               m_drat;
-        bool               m_drat_disable;
         bool               m_drat_binary;
         symbol             m_drat_file;
-        bool               m_smt_proof_check;
-        bool               m_smt_proof_check_rup;
+        symbol             m_smt_proof;
         bool               m_drat_check_unsat;
         bool               m_drat_check_sat;
         bool               m_drat_activity;

@@ -115,8 +115,7 @@ private:
     }
 
 public:
-    combined_solver(solver * s1, solver * s2, params_ref const & p):
-        solver(s1->get_manager()) {
+    combined_solver(solver * s1, solver * s2, params_ref const & p) {
         m_solver1 = s1;
         m_solver2 = s2;
         updt_local_params(p);
@@ -275,10 +274,6 @@ public:
         return m_solver2->cube(vars, backtrack_level);
     }
 
-    expr* congruence_next(expr* e) override { switch_inc_mode(); return m_solver2->congruence_next(e); }
-    expr* congruence_root(expr* e) override { switch_inc_mode(); return m_solver2->congruence_root(e); }
-
-
     expr * get_assumption(unsigned idx) const override {
         unsigned c1 = m_solver1->get_num_assumptions();
         if (idx < c1) return m_solver1->get_assumption(idx);
@@ -323,11 +318,11 @@ public:
             return m_solver2->get_trail(max_level);
     }
 
-    proof * get_proof_core() override {
+    proof * get_proof() override {
         if (m_use_solver1_results)
-            return m_solver1->get_proof_core();
+            return m_solver1->get_proof();
         else
-            return m_solver2->get_proof_core();
+            return m_solver2->get_proof();
     }
 
     std::string reason_unknown() const override {
@@ -348,11 +343,7 @@ public:
         else
             return m_solver2->get_labels(r);
     }
-
-    void register_on_clause(void* ctx, user_propagator::on_clause_eh_t& on_clause) override {
-        switch_inc_mode();
-        m_solver2->register_on_clause(ctx, on_clause);
-    }    
+    
 
     void user_propagate_init(
         void* ctx, 
