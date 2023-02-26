@@ -124,6 +124,8 @@ namespace nlsat {
          * Random
          */
         unsigned                                             m_rand_seed;
+        random_gen                                           m_rand;
+
 
         /**
          * * improvement and restart
@@ -893,8 +895,7 @@ namespace nlsat {
         }
 
         unsigned rand_int(){
-            random_gen r(m_rand_seed++);
-            return r();
+            return m_rand();
         }
 
         void set_abs_anum(anum & res, anum const & w){
@@ -1234,7 +1235,9 @@ namespace nlsat {
                 }
             }
 
-            // random_walk();
+            if (rand_int() % 20 == 0) {
+                random_walk();
+            }
             LSTRACE(tout << "end of pick nra move\n";);
             LSTRACE(tout << "show time of end picking nra move\n";
                 TimeElapsed();
