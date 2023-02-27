@@ -23,8 +23,10 @@ Revision History:
  
 namespace nlsat {
 
-    ineq_atom::ineq_atom(kind k, unsigned sz, poly * const * ps, bool const * is_even, var max_var):
-        atom(k, max_var),
+    // ineq_atom::ineq_atom(kind k, unsigned sz, poly * const * ps, bool const * is_even, var max_var):
+    ineq_atom::ineq_atom(kind k, unsigned sz, poly * const * ps, bool const * is_even):
+        // atom(k, max_var),
+        atom(k),
         m_size(sz) {
         for (unsigned i = 0; i < m_size; i++) {
             m_ps[i] = TAG(poly *, ps[i], is_even[i] ? 1 : 0);
@@ -48,7 +50,8 @@ namespace nlsat {
     }
 
     root_atom::root_atom(kind k, var x, unsigned i, poly * p):
-        atom(k, x),
+        // atom(k, x),
+        atom(k),
         m_x(x),
         m_i(i),
         m_p(p) {
@@ -66,5 +69,4 @@ namespace nlsat {
     bool root_atom::eq_proc::operator()(root_atom const * a1, root_atom const * a2) const {
         return a1->m_kind == a2->m_kind && a1->m_x == a2->m_x && a1->m_i == a2->m_i && a1->m_p == a2->m_p;
     }
-
 };

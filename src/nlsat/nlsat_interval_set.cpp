@@ -17,21 +17,20 @@ Revision History:
 
 --*/
 #include "nlsat/nlsat_interval_set.h"
-#include "math/polynomial/algebraic_numbers.h"
 #include "util/buffer.h"
 
 namespace nlsat {
 
-    struct interval {
-        unsigned  m_lower_open:1;
-        unsigned  m_upper_open:1;
-        unsigned  m_lower_inf:1;
-        unsigned  m_upper_inf:1;
-        literal   m_justification;
-        clause const* m_clause;
-        anum      m_lower;
-        anum      m_upper;
-    };
+    // struct interval {
+    //     unsigned  m_lower_open:1;
+    //     unsigned  m_upper_open:1;
+    //     unsigned  m_lower_inf:1;
+    //     unsigned  m_upper_inf:1;
+    //     literal   m_justification;
+    //     clause const* m_clause;
+    //     anum      m_lower;
+    //     anum      m_upper;
+    // };
 
     class interval_set {
     public:
@@ -110,6 +109,7 @@ namespace nlsat {
     interval_set_manager::interval_set_manager(anum_manager & m, small_object_allocator & a):
         m_am(m),
         m_allocator(a) {
+            set_const_anum();
     }
      
     interval_set_manager::~interval_set_manager() {
@@ -684,6 +684,144 @@ namespace nlsat {
         return new_set;
     }
 
+    // wzh ls
+    interval_set * interval_set_manager::mk_union(interval_set const * s1, interval_set const * s2, interval_set const * s3){
+        return mk_union(mk_union(s1, s2), s3);
+    }
+
+    interval_set * interval_set_manager::mk_full(){
+        anum zero;
+        return mk(true, true, zero, true, true, zero, null_literal, nullptr);
+    }
+
+    interval_set * interval_set_manager::mk_point_interval(anum const & w){
+        return mk(false, false, w, false, false, w, null_literal, nullptr);
+    }
+
+    interval_set * interval_set_manager::mk_complement(anum const & w){
+        interval_buffer result;
+        // (-oo, w)
+        anum zero;
+        interval inter1;
+        inter1.m_lower = zero;
+        m_am.set(inter1.m_upper, w);
+        inter1.m_lower_inf = true;
+        inter1.m_upper_inf = false;
+        inter1.m_lower_open = true;
+        inter1.m_upper_open = true;
+        push_back(m_am, result, inter1);
+
+        // (w, +oo)
+        interval inter2;
+        m_am.set(inter2.m_lower, w);
+        inter2.m_upper = zero;
+        inter2.m_lower_inf = false;
+        inter2.m_upper_inf = true;
+        inter2.m_lower_open = true;
+        inter2.m_upper_open = true;
+        push_back(m_am, result, inter2);
+
+        return mk_interval(m_allocator, result, false);
+    }
+
+    interval_set * interval_set_manager::mk_complement(interval_set const * s){
+        if(s == nullptr){
+            return mk_full();
+        }
+        if(s->m_full){
+            return nullptr;
+        }
+        anum zero;
+        unsigned num = num_intervals(s);
+        interval_buffer result;
+        // (-oo, x
+        if(!s->m_intervals[0].m_lower_inf){
+            interval inter;
+            inter.m_lower = zero;
+            inter.m_upper = s->m_intervals[0].m_lower;
+            inter.m_lower_inf = true;
+            inter.m_upper_inf = false;
+            inter.m_lower_open = true;
+            inter.m_upper_open = !s->m_intervals[0].m_lower_open;
+            push_back(m_am, result, inter);
+        }
+        // middle area
+        for(unsigned i = 1; i < num; i++){
+            interval curr_inter = s->m_intervals[i];
+            interval inter;
+            inter.m_lower = s->m_intervals[i - 1].m_upper;
+            inter.m_upper = curr_inter.m_lower;
+            inter.m_lower_inf = false;
+            inter.m_upper_inf = false;
+            inter.m_lower_open = !s->m_intervals[i - 1].m_upper_open;
+            inter.m_upper_open = !curr_inter.m_lower_open;
+            push_back(m_am, result, inter);
+        }
+        // x, +oo)
+        if(!s->m_intervals[num - 1].m_upper_inf){
+            interval inter;
+            inter.m_lower = s->m_intervals[num - 1].m_upper;
+            inter.m_upper = zero;
+            inter.m_lower_inf = false;
+            inter.m_upper_inf = true;
+            inter.m_lower_open = !s->m_intervals[num - 1].m_upper_open;
+            inter.m_upper_open = true;
+            push_back(m_am, result, inter);
+        }
+        // bool found_slack  = !result[0].m_lower_inf || !result[num-1].m_upper_inf;
+        return mk_interval(m_allocator, result, false);
+    }
+
+    // s1 /\ s2 = !(!s1 \/ !s2)
+    interval_set * interval_set_manager::mk_intersection(interval_set const * s1, interval_set const * s2){
+        TRACE("wzh", tout << "[intersection] show s1 and s2" << std::endl;
+            display(tout, s1);
+            display(tout, s2);
+            tout << std::endl;
+        );
+        if(s1 == nullptr || s2 == nullptr){
+            return nullptr;
+        }
+        return mk_complement(mk_union(mk_complement(s1), mk_complement(s2)));
+    }
+
+    bool interval_set_manager::contains_zero(interval_set const * s) const {
+        if(s == nullptr){
+            return false;
+        }
+        for(unsigned i = 0; i < s->m_num_intervals; i++){
+            if(interval_contains_zero(s->m_intervals[i])){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    bool interval_set_manager::interval_contains_zero(interval inter) const {
+        // [0, 
+        if(!inter.m_lower_inf && m_am.is_zero(inter.m_lower) && !inter.m_lower_open){
+            return true;
+        }
+        // , 0]
+        if(!inter.m_upper_inf && m_am.is_zero(inter.m_upper) && !inter.m_upper_open){
+            return true;
+        }
+        bool left = inter.m_lower_inf || m_am.is_neg(inter.m_lower);
+        bool right = inter.m_upper_inf || m_am.is_pos(inter.m_upper);
+        return left && right;
+    }
+
+    void interval_set_manager::set_const_anum(){
+        m_am.set(m_zero, 0);
+        m_am.set(m_one, 1);
+        m_am.set(m_max, INT_MAX);
+        m_am.set(m_neg_max, INT_MIN);
+        // m_min = 0.0001
+        m_am.set(m_10k, 10000);
+        m_am.div(m_one, m_10k, m_min);
+    }
+    // hzw ls
+
     void interval_set_manager::peek_in_complement(interval_set const * s, bool is_int, anum & w, bool randomize) {
         SASSERT(!is_full(s));
         if (s == nullptr) {
@@ -771,5 +909,4 @@ namespace nlsat {
             out << "*";
         return out;
     }
-
 };

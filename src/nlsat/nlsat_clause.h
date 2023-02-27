@@ -29,7 +29,10 @@ namespace nlsat {
         unsigned         m_size;
         unsigned         m_capacity:31;
         unsigned         m_learned:1;
-        unsigned         m_activity;
+        // wzh dynamic
+        // unsigned         m_activity;
+        double m_activity;
+        // hzw dynamic
         assumption_set   m_assumptions;
         literal          m_lits[0];
         static size_t get_obj_size(unsigned num_lits) { return sizeof(clause) + num_lits * sizeof(literal); }
@@ -47,8 +50,12 @@ namespace nlsat {
         literal const * end() const { return m_lits + m_size; }
         literal const * data() const { return m_lits; }
         void inc_activity() { m_activity++; }
-        void set_activity(unsigned v) { m_activity = v; }
-        unsigned get_activity() const { return m_activity; }
+        // wzh dynamic
+        // void set_activity(unsigned v) { m_activity = v; }
+        // unsigned get_activity() const { return m_activity; }
+        void set_activity(double v) {m_activity = v; }
+        double get_activity() const { return m_activity; }
+        // hzw dynamic
         bool contains(literal l) const;
         bool contains(bool_var v) const;
         void shrink(unsigned num_lits) { SASSERT(num_lits <= m_size); if (num_lits < m_size) { m_size = num_lits; } }

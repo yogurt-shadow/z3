@@ -75,34 +75,66 @@ namespace nlsat {
             bool empty() const { return m_set.empty(); }
             
             // Return max variable in todo_set
-            var max_var() const {
-                pmanager & pm = m_set.m();
-                var max = null_var;
-                unsigned sz = m_set.size();
-                for (unsigned i = 0; i < sz; i++) {
-                    var x = pm.max_var(m_set.get(i));
-                    SASSERT(x != null_var);
-                    if (max == null_var || x > max)
-                        max = x;
-                }
-                return max;
-            }
+            // var max_var() const {
+            //     pmanager & pm = m_set.m();
+            //     var max = null_var;
+            //     unsigned sz = m_set.size();
+            //     for (unsigned i = 0; i < sz; i++) {
+            //         var x = pm.max_var(m_set.get(i));
+            //         SASSERT(x != null_var);
+            //         if (max == null_var || x > max)
+            //             max = x;
+            //     }
+            //     return max;
+            // }
             
             /**
                \brief Remove the maximal polynomials from the set and store
                them in max_polys. Return the maximal variable
              */
-            var remove_max_polys(polynomial_ref_vector & max_polys) {
+            // var remove_max_polys(polynomial_ref_vector & max_polys) {
+            //     max_polys.reset();
+            //     var x = max_var();
+            //     pmanager & pm = m_set.m();
+            //     unsigned sz = m_set.size();
+            //     unsigned j  = 0;
+            //     for (unsigned i = 0; i < sz; i++) {
+            //         poly * p = m_set.get(i);
+            //         var y = pm.max_var(p);
+            //         SASSERT(y <= x);
+            //         if (y == x) {
+            //             max_polys.push_back(p);
+            //             m_in_set[pm.id(p)] = false;
+            //         }
+            //         else {
+            //             m_set.set(j, p);
+            //             j++;
+            //         }
+            //     }
+            //     m_set.shrink(j);
+            //     return x;
+            // }
+
+            // wzh dynamic
+            void collect_ps(polynomial_ref_vector & res) const {
+                res.reset();
+                for(unsigned i = 0; i < m_set.size(); i++){
+                    res.push_back(m_set.get(i));
+                }
+            }
+
+            void remove_var_polys(polynomial_ref_vector & max_polys, var x){
                 max_polys.reset();
-                var x = max_var();
                 pmanager & pm = m_set.m();
                 unsigned sz = m_set.size();
                 unsigned j  = 0;
                 for (unsigned i = 0; i < sz; i++) {
                     poly * p = m_set.get(i);
-                    var y = pm.max_var(p);
-                    SASSERT(y <= x);
-                    if (y == x) {
+                    // var y = pm.max_var(p);
+                    var_vector curr_vars;
+                    pm.vars(p, curr_vars);
+                    // if (y == x) {
+                    if(curr_vars.contains(x)) {
                         max_polys.push_back(p);
                         m_in_set[pm.id(p)] = false;
                     }
@@ -112,8 +144,8 @@ namespace nlsat {
                     }
                 }
                 m_set.shrink(j);
-                return x;
             }
+            // hzw dynamic
         };
         
         // temporary field for store todo set of polynomials
@@ -128,9 +160,10 @@ namespace nlsat {
         svector<char>           m_already_added_literal;
 
         evaluator &             m_evaluator;
+        Dynamic_manager & m_dm;
 
         imp(solver & s, assignment const & x2v, polynomial::cache & u, atom_vector const & atoms, atom_vector const & x2eq,
-            evaluator & ev):
+            evaluator & ev, Dynamic_manager & dm):
             m_solver(s),
             m_assignment(x2v),
             m_atoms(atoms),
@@ -147,7 +180,9 @@ namespace nlsat {
             m_core1(s),
             m_core2(s),
             m_result(nullptr),
-            m_evaluator(ev) {
+            m_evaluator(ev),
+            m_dm(dm)
+            {
             m_simplify_cores   = false;
             m_full_dimensional = false;
             m_minimize_cores   = false;
@@ -203,15 +238,31 @@ namespace nlsat {
             SASSERT(check_already_added());
         }
 
+        // wzh dynamic
+        bool all_assigned_poly(poly const * p) const {
+            var_vector curr_vars;
+            m_pm.vars(p, curr_vars);
+            for(var v: curr_vars){
+                if(!m_assignment.is_assigned(v)){
+                    return false;
+                }
+            }
+            return true;
+        }
+        // hzw dynamic
+
 
         /**
            \brief evaluate the given polynomial in the current interpretation.
            max_var(p) must be assigned in the current interpretation.
         */
         ::sign sign(polynomial_ref const & p) {
-            SASSERT(max_var(p) == null_var || m_assignment.is_assigned(max_var(p)));
+            // SASSERT(max_var(p) == null_var || m_assignment.is_assigned(max_var(p)));
+            // wzh dynamic
+            SASSERT(all_assigned_poly(p));
+            // hzw dynamic
             auto s = m_am.eval_sign_at(p, m_assignment);
-            TRACE("nlsat_explain", tout << "p: " << p << " var: " << max_var(p) << " sign: " << s << "\n";);
+            // TRACE("nlsat_explain", tout << "p: " << p << " var: " << max_var(p) << " sign: " << s << "\n";);
             return s;
         }
         
@@ -230,8 +281,10 @@ namespace nlsat {
         */
         void psc_chain(polynomial_ref & p, polynomial_ref & q, unsigned x, polynomial_ref_vector & result) {
             // TODO caching
-            SASSERT(max_var(p) == max_var(q));
-            SASSERT(max_var(p) == x);
+            // SASSERT(max_var(p) == max_var(q));
+            // SASSERT(max_var(p) == x);
+            SASSERT(max_stage_var_poly(p) == max_stage_var_poly(q));
+            SASSERT(max_stage_var_poly(p) == x);
             m_cache.psc_chain(p, q, x, result);
         }
         
@@ -264,6 +317,7 @@ namespace nlsat {
             // then only the factors that are zero in the current interpretation needed to be considered.
             // I don't want to create a nested conjunction in the clause. 
             // Then, I assert p_i1 * ... * p_im  != 0
+            // wzh assumption
             factor(p, m_factors);
             unsigned num_factors = m_factors.size();
             m_zero_fs.reset();
@@ -281,6 +335,7 @@ namespace nlsat {
             l.neg();
             TRACE("nlsat_explain", tout << "adding (zero assumption) literal:\n"; display(tout, l); tout << "\n";);
             add_literal(l);
+            // hzw assumption
         }
 
         void add_simple_assumption(atom::kind k, poly * p, bool sign = false) {
@@ -306,7 +361,11 @@ namespace nlsat {
         */
         void elim_vanishing(polynomial_ref & p) {
             SASSERT(!is_const(p));
-            var x = max_var(p);
+            // var x = max_var(p);
+            // wzh dynamic
+            var x = m_dm.max_stage_var_poly(p);
+            TRACE("nlsat_explain", tout << "[debug] max var in elim: " << x << std::endl;);
+            // hzw dynamic
             unsigned k = degree(p, x);
             SASSERT(k > 0);
             polynomial_ref lc(m_pm);
@@ -317,7 +376,10 @@ namespace nlsat {
                     return;
                 if (k == 0) {
                     // x vanished from p, peek next maximal variable
-                    x = max_var(p);
+                    // x = max_var(p);
+                    // wzh dynamic
+                    x = m_dm.max_stage_var_poly(p);
+                    // hzw dynamic
                     SASSERT(x != null_var);
                     k = degree(p, x);
                 }
@@ -342,6 +404,7 @@ namespace nlsat {
                         return;
                     // lc is not the zero polynomial, but it vanished in the current interpretation.
                     // so we keep searching...
+                    TRACE("nlsat_explain", tout << "[debug] add zero assumption\n";);
                     add_zero_assumption(lc);
                 }
                 if (k == 0) {
@@ -401,6 +464,7 @@ namespace nlsat {
            Remark: root atoms are not normalized
         */
         literal normalize(literal l, var max) {
+            TRACE("nlsat_explain", tout << "[debug] enter normalize literal" << std::endl;);
             bool_var b = l.var();
             if (b == true_bool_var)
                 return l;
@@ -413,15 +477,27 @@ namespace nlsat {
                 int atom_sign = 1;
                 unsigned sz = a->size();
                 bool normalized = false; // true if the literal needs to be normalized
+
+                // wzh dynamic
+                var max_stage = m_dm.find_stage(max, false);
+                // hzw dynamic
                 for (unsigned i = 0; i < sz; i++) {
                     p = a->p(i);
-                    if (max_var(p) == max)
+                    TRACE("nlsat_explain", tout << "[debug] show polynomial:\n";
+                        m_pm.display(tout, p);
+                        tout << std::endl;
+                    );
+                    // if (max_var(p) == max)
+                    if(m_dm.max_stage_var_poly(p) == max){
+                        TRACE("nlsat_explain", tout << "[debug] max stage is equal to max, enter elim vanishing\n";);
                         elim_vanishing(p); // eliminate vanishing coefficients of max
-                    if (is_const(p) || max_var(p) < max) {
+                    }
+                    // if (is_const(p) || max_var(p) < max) {
+                    if(is_const(p) || m_dm.max_stage_poly(p) < max_stage){
                         int s = sign(p); 
                         if (!is_const(p)) {
-                            SASSERT(max_var(p) != null_var);
-                            SASSERT(max_var(p) < max);
+                            // SASSERT(max_var(p) != null_var);
+                            SASSERT(max_stage_poly(p) < max_stage);
                             // factor p is a lower stage polynomial, so we should add assumption to justify p being eliminated
                             if (s == 0)
                                 add_simple_assumption(atom::EQ, p);  // add assumption p = 0
@@ -507,51 +583,51 @@ namespace nlsat {
             C.shrink(j);
         }
 
-        var max_var(poly const * p) { return m_pm.max_var(p); }
+        // var max_var(poly const * p) { return m_pm.max_var(p); }
 
-        /**
-           \brief Return the maximal variable in a set of nonconstant polynomials.
-        */
-        var max_var(polynomial_ref_vector const & ps) {
-            if (ps.empty())
-                return null_var;
-            var max = max_var(ps.get(0)); 
-            SASSERT(max != null_var); // there are no constant polynomials in ps
-            unsigned sz = ps.size();
-            for (unsigned i = 1; i < sz; i++) {
-                var curr = m_pm.max_var(ps.get(i));
-                SASSERT(curr != null_var);
-                if (curr > max)
-                    max = curr;
-            }
-            return max;
-        }
+        // /**
+        //    \brief Return the maximal variable in a set of nonconstant polynomials.
+        // */
+        // var max_var(polynomial_ref_vector const & ps) {
+        //     if (ps.empty())
+        //         return null_var;
+        //     var max = max_var(ps.get(0)); 
+        //     SASSERT(max != null_var); // there are no constant polynomials in ps
+        //     unsigned sz = ps.size();
+        //     for (unsigned i = 1; i < sz; i++) {
+        //         var curr = m_pm.max_var(ps.get(i));
+        //         SASSERT(curr != null_var);
+        //         if (curr > max)
+        //             max = curr;
+        //     }
+        //     return max;
+        // }
 
-        polynomial::var max_var(literal l) {
-            atom * a  = m_atoms[l.var()];
-            if (a != nullptr)
-                return a->max_var();
-            else
-                return null_var;
-        }
+        // polynomial::var max_var(literal l) {
+        //     atom * a  = m_atoms[l.var()];
+        //     if (a != nullptr)
+        //         return a->max_var();
+        //     else
+        //         return null_var;
+        // }
 
-        /**
-           \brief Return the maximal variable in the given set of literals
-         */
-        var max_var(unsigned sz, literal const * ls) {
-            var max = null_var;
-            for (unsigned i = 0; i < sz; i++) {
-                literal l = ls[i];
-                atom * a  = m_atoms[l.var()];
-                if (a != nullptr) {
-                    var x = a->max_var();
-                    SASSERT(x != null_var);
-                    if (max == null_var || x > max) 
-                        max = x;
-                }
-            }
-            return max;
-        }
+        // /**
+        //    \brief Return the maximal variable in the given set of literals
+        //  */
+        // var max_var(unsigned sz, literal const * ls) {
+        //     var max = null_var;
+        //     for (unsigned i = 0; i < sz; i++) {
+        //         literal l = ls[i];
+        //         atom * a  = m_atoms[l.var()];
+        //         if (a != nullptr) {
+        //             var x = a->max_var();
+        //             SASSERT(x != null_var);
+        //             if (max == null_var || x > max) 
+        //                 max = x;
+        //         }
+        //     }
+        //     return max;
+        // }
 
         /**
            \brief Move the polynomials in q in ps that do not contain x to qs.
@@ -561,7 +637,8 @@ namespace nlsat {
             unsigned j  = 0;
             for (unsigned i = 0; i < sz; i++) {
                 poly * q = ps.get(i);
-                if (max_var(q) != x) {
+                // if (max_var(q) != x) {
+                if(m_dm.max_stage_poly(q) != m_dm.find_stage(x, false)){
                     qs.push_back(q);
                 }
                 else {
@@ -914,13 +991,24 @@ namespace nlsat {
             unsigned sz = ps.size();
             for (unsigned k = 0; k < sz; k++) {
                 p = ps.get(k);
-                if (max_var(p) != y)
+                // if (max_var(p) != y)
+                //     continue;
+                
+                // wzh dynamic
+                if(m_dm.max_stage_poly(p) != m_dm.find_stage(y, false)){
                     continue;
+                }
+                // hzw dynamic
+                TRACE("nlsat_explain", tout << "[debug] consider polynomial:\n";
+                    m_pm.display(tout, p);
+                    tout << std::endl;
+                );
                 roots.reset();
                 // Variable y is assigned in m_assignment. We must temporarily unassign it.
                 // Otherwise, the isolate_roots procedure will assume p is a constant polynomial.
                 m_am.isolate_roots(p, undef_var_assignment(m_assignment, y), roots);
                 unsigned num_roots = roots.size();
+                TRACE("nlsat_explain", tout << "[debug] num roots: " << num_roots << std::endl;);
                 for (unsigned i = 0; i < num_roots; i++) {
                     int s = m_am.compare(y_val, roots[i]);
                     TRACE("nlsat_explain", 
@@ -969,6 +1057,7 @@ namespace nlsat {
             }
         }
 
+        // wzh dynamic
         /**
            \brief Return true if all polynomials in ps are univariate in x.
         */
@@ -976,13 +1065,23 @@ namespace nlsat {
             unsigned sz = ps.size();
             for (unsigned i = 0; i < sz; i++) {
                 poly * p = ps.get(i);
-                if (max_var(p) != x)
+                // if (max_var(p) != x)
+                //     return false;
+                // if (!m_pm.is_univariate(p))
+                //     return false;
+                if(!is_univ(p, x)){
                     return false;
-                if (!m_pm.is_univariate(p))
-                    return false;
+                }
             }
             return true;
         }
+
+        bool is_univ(poly * p, var x){
+            var_vector curr;
+            m_pm.vars(p, curr);
+            return curr.size() == 1 && curr[0] == x;
+        }
+        // hzw dynamic
         
         /**
            \brief Apply model-based projection operation defined in our paper.
@@ -994,7 +1093,33 @@ namespace nlsat {
             for (poly* p : ps) {
                 m_todo.insert(p);
             }
-            var x = m_todo.remove_max_polys(ps);
+            // var x = m_todo.remove_max_polys(ps);
+            TRACE("nlsat_explain", tout << "[dynamic] show polynomials before var:\n";
+                for(auto ele: ps){
+                    m_pm.display(tout << std::endl, ele);
+                }
+                tout << std::endl;
+            );
+            // wzh dynamic
+            polynomial_ref_vector todo_ps(m_pm);
+            m_todo.collect_ps(todo_ps);
+            TRACE("nlsat_explain", tout << "[dynamic] show todo polynomials:\n";
+                for(auto ele: todo_ps){
+                    m_pm.display(tout << std::endl, ele);
+                }
+                tout << std::endl;
+            );
+            var x = m_dm.max_stage_or_unassigned_ps(todo_ps);
+            TRACE("nlsat_explain", tout << "[dynamic] next projection var: " << x << std::endl;);
+            m_todo.remove_var_polys(ps, x);
+            TRACE("nlsat_explain", tout << "[dynamic] show polynomials after remove:\n";
+                for(auto ele: ps){
+                    m_pm.display(tout << std::endl, ele);
+                }
+                tout << std::endl;
+            );
+            // hzw dynamic
+
             // Remark: after vanishing coefficients are eliminated, ps may not contain max_x anymore
             if (x < max_x)
                 add_cell_lits(ps, x);
@@ -1004,13 +1129,39 @@ namespace nlsat {
                     break;
                 }
                 TRACE("nlsat_explain", tout << "project loop, processing var "; display_var(tout, x); tout << "\npolynomials\n";
-                      display(tout, ps); tout << "\n";);
+                    display(tout, ps); tout << "\n";);
                 add_lc(ps, x);
                 psc_discriminant(ps, x);
                 psc_resultant(ps, x);
                 if (m_todo.empty())
                     break;
-                x = m_todo.remove_max_polys(ps);
+                // x = m_todo.remove_max_polys(ps);
+                TRACE("nlsat_explain", tout << "[dynamic] show polynomials before var:\n";
+                    for(auto ele: ps){
+                        m_pm.display(tout << std::endl, ele);
+                    }
+                    tout << std::endl;
+                );
+                // wzh dynamic
+                polynomial_ref_vector todo_ps(m_pm);
+                m_todo.collect_ps(todo_ps);
+                TRACE("nlsat_explain", tout << "[dynamic] show todo polynomials:\n";
+                    for(auto ele: todo_ps){
+                        m_pm.display(tout << std::endl, ele);
+                    }
+                    tout << std::endl;
+                );
+                x = m_dm.max_stage_or_unassigned_ps(todo_ps);
+                TRACE("nlsat_explain", tout << "[dynamic] next projection var: " << x << std::endl;);
+                m_todo.remove_var_polys(ps, x);
+                TRACE("nlsat_explain", tout << "[dynamic] show polynomials after remove:\n";
+                    for(auto ele: ps){
+                        m_pm.display(tout << std::endl, ele);
+                    }
+                    tout << std::endl;
+                );
+                // hzw dynamic
+                TRACE("nlsat_explain", tout << "[dynamic] adding cell literals for var: " << x << std::endl;);
                 add_cell_lits(ps, x);
             }
         }
@@ -1116,6 +1267,10 @@ namespace nlsat {
             polynomial_ref        new_factor(m_pm);
             for (unsigned s = 0; s < num_factors; s++) {
                 poly * f = _a->p(s);
+                TRACE("nlsat_explain", tout << "[debug] loop factors:\n";
+                    m_pm.display(tout, f);
+                    tout << std::endl;
+                );
                 bool is_even = _a->is_even(s);
                 if (m_pm.degree(f, info.m_x) < info.m_k) {
                     new_factors.push_back(f);
@@ -1191,16 +1346,25 @@ namespace nlsat {
                 atom::kind new_k = _a->get_kind();
                 if (atom_sign < 0)
                     new_k = atom::flip(new_k);
+                TRACE("nlsat_explain", tout << "[debug] make ineq literal for new lit\n";);
                 new_lit = m_solver.mk_ineq_literal(new_k, new_factors.size(), new_factors.data(), new_factors_even.data());
                 if (l.sign())
                     new_lit.neg();
-                TRACE("nlsat_simplify_core", tout << "simplified literal:\n"; display(tout, new_lit) << " " << m_solver.value(new_lit) << "\n";);
-                
-                if (max_var(new_lit) < max) {
+                TRACE("nlsat_simplify_core", tout << "simplified literal:\n"; display(tout, new_lit) << "\n" << m_solver.value(new_lit) << "\n";);
+                // TRACE("nlsat_explain", tout << "[debug] simplified literal:\n"; display(tout, new_lit) << std::endl;);
+                // TRACE("nlsat_explain", tout << "[debug] display max var: " << max << std::endl;);
+                // TRACE("nlsat_explain", tout << "[debug] max stage literal, max stage: " << find_stage(max) << std::endl;);
+                // TRACE("nlsat_explain", tout << "[debug] literal's max stage: " << max_stage_literal(new_lit) << std::endl;);
+                // TRACE("nlsat_explain", display_dynamic(tout) << std::endl;);
+                if (m_dm.max_stage_literal(new_lit) < m_dm.find_stage(max, false)) {
+                // if(!contains_literal(new_lit, max)){
+                // if (max_var(new_lit) < max) {
+                // if(false){
                     if (m_solver.value(new_lit) == l_true) {
                         new_lit = l;
                     }
                     else {
+                        TRACE("nlsat_explain", tout << "[debug] enter new literal\n";);
                         add_literal(new_lit);
                         new_lit = true_literal;
                     }
@@ -1219,8 +1383,21 @@ namespace nlsat {
             bool modified_core = false;
             eq_info info;
             info.m_eq = eq;
-            info.m_x  = m_pm.max_var(info.m_eq);
+            // info.m_x  = m_pm.max_var(info.m_eq);
+            // wzh dynamic
+            info.m_x = m_dm.max_stage_var_poly(info.m_eq);
+            var_vector curr_vars;
+            m_pm.vars(eq, curr_vars);
+            TRACE("nlsat_explain", tout << "[debug] vars in equal: " << std::endl;
+                for(var v:curr_vars){
+                    tout << v << " ";
+                }
+                tout << std::endl;
+            );
+            TRACE("nlsat_explain", tout << "[debug] max var for equal: " << info.m_x << std::endl;);
+            // hzw dynamic
             info.m_k  = m_pm.degree(eq, info.m_x);
+            TRACE("nlsat_explain", tout << "[debug] degree of max var: " << info.m_k << std::endl;);
             polynomial_ref lc_eq(m_pm);
             lc_eq           = m_pm.coeff(eq, info.m_x, info.m_k);
             info.m_lc       = lc_eq.get();
@@ -1235,8 +1412,11 @@ namespace nlsat {
             for (unsigned i = 0; i < sz; i++) {
                 literal  l = C[i];
                 new_lit = null_literal;
+                // fix bug of Mulligan here
                 simplify(l, info, max, new_lit);
                 SASSERT(new_lit != null_literal);
+                // wzh
+                // unchanged
                 if (l == new_lit) {
                     C.set(j, l);
                     j++;
@@ -1261,6 +1441,7 @@ namespace nlsat {
                     add_assumption(atom::EQ, info.m_lc, true);
             }
             return modified_core;
+            // return false;
         }
 
         /**
@@ -1286,6 +1467,11 @@ namespace nlsat {
                 if (_a->is_even(0))
                     continue;
                 unsigned d = m_pm.degree(_a->p(0), max);
+                // wzh dynamic
+                if(d == 0){
+                    continue;
+                }
+                // hzw dynamic
                 SASSERT(d > 0);
                 if (d < min_d) {
                     r     = _a->p(0);
@@ -1306,6 +1492,9 @@ namespace nlsat {
         var_vector m_select_tmp;
         ineq_atom * select_lower_stage_eq(scoped_literal_vector & C, var max) {
             var_vector & xs = m_select_tmp;
+            // wzh dynamic
+            var max_stage = m_dm.find_stage(max, false);
+            // hzw dynamic
             for (literal l : C) {
                 bool_var b = l.var();
                 atom * a = m_atoms[b];
@@ -1318,8 +1507,14 @@ namespace nlsat {
                     xs.reset();
                     m_pm.vars(p, xs);
                     for (var y : xs) {
-                        if (y >= max)
+                        // if (y >= max)
+                            // continue;
+                        // wzh dynamic
+                        var curr_stage = m_dm.find_stage(y, false);
+                        if(curr_stage >= max_stage){
                             continue;
+                        }
+                        // hzw dynamic
                         atom * eq = m_x2eq[y];
                         if (eq == nullptr)
                             continue;
@@ -1345,24 +1540,35 @@ namespace nlsat {
         */
         void simplify(scoped_literal_vector & C, var max) {
             // Simplify using equations in the core
+            // fix bug Mulligan here
             while (!C.empty()) {
+                TRACE("nlsat_explain", tout << "[debug] select stage equal\n";);
                 poly * eq = select_eq(C, max);
                 if (eq == nullptr)
                     break;
+                TRACE("nlsat_explain", tout << "[debug] select equal for simplify\n";
+                    m_pm.display(tout, eq);
+                    tout << std::endl;
+                );
                 TRACE("nlsat_simplify_core", tout << "using equality for simplifying core\n"; 
                       m_pm.display(tout, eq, m_solver.display_proc()); tout << "\n";);
-                if (!simplify(C, eq, max))
+                if (!simplify(C, eq, max)){
+                    TRACE("nlsat_explain", tout << "[debug] break here\n";);
                     break;
+                }
             }
             // Simplify using equations using variables from lower stages.
             while (!C.empty()) {
+                TRACE("nlsat_explain", tout << "[debug] selecet lower stage equal\n";);
                 ineq_atom * eq = select_lower_stage_eq(C, max);
                 if (eq == nullptr)
                     break;
                 SASSERT(eq->size() == 1);
                 SASSERT(!eq->is_even(0));
                 poly * eq_p = eq->p(0);
+                TRACE("nlsat_explain", tout << "[debug] enter verify" << std::endl;);
                 VERIFY(simplify(C, eq_p, max));
+                TRACE("nlsat_explain", tout << "[debug] exit verify" << std::endl;);
                 // add equation as an assumption                
                 TRACE("nlsat_simpilfy_core", display(tout << "adding equality as assumption ", literal(eq->bvar(), true)); tout << "\n";);
                 add_literal(literal(eq->bvar(), true));
@@ -1376,9 +1582,10 @@ namespace nlsat {
             if (num == 0)
                 return;
             collect_polys(num, ls, m_ps);
-            var max_x = max_var(m_ps);
+            // var max_x = max_var(m_ps);
+            var max_x = m_dm.max_stage_or_unassigned_ps(m_ps);
             TRACE("nlsat_explain", tout << "polynomials in the conflict:\n"; display(tout, m_ps); tout << "\n";);
-            elim_vanishing(m_ps);
+            // elim_vanishing(m_ps);
             TRACE("nlsat_explain", tout << "elim vanishing\n"; display(tout, m_ps); tout << "\n";);
             project(m_ps, max_x);
             TRACE("nlsat_explain", tout << "after projection\n"; display(tout, m_ps); tout << "\n";);
@@ -1388,12 +1595,19 @@ namespace nlsat {
             if (m_simplify_cores) {
                 m_core2.reset();
                 m_core2.append(num, ls);
-                var max = max_var(num, ls);
+                // var max = max_var(num, ls);
+                var max = m_dm.max_stage_or_unassigned_literals(num, ls);
                 SASSERT(max != null_var);
+                TRACE("nlsat_explain", display(tout << "core before normalization\n", m_core2) << "\n";);
+                // fix bug for MulliganEconomicsModel0054e
                 normalize(m_core2, max);
                 TRACE("nlsat_explain", display(tout << "core after normalization\n", m_core2) << "\n";);
+                // TRACE("nlsat_explain", display(tout << "core before simplify\n", m_core2) << "\n";);
+                // fix bug for MulliganEconomicsModel0054e
                 simplify(m_core2, max);
-                TRACE("nlsat_explain", display(tout << "core after simplify\n", m_core2) << "\n";);
+                // TRACE("nlsat_explain", display(tout << "core after simplify\n", m_core2) << "\n";);
+                // TRACE("nlsat_explain", tout << "[dynamic] we disable simplify currently" << std::endl;);
+                TRACE("nlsat_explain", tout << "[dynamic] we enable simplify currently" << std::endl;);
                 main(m_core2.size(), m_core2.data());
                 m_core2.reset();
             }
@@ -1416,7 +1630,8 @@ namespace nlsat {
                 literal l = core[i];
                 atom * a  = m_atoms[l.var()];
                 SASSERT(a != 0);
-                interval_set_ref inf = m_evaluator.infeasible_intervals(a, l.sign(), nullptr);
+                // interval_set_ref inf = m_evaluator.infeasible_intervals(a, l.sign(), nullptr);
+                interval_set_ref inf = m_evaluator.infeasible_intervals(a, l.sign(), nullptr, m_dm.max_stage_or_unassigned_atom(a));
                 r = ism.mk_union(inf, r);
                 if (ism.is_full(r)) {
                     // Done
@@ -1435,7 +1650,8 @@ namespace nlsat {
                 literal l = todo[i];
                 atom * a  = m_atoms[l.var()];
                 SASSERT(a != 0);
-                interval_set_ref inf = m_evaluator.infeasible_intervals(a, l.sign(), nullptr);
+                // interval_set_ref inf = m_evaluator.infeasible_intervals(a, l.sign(), nullptr);
+                interval_set_ref inf = m_evaluator.infeasible_intervals(a, l.sign(), nullptr, m_dm.max_stage_or_unassigned_atom(a));
                 r = ism.mk_union(inf, r);
                 if (ism.is_full(r)) {
                     // literal l must be in the core
@@ -1486,11 +1702,6 @@ namespace nlsat {
         void operator()(unsigned num, literal const * ls, scoped_literal_vector & result) {
             SASSERT(check_already_added());
             SASSERT(num > 0);
-            TRACE("nlsat_explain", 
-                  tout << "[explain] set of literals is infeasible in the current interpretation\n"; 
-                  display(tout, num, ls) << "\n";
-                  m_assignment.display(tout);
-                  );
             m_result = &result;
             process(num, ls);
             reset_already_added();
@@ -1516,7 +1727,8 @@ namespace nlsat {
                 });
             split_literals(x, num, ls, lits);
             collect_polys(lits.size(), lits.data(), m_ps);
-            var mx_var = max_var(m_ps);
+            // var mx_var = max_var(m_ps);
+            var mx_var = m_dm.max_stage_or_unassigned_ps(m_ps);
             if (!m_ps.empty()) {                
                 svector<var> renaming;
                 if (x != mx_var) {
@@ -1602,7 +1814,6 @@ namespace nlsat {
 
 
         void signed_project(polynomial_ref_vector& ps, var x) {
-            
             TRACE("nlsat_explain", tout << "Signed projection\n";);
             polynomial_ref p(m_pm);
             unsigned eq_index = 0;
@@ -1611,7 +1822,8 @@ namespace nlsat {
             for (unsigned i = 0; i < ps.size(); ++i) {
                 p = ps.get(i);
                 int s = sign(p);
-                if (max_var(p) != x) {
+                // if (max_var(p) != x) {
+                if(m_dm.max_stage_poly(p) != m_dm.find_stage(x, false)){
                     atom::kind k = (s == 0)?(atom::EQ):((s < 0)?(atom::LT):(atom::GT));
                     add_simple_assumption(k, p, false);
                     ps[i] = ps.back();
@@ -1831,8 +2043,8 @@ namespace nlsat {
     };
 
     explain::explain(solver & s, assignment const & x2v, polynomial::cache & u, 
-                     atom_vector const& atoms, atom_vector const& x2eq, evaluator & ev) {
-        m_imp = alloc(imp, s, x2v, u, atoms, x2eq, ev);
+                     atom_vector const& atoms, atom_vector const& x2eq, evaluator & ev, Dynamic_manager & dm) {
+        m_imp = alloc(imp, s, x2v, u, atoms, x2eq, ev, dm);
     }
 
     explain::~explain() {
@@ -1864,6 +2076,10 @@ namespace nlsat {
         m_imp->m_signed_project = f;
     }
 
+    // void explain::operator()(unsigned n, literal const * ls, scoped_literal_vector & result) {
+    //     (*m_imp)(n, ls, result);
+    // }
+
     void explain::operator()(unsigned n, literal const * ls, scoped_literal_vector & result) {
         (*m_imp)(n, ls, result);
     }
@@ -1883,32 +2099,31 @@ namespace nlsat {
 };
 
 #ifdef Z3DEBUG
-#include <iostream>
 void pp(nlsat::explain::imp & ex, unsigned num, nlsat::literal const * ls) {
-    ex.display(std::cout, num, ls);
+    ex.display(tout, num, ls);
 }
 void pp(nlsat::explain::imp & ex, nlsat::scoped_literal_vector & ls) {
-    ex.display(std::cout, ls);
+    ex.display(tout, ls);
 }
 void pp(nlsat::explain::imp & ex, polynomial_ref const & p) {
-    ex.display(std::cout, p);
-    std::cout << std::endl;
+    ex.display(tout, p);
+    tout << std::endl;
 }
 void pp(nlsat::explain::imp & ex, polynomial::polynomial * p) {
     polynomial_ref _p(p, ex.m_pm);
-    ex.display(std::cout, _p);
-    std::cout << std::endl;
+    ex.display(tout, _p);
+    tout << std::endl;
 }
 void pp(nlsat::explain::imp & ex, polynomial_ref_vector const & ps) {
-    ex.display(std::cout, ps);
+    ex.display(tout, ps);
 }
 void pp_var(nlsat::explain::imp & ex, nlsat::var x) {
-    ex.display(std::cout, x);
-    std::cout << std::endl;
+    ex.display(tout, x);
+    tout << std::endl;
 }
 void pp_lit(nlsat::explain::imp & ex, nlsat::literal l) {
-    ex.display(std::cout, l);
-    std::cout << std::endl;
+    ex.display(tout, l);
+    tout << std::endl;
 }
 #endif
 

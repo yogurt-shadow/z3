@@ -286,23 +286,22 @@ namespace nlsat {
             }
             
             bool check_invariant() const {
-                DEBUG_CODE(
-                    SASSERT(m_sections.size() == m_sorted_sections.size());
-                    for (unsigned i = 0; i < m_sorted_sections.size(); i++) {
-                        SASSERT(m_sorted_sections[i] < m_sections.size());
-                        SASSERT(m_sections[m_sorted_sections[i]].m_pos == i);
-                    }
-                    unsigned total_num_sections = 0;
-                    unsigned total_num_signs = 0;
-                    for (unsigned i = 0; i < m_info.size(); i++) {
-                        SASSERT(m_info[i].m_first_section <= m_poly_sections.size());
-                        SASSERT(m_info[i].m_num_roots == 0 || m_info[i].m_first_section < m_poly_sections.size());
-                        SASSERT(m_info[i].m_first_sign < m_poly_signs.size());
-                        total_num_sections += m_info[i].m_num_roots;
-                        total_num_signs += m_info[i].m_num_roots + 1;
-                    }
-                    SASSERT(total_num_sections == m_poly_sections.size());
-                    SASSERT(total_num_signs == m_poly_signs.size()););
+                SASSERT(m_sections.size() == m_sorted_sections.size());
+                for (unsigned i = 0; i < m_sorted_sections.size(); i++) {
+                    SASSERT(m_sorted_sections[i] < m_sections.size());
+                    SASSERT(m_sections[m_sorted_sections[i]].m_pos == i);
+                }
+                unsigned total_num_sections = 0;
+                unsigned total_num_signs = 0;
+                for (unsigned i = 0; i < m_info.size(); i++) {
+                    SASSERT(m_info[i].m_first_section <= m_poly_sections.size());
+                    SASSERT(m_info[i].m_num_roots == 0 || m_info[i].m_first_section < m_poly_sections.size());
+                    SASSERT(m_info[i].m_first_sign < m_poly_signs.size());
+                    total_num_sections += m_info[i].m_num_roots;
+                    total_num_signs += m_info[i].m_num_roots + 1;
+                }
+                SASSERT(total_num_sections == m_poly_sections.size());
+                SASSERT(total_num_signs == m_poly_signs.size());
                 return true;
             }
 
@@ -373,9 +372,9 @@ namespace nlsat {
             m_sign_table_tmp(m_am) {
         }
 
-        var max_var(poly const * p) const {
-            return m_pm.max_var(p);
-        }
+        // var max_var(poly const * p) const {
+        //     return m_pm.max_var(p);
+        // }
 
         /**
            \brief Return the sign of the polynomial in the current interpretation.
@@ -384,7 +383,8 @@ namespace nlsat {
         */
         ::sign eval_sign(poly * p) {
             // TODO: check if it is useful to cache results
-            SASSERT(m_assignment.is_assigned(max_var(p)));
+            // SASSERT(m_assignment.is_assigned(max_var(p)));
+            SASSERT(all_assigned_poly(p));
             return m_am.eval_sign_at(polynomial_ref(p, m_pm), m_assignment);
         }
         
@@ -400,8 +400,45 @@ namespace nlsat {
             return neg ? !r : r;
         }
 
+        // wzh dynamic
+        bool all_assigned_ineq(ineq_atom const * a) const {
+            var_vector curr_vars;
+            for(unsigned i = 0; i < a->size(); i++){
+                var_vector curr;
+                m_pm.vars(a->p(i), curr);
+                for(var v: curr){
+                    if(!curr_vars.contains(v)){
+                        curr_vars.push_back(v);
+                    }
+                }
+            }
+            for(var v: curr_vars){
+                if(!m_assignment.is_assigned(v)){
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        bool all_assigned_root(root_atom const * a) const {
+            return all_assigned_poly(a->p()) && m_assignment.is_assigned(a->x());
+        }
+
+        bool all_assigned_poly(poly const * p) const {
+            var_vector curr_vars;
+            m_pm.vars(p, curr_vars);
+            for(var v: curr_vars){
+                if(!m_assignment.is_assigned(v)){
+                    return false;
+                }
+            }
+            return true;
+        }
+        // hzw dynamic
+
         bool eval_ineq(ineq_atom * a, bool neg) {
-            SASSERT(m_assignment.is_assigned(a->max_var()));
+            // SASSERT(m_assignment.is_assigned(a->max_var()));
+            SASSERT(all_assigned_ineq(a));
             // all variables of a were already assigned... 
             atom::kind k = a->get_kind();
             unsigned sz  = a->size();
@@ -418,7 +455,8 @@ namespace nlsat {
         }
 
         bool eval_root(root_atom * a, bool neg) {
-            SASSERT(m_assignment.is_assigned(a->max_var()));
+            // SASSERT(m_assignment.is_assigned(a->max_var()));
+            SASSERT(all_assigned_root(a));
             // all variables of a were already assigned... 
             atom::kind k = a->get_kind();
             scoped_anum_vector & roots = m_tmp_values;
@@ -452,17 +490,22 @@ namespace nlsat {
 
         svector<sign> m_add_signs_tmp;
         void add(poly * p, var x, sign_table & t) {
-            SASSERT(m_pm.max_var(p) <= x);
-            if (m_pm.max_var(p) < x) {
+            // SASSERT(m_pm.max_var(p) <= x);
+            // if (m_pm.max_var(p) < x) {
+                // t.add_const(eval_sign(p));
+            // }
+            // wzh dynamic
+            if(all_assigned_poly(p)){
                 t.add_const(eval_sign(p));
             }
+            // hzw dynamic
             else {
                 // isolate roots of p
                 scoped_anum_vector & roots = m_add_roots_tmp;
                 svector<sign> & signs = m_add_signs_tmp;
                 roots.reset();
                 signs.reset();
-                TRACE("nlsat_evaluator", tout << "x: " << x << " max_var(p): " << m_pm.max_var(p) << "\n";);
+                // TRACE("nlsat_evaluator", tout << "x: " << x << " max_var(p): " << m_pm.max_var(p) << "\n";);
                 // Note: I added undef_var_assignment in the following statement, to allow us to obtain the infeasible interval sets
                 // even when the maximal variable is assigned. I need this feature to minimize conflict cores.
                 m_am.isolate_roots(polynomial_ref(p, m_pm), undef_var_assignment(m_assignment, x), roots, signs);
@@ -488,12 +531,12 @@ namespace nlsat {
             return sign;
         }
         
-        interval_set_ref infeasible_intervals(ineq_atom * a, bool neg, clause const* cls) {
+        interval_set_ref infeasible_intervals_ineq(ineq_atom * a, bool neg, clause const* cls, var x) {
             sign_table & table = m_sign_table_tmp;
             table.reset();
             TRACE("nsat_evaluator", m_solver.display(tout, *a) << "\n";);
             unsigned num_ps = a->size();
-            var x = a->max_var();
+            // var x = a->max_var();
             for (unsigned i = 0; i < num_ps; i++) {
                 add(a->p(i), x, table);
                 TRACE("nlsat_evaluator_bug", tout << "table after:\n"; m_pm.display(tout, a->p(i)); tout << "\n"; table.display_raw(tout);); 
@@ -593,7 +636,12 @@ namespace nlsat {
             return result;
         }
 
-        interval_set_ref infeasible_intervals(root_atom * a, bool neg, clause const* cls) {
+        interval_set_ref infeasible_intervals_root(root_atom * a, bool neg, clause const* cls, var x) {
+            // wzh dynamic
+            interval_set_ref result(m_ism);
+            // we disable this constraint and return an empty interval set
+            SASSERT(x == a->x());
+            // hzw dynamic
             atom::kind k = a->get_kind();
             unsigned i = a->i();
             SASSERT(i > 0);
@@ -601,11 +649,10 @@ namespace nlsat {
             anum dummy;
             scoped_anum_vector & roots = m_tmp_values;
             roots.reset();
-            var x = a->max_var();
+            // var x = a->max_var();
             // Note: I added undef_var_assignment in the following statement, to allow us to obtain the infeasible interval sets
             // even when the maximal variable is assigned. I need this feature to minimize conflict cores.
             m_am.isolate_roots(polynomial_ref(a->p(), m_pm), undef_var_assignment(m_assignment, x), roots);
-            interval_set_ref result(m_ism);
 
             if (i > roots.size()) {
                 // p does have sufficient roots
@@ -664,8 +711,8 @@ namespace nlsat {
             return result;
         }
         
-        interval_set_ref infeasible_intervals(atom * a, bool neg, clause const* cls) {
-            return a->is_ineq_atom() ? infeasible_intervals(to_ineq_atom(a), neg, cls) : infeasible_intervals(to_root_atom(a), neg, cls); 
+        interval_set_ref infeasible_intervals(atom * a, bool neg, clause const* cls, var x) {
+            return a->is_ineq_atom() ? infeasible_intervals_ineq(to_ineq_atom(a), neg, cls, x) : infeasible_intervals_root(to_root_atom(a), neg, cls, x); 
         }
     };
     
@@ -685,8 +732,8 @@ namespace nlsat {
         return m_imp->eval(a, neg);
     }
         
-    interval_set_ref evaluator::infeasible_intervals(atom * a, bool neg, clause const* cls) {
-        return m_imp->infeasible_intervals(a, neg, cls);
+    interval_set_ref evaluator::infeasible_intervals(atom * a, bool neg, clause const* cls, var x) {
+        return m_imp->infeasible_intervals(a, neg, cls, x);
     }
 
     void evaluator::push() {

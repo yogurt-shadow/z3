@@ -19,12 +19,24 @@ Revision History:
 #pragma once
 
 #include "nlsat/nlsat_types.h"
+#include "math/polynomial/algebraic_numbers.h"
 
 namespace nlsat {
+   struct interval {
+        unsigned  m_lower_open:1;
+        unsigned  m_upper_open:1;
+        unsigned  m_lower_inf:1;
+        unsigned  m_upper_inf:1;
+        literal   m_justification;
+        clause const* m_clause;
+        anum      m_lower;
+        anum      m_upper;
+    };
 
     class interval_set;
 
     class interval_set_manager {
+        anum m_one, m_zero, m_max, m_min, m_neg_max, m_10k;
         anum_manager &           m_am;
         small_object_allocator & m_allocator;
         svector<char>            m_already_visited;
@@ -52,6 +64,19 @@ namespace nlsat {
            \brief Return the union of two sets.
         */
         interval_set * mk_union(interval_set const * s1, interval_set const * s2);
+
+        interval_set * mk_union(interval_set const * s1, interval_set const * s2, interval_set const * s3);
+
+        // wzh ls
+        void set_const_anum();
+        interval_set * mk_point_interval(anum const & w);
+        interval_set * mk_complement(interval_set const * s);
+        interval_set * mk_complement(anum const & w);
+        interval_set * mk_intersection(interval_set const * s1, interval_set const * s2);
+        interval_set * mk_full();
+        bool contains_zero(interval_set const * s) const;
+        bool interval_contains_zero(interval inter) const;
+        // hzw ls
         
         /**
            \brief Reference counting

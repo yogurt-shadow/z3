@@ -3,6 +3,9 @@ def_module_params('nlsat',
                   description='nonlinear solver',
                   export=True,
                   params=(max_memory_param(),
+                  
+                        ('linxi_simple_check', BOOL, False, "linxi precheck about variables sign"),
+
                           ('lazy', UINT, 0, "how lazy the solver is."),
                           ('reorder', BOOL, True, "reorder variables."),
                           ('log_lemmas', BOOL, False, "display lemmas as self-contained SMT formulas"),

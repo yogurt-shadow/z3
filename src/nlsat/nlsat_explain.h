@@ -22,6 +22,7 @@ Revision History:
 #include "nlsat/nlsat_scoped_literal_vector.h"
 #include "math/polynomial/polynomial_cache.h"
 #include "math/polynomial/algebraic_numbers.h"
+#include "nlsat/nlsat_dynamic.h"
 
 namespace nlsat {
     class evaluator;
@@ -34,7 +35,7 @@ namespace nlsat {
         imp * m_imp;
     public:
         explain(solver & s, assignment const & x2v, polynomial::cache & u, 
-                atom_vector const& atoms, atom_vector const& x2eq, evaluator & ev);
+                atom_vector const& atoms, atom_vector const& x2eq, evaluator & ev, Dynamic_manager & dm);
         ~explain();
 
         void reset();
@@ -61,6 +62,8 @@ namespace nlsat {
                  - s_1, ..., s_m do not contain variable x.
                  - s_1, ..., s_m are false in the current interpretation
         */
+        // void operator()(unsigned n, literal const * ls, scoped_literal_vector & result);
+        // void operator()(unsigned n, literal const * ls, var_vector const & dynamic, scoped_literal_vector & result);
         void operator()(unsigned n, literal const * ls, scoped_literal_vector & result);
 
         
