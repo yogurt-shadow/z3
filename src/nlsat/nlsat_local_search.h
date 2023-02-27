@@ -36,6 +36,7 @@ namespace nlsat {
     typedef var clause_index;
     using var_pair = std::pair<var, var>;
     using poly_vector = vector<poly *>;
+    using int_vector = vector<int>;
 
     struct var_hash {
         unsigned operator()(var v) const {

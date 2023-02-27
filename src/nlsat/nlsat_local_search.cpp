@@ -163,6 +163,7 @@ namespace nlsat {
         var_vector                                           m_nra_operation_index;
         anum_vector                                          m_nra_operation_value;
         var_vector                                           m_nra_operation_literal_index;
+        var_vector                                           m_nra_operation_clause_index;
 
         /**
          * * Statistics
@@ -173,7 +174,15 @@ namespace nlsat {
         double                     &                         m_stuck_ratio;
 
         const substitute_value_vector & m_sub_value;
-        
+
+        /**
+        @author wzh
+        @brief clause choose heuristic: choose literals from several clauses
+            score(clause) = max(max score of this clause's operation table, 0)
+            #clause sequence: clause number, clause number/2, ..., 3
+        @date 23/02/27
+        */
+        double_vector                                        m_clauses_cm_score;
 
         imp(solver & s, anum_manager & am, pmanager & pm, polynomial::cache & cache, interval_set_manager & ism, evaluator & ev, 
                          assignment & ass, svector<lbool> & bvalues, clause_vector const & cls, atom_vector const & ats, bool_var_vector const & pure_bool_vars, 
@@ -252,6 +261,7 @@ namespace nlsat {
         void init_clauses(){
             LSTRACE(tout << "begin init clauses\n";);
             m_num_clauses = m_clauses.size();
+            m_clauses_cm_score.resize(m_num_clauses, 0.0);
             m_num_literals = 0;
             m_num_arith_literals = 0;
             m_num_bool_literals = 0;
@@ -873,7 +883,7 @@ namespace nlsat {
             return null_var;
         }
 
-        void insert_in_complement(var v, interval_set const * s, literal_index l_idx){
+        void insert_in_complement(var v, interval_set const * s, literal_index l_idx, clause_index c_idx){
             SASSERT(!m_ism.is_full(s));
             LSTRACE(
                 tout << "insertion var " << v << std::endl;
@@ -891,6 +901,7 @@ namespace nlsat {
                 m_nra_operation_index.push_back(v);
                 m_nra_operation_value.push_back(ele);
                 m_nra_operation_literal_index.push_back(l_idx);
+                m_nra_operation_clause_index.push_back(c_idx);
             }
         }
 
@@ -1063,6 +1074,11 @@ namespace nlsat {
             var m_arith_index;
             scoped_anum m_arith_value(m_am);
             literal_index m_literal_index;
+            clause_index c_idx;
+
+            int_vector m_clauses_max_score;
+            m_clauses_max_score.resize(m_num_clauses, INT_MIN);
+
             if(m_nra_operation_index.size() > 45){
                 cnt = 45;
                 BMS = true;
@@ -1087,14 +1103,18 @@ namespace nlsat {
                     m_arith_index = m_nra_operation_index[rand_index];
                     m_literal_index = m_nra_operation_literal_index[rand_index];
                     m_am.set(m_arith_value, m_nra_operation_value[rand_index]);
+                    c_idx = m_nra_operation_clause_index[rand_index];
+
                     m_nra_operation_index[rand_index] = m_nra_operation_index[m_nra_operation_index.size() - i - 1];
                     m_am.set(m_nra_operation_value[rand_index], m_nra_operation_value[m_nra_operation_index.size() - i - 1]);;
                     m_nra_operation_literal_index[rand_index] = m_nra_operation_literal_index[m_nra_operation_index.size() - i - 1];
+                    m_nra_operation_clause_index[rand_index] = m_nra_operation_clause_index[m_nra_operation_index.size() - i - 1];
                 }
                 else {
                     m_arith_index = m_nra_operation_index[i];
                     m_literal_index = m_nra_operation_literal_index[i];
                     m_am.set(m_arith_value, m_nra_operation_value[i]);
+                    c_idx = m_nra_operation_clause_index[i];
                 }
                 int curr_score = get_arith_critical_score(m_arith_index, m_arith_value);
                 LSTRACE(tout << "show score in pick nra move: " << curr_score << std::endl;);
@@ -1107,11 +1127,17 @@ namespace nlsat {
                     m_am.set(best_value, m_arith_value);
                     best_literal_index = m_literal_index;
                 }
+                // update clause's best score
+                if(curr_score > m_clauses_max_score[c_idx]) {
+                    m_clauses_max_score[c_idx] = curr_score;
+                }
             }
+            // TODO: bump clause scores
+            
             return best_arith_index;
         }
 
-        void add_literal_arith_operation(nra_literal const * l){
+        void add_literal_arith_operation(nra_literal const * l, clause_index c_idx){
             LSTRACE(tout << "add operation for literal\n";
                 m_solver.display(tout, l->m_literal); tout << std::endl;
             );
@@ -1138,7 +1164,7 @@ namespace nlsat {
                 if(m_ism.is_full(union_st)){
                     continue;
                 }
-                insert_in_complement(v, union_st, l->get_index());
+                insert_in_complement(v, union_st, l->get_index(), c_idx);
             }
         }
 
@@ -1173,7 +1199,7 @@ namespace nlsat {
             nra_clause const * curr_clause = m_nra_clauses[cls_idx];
             for (literal_index lit_idx: curr_clause->m_arith_literals) {
                 nra_literal const * curr_literal = m_nra_literals[lit_idx];
-                add_literal_arith_operation(curr_literal);
+                add_literal_arith_operation(curr_literal, cls_idx);
             }
 
             // loop operation arith variables
@@ -1277,6 +1303,7 @@ namespace nlsat {
             m_nra_operation_index.reset();
             m_nra_operation_value.reset();
             m_nra_operation_literal_index.reset();
+            m_nra_operation_clause_index.reset();
             m_literal_added.reset();
         }
 
@@ -1789,7 +1816,7 @@ namespace nlsat {
                 // ^ add arith literal operations in this clause
                 for(literal_index l_idx: curr_clause->m_arith_literals){
                     nra_literal const * curr_literal = m_nra_literals[l_idx];
-                    add_literal_arith_operation(curr_literal);   
+                    add_literal_arith_operation(curr_literal, c_idx);   
                 }
                 // ^ add bool literal operations in this clause
                 // loop bool literals
@@ -2079,7 +2106,7 @@ namespace nlsat {
                         nra_literal const * lit = m_nra_literals[l_idx];
                         // only consider false literal
                         if(!lit->get_sat_status()){
-                            add_literal_arith_operation(lit);   
+                            add_literal_arith_operation(lit, m_sat_clause_with_false_literals[i]);   
                         }
                     }
                 }
@@ -2091,7 +2118,7 @@ namespace nlsat {
                     for(literal_index l_idx: cls->m_arith_literals){
                         nra_literal const * lit = m_nra_literals[l_idx];
                         if(!lit->get_sat_status()){
-                            add_literal_arith_operation(lit);
+                            add_literal_arith_operation(lit, c_idx);
                         }
                     }
                 }
