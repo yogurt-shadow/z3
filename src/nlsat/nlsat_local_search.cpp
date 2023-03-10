@@ -1020,7 +1020,8 @@ namespace nlsat {
             }
             // reset is chosen to false
             reset_chosen_bool();
-            int best_bool_score = -10;
+            // int best_bool_score = -10;
+            int best_bool_score = 0;
             bool_var best_bool_var_index = select_best_from_bool_operations(best_bool_score);
             // untabu decreasing bool variable exists
             if(best_bool_var_index != null_var && best_bool_score > 0){
@@ -1039,11 +1040,11 @@ namespace nlsat {
             }
 
             // if (rand_int() % 10 == 0) {
-                if (best_bool_var_index != null_var) {
-                    return best_bool_var_index;
-                }
+                // if (best_bool_var_index != null_var) {
+                //     return best_bool_var_index;
+                // }
             // }
-            // random_walk();
+            random_walk();
             LSTRACE(tout << "end of pick bool move\n";);
             LSTRACE(tout << "show time of end picking bool move\n";
                 TimeElapsed();
@@ -1160,27 +1161,29 @@ namespace nlsat {
             LSTRACE(tout << "LEVEL I: consider literals in unsat clauses\n";);
             SASSERT(!m_unsat_clauses.empty());
 
-            // for(clause_index cls_idx: m_unsat_clauses){
-            //     nra_clause const * curr_clause = m_nra_clauses[cls_idx];
-            //     LSTRACE(tout << "consider clause: "; m_solver.display(tout, *curr_clause->get_clause()); tout << std::endl;);
-            //     for(literal_index lit_idx: curr_clause->m_arith_literals){
-            //         nra_literal const * curr_literal = m_nra_literals[lit_idx];
-            //         add_literal_arith_operation(curr_literal);
-            //     }
-            // }
-            int unsat_idx = rand_int() % m_unsat_clauses.size();
-            int cls_idx = m_unsat_clauses[unsat_idx];
-            nra_clause const * curr_clause = m_nra_clauses[cls_idx];
-            for (literal_index lit_idx: curr_clause->m_arith_literals) {
-                nra_literal const * curr_literal = m_nra_literals[lit_idx];
-                add_literal_arith_operation(curr_literal);
+            for(clause_index cls_idx: m_unsat_clauses){
+                nra_clause const * curr_clause = m_nra_clauses[cls_idx];
+                LSTRACE(tout << "consider clause: "; m_solver.display(tout, *curr_clause->get_clause()); tout << std::endl;);
+                for(literal_index lit_idx: curr_clause->m_arith_literals){
+                    nra_literal const * curr_literal = m_nra_literals[lit_idx];
+                    add_literal_arith_operation(curr_literal);
+                }
             }
+
+            // int unsat_idx = rand_int() % m_unsat_clauses.size();
+            // int cls_idx = m_unsat_clauses[unsat_idx];
+            // nra_clause const * curr_clause = m_nra_clauses[cls_idx];
+            // for (literal_index lit_idx: curr_clause->m_arith_literals) {
+            //     nra_literal const * curr_literal = m_nra_literals[lit_idx];
+            //     add_literal_arith_operation(curr_literal);
+            // }
 
             // loop operation arith variables
             LSTRACE(display_arith_operations(tout););
             literal_index best_literal_index;
             // anum best_value_level1;
-            best_arith_score = -10;
+            // best_arith_score = -10;
+            best_arith_score = 0;
             best_arith_index = select_best_from_arith_operations(best_arith_score, best_value, best_literal_index);
             // var best_arith_index_level1 = select_best_from_arith_operations(INT_MIN, best_value_level1, best_literal_index_level1);
             // untabu decreasing arith variable exists
@@ -1230,14 +1233,15 @@ namespace nlsat {
             }
 
             // if (rand_int() % 10 == 0) {
-                if (best_arith_index != null_var) {
-                    return best_arith_index;
-                }
+                // if (best_arith_index != null_var) {
+                //     return best_arith_index;
+                // }
             // }
 
-            if (rand_int() % 20 == 0) {
-                random_walk();
-            }
+            // if (rand_int() % 20 == 0) {
+            //     random_walk();
+            // }
+            random_walk();
             LSTRACE(tout << "end of pick nra move\n";);
             LSTRACE(tout << "show time of end picking nra move\n";
                 TimeElapsed();
