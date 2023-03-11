@@ -981,8 +981,12 @@ namespace nlsat {
                 }
                 // Score for pure bool variables are calculated before
                 nra_bool_var const * curr_bool = m_bool_vars[m_curr_operation];
-                if(curr_bool->get_score() > best_score || (curr_bool->get_score() == best_score && curr_bool->get_last_move() < best_last_move)){
-                    best_score = curr_bool->get_score();
+//                if(curr_bool->get_score() > best_score || (curr_bool->get_score() == best_score && curr_bool->get_last_move() < best_last_move)){
+//                    best_score = curr_bool->get_score();
+                // int score = curr_bool->get_score();
+                int score = get_bool_critical_score(m_curr_operation);
+                if(score > best_score || (score == best_score && curr_bool->get_last_move() < best_last_move)){
+                    best_score = score;
                     best_last_move = curr_bool->get_last_move();
                     best_bool_var_index = m_curr_operation;
                 }
@@ -1024,6 +1028,7 @@ namespace nlsat {
             bool_var best_bool_var_index = select_best_from_bool_operations(best_bool_score);
             // untabu decreasing bool variable exists
             if(best_bool_var_index != null_var && best_bool_score > 0){
+                // std::cout << "best_bool_score = " << best_bool_score << std::endl;
                 LSTRACE(tout << "end of pick bool move\n";);
                 LSTRACE(tout << "show time of end picking bool move\n";
                     TimeElapsed();
@@ -1031,7 +1036,7 @@ namespace nlsat {
                 return best_bool_var_index;
             }
             // update clause weight
-            if(rand_int() % 500 > smooth_probability){
+            if(rand_int() % 10000 > smooth_probability){
                 update_clause_weight();
             }
             else {
@@ -1185,6 +1190,7 @@ namespace nlsat {
             // var best_arith_index_level1 = select_best_from_arith_operations(INT_MIN, best_value_level1, best_literal_index_level1);
             // untabu decreasing arith variable exists
             if(best_arith_index != null_var && best_arith_score > 0){
+                // std::cout << "best_arith_score = " << best_arith_score << std::endl;
                 LSTRACE(
                     tout << "LEVEL I: choose var " << best_arith_index << std::endl;
                     tout << "show value: "; m_am.display(tout, best_value); tout << std::endl;
@@ -1222,7 +1228,7 @@ namespace nlsat {
 */            
             // update clause weight
             // ^ PAWS
-            if(rand_int() % 500 > smooth_probability){
+            if(rand_int() % 10000 > smooth_probability){
                 update_clause_weight();
             }
             else {
@@ -1367,6 +1373,58 @@ namespace nlsat {
             return res_score;
         }
 
+        // get score for critical bool move
+        int get_bool_critical_score(var b){
+            int res_score = 0;
+            nra_bool_var * m_bool_var = m_bool_vars[b];
+
+            // loop all literal-clause pairs in this arith variable
+            // literal 0 1 3 4 1 ...
+            // clause  0 0 1 1 1 ...
+            SASSERT(m_bool_var->m_literals.size() == m_bool_var->m_lit_cls.size());
+            int make_break = 0; 
+
+            for(unsigned i = 0; i < m_bool_var->m_literals.size(); i++){
+                literal_index l_idx = m_bool_var->m_literals[i];
+                clause_index c_idx = m_bool_var->m_lit_cls[i];
+                nra_literal * curr_literal = m_nra_literals[l_idx];
+                nra_clause const * curr_clause = m_nra_clauses[c_idx];
+                LSTRACE(
+                    tout << "consider literal: "; m_solver.display(tout, curr_literal->m_literal); tout << std::endl;
+                    tout << "consider clause: "; m_solver.display(tout, *curr_clause->get_clause()); tout << std::endl;
+                );
+                SASSERT(curr_literal->is_bool());
+                bool before_sat, after_sat;
+                before_sat = is_literal_sat(curr_literal);
+                after_sat = !before_sat;
+                make_break += (after_sat - before_sat);
+                LSTRACE(
+                    tout << "bool value: "; tout << (before_sat ? "true" : "false"); tout << "->"; tout << (after_sat ? "true" : "false"); tout << std::endl;
+                );
+
+                // the end of a clause block (claus block means an area of the same clause index)
+                // time to count clause count
+                if(i == m_bool_var->m_literals.size() - 1 || (c_idx != m_bool_var->m_lit_cls[i + 1])){
+                    LSTRACE(tout << "end for clause "; m_solver.display(tout, *curr_clause->get_clause()); tout << std::endl;);
+                    unsigned before_sat_count = curr_clause->get_sat_count();
+                    LSTRACE(tout << "show make break: " << make_break << std::endl;);
+                    unsigned after_sat_count = before_sat_count + make_break;
+                    LSTRACE(tout << "sat count in get score: " << before_sat_count << "->" << after_sat_count << std::endl;);
+                    SASSERT(after_sat_count >= 0);
+                    // unsat --> sat
+                    if(before_sat_count == 0 && after_sat_count > 0){
+                        res_score += curr_clause->get_weight();
+                    }
+                    // sat --> unsat
+                    else if(before_sat_count > 0 && after_sat_count == 0){
+                        res_score -= curr_clause->get_weight();
+                    }
+                    make_break = 0;
+                }
+            }
+            return res_score;
+        }
+        
         void restore_literal_info(){
             for(unsigned i = 0; i < m_literal_index_visited.size(); i++){
                 literal_index l_idx = m_literal_index_visited[i];
