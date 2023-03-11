@@ -3,6 +3,14 @@
 
 /**
  * * local search for nlsat on nonlinear real arithmetic
+ * 
+ * @author wzh
+ * @date 23/03/12
+ * @version z3_nra_v3
+ * Insert only one unsat literal in unsat clauses
+ * how can we design heuristic algorithms to decrease score with less unsat clauses or literals ?
+ * 
+ * 
 */
 
 namespace nlsat {
@@ -1188,6 +1196,11 @@ namespace nlsat {
             // }
 
 
+            /**
+             * @version z3_nra_v2
+             * @date 23/03/10
+             * Insert up to 5 unsat clauses each step with each literals
+            */
             // consider insertion several random clause
             // int unsat_idx = rand_int() % m_unsat_clauses.size();
             // int cls_idx = m_unsat_clauses[unsat_idx];
@@ -1197,27 +1210,42 @@ namespace nlsat {
             //     add_literal_arith_operation(curr_literal);
             // }
 
-            if(m_unsat_clauses.size() > 5) {
-                 unsigned_vector m_random_index;
-                 random_select_several_from_table(m_unsat_clauses, 5, m_random_index);
-                 for (clause_index cls_idx: m_random_index) {
-                    nra_clause const * curr_clause = m_nra_clauses[cls_idx];
-                    for (literal_index lit_idx : curr_clause->m_arith_literals) {
-                        nra_literal const *curr_literal = m_nra_literals[lit_idx];
-                        add_literal_arith_operation(curr_literal);
-                    }
-                 }
-            }
-            // insert all literals from unsat clauses
-            else {
-                for(clause_index cls_idx: m_unsat_clauses) {
-                    nra_clause const * curr_clause = m_nra_clauses[cls_idx];
-                    for(literal_index lit_idx: curr_clause->m_arith_literals) {
-                        nra_literal const * curr_literal = m_nra_literals[lit_idx];
-                        add_literal_arith_operation(curr_literal);
-                    }
-                }    
-            }
+            // if(m_unsat_clauses.size() > 5) {
+            //      unsigned_vector m_random_index;
+            //      random_select_several_from_table(m_unsat_clauses, 5, m_random_index);
+            //      for (clause_index cls_idx: m_random_index) {
+            //         nra_clause const * curr_clause = m_nra_clauses[cls_idx];
+            //         for (literal_index lit_idx : curr_clause->m_arith_literals) {
+            //             nra_literal const *curr_literal = m_nra_literals[lit_idx];
+            //             add_literal_arith_operation(curr_literal);
+            //         }
+            //      }
+            // }
+            // // insert all literals from unsat clauses
+            // else {
+            //     for(clause_index cls_idx: m_unsat_clauses) {
+            //         nra_clause const * curr_clause = m_nra_clauses[cls_idx];
+            //         for(literal_index lit_idx: curr_clause->m_arith_literals) {
+            //             nra_literal const * curr_literal = m_nra_literals[lit_idx];
+            //             add_literal_arith_operation(curr_literal);
+            //         }
+            //     }    
+            // }
+
+            /**
+             * @version z3_nra_v3
+             * @date 23/03/11
+             * Insert only one unsat literal for each unsat clause
+            */
+           for(clause_index cls_idx: m_unsat_clauses) {
+                nra_clause const * curr_clause = m_nra_clauses[cls_idx];
+                if(curr_clause->m_arith_literals.empty()) {
+                    continue;
+                }
+                literal_index lit_idx = curr_clause->m_arith_literals[rand_int() % curr_clause->m_arith_literals.size()];
+                nra_literal const * curr_literal = m_nra_literals[lit_idx];
+                add_literal_arith_operation(curr_literal);
+           }
 
             // loop operation arith variables
             LSTRACE(display_arith_operations(tout););
