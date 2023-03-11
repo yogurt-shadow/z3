@@ -1143,6 +1143,23 @@ namespace nlsat {
             }
         }
 
+        void random_select_several_from_table(unsigned_vector const & table, unsigned num, unsigned_vector & res) {
+            res.reset();
+            SASSERT(num <= table.size());
+            for(unsigned i = 0; i < table.size(); i++) {
+                if(i < num) {
+                    res.push_back(table[i]);
+                }
+                else {
+                    int r = rand_int() % (i + 1);
+                    if(r < num) {
+                        res[r] = table[i];
+                    }
+                }
+            }
+            SASSERT(res.size() == num);
+        }
+
         var pick_critical_nra_move(anum & best_value){
             LSTRACE(tout << "start of pick nra move\n";
                 show_ls_assignment(tout);
@@ -1161,15 +1178,17 @@ namespace nlsat {
             LSTRACE(tout << "LEVEL I: consider literals in unsat clauses\n";);
             SASSERT(!m_unsat_clauses.empty());
 
-            for(clause_index cls_idx: m_unsat_clauses){
-                nra_clause const * curr_clause = m_nra_clauses[cls_idx];
-                LSTRACE(tout << "consider clause: "; m_solver.display(tout, *curr_clause->get_clause()); tout << std::endl;);
-                for(literal_index lit_idx: curr_clause->m_arith_literals){
-                    nra_literal const * curr_literal = m_nra_literals[lit_idx];
-                    add_literal_arith_operation(curr_literal);
-                }
-            }
+            // for(clause_index cls_idx: m_unsat_clauses){
+            //     nra_clause const * curr_clause = m_nra_clauses[cls_idx];
+            //     LSTRACE(tout << "consider clause: "; m_solver.display(tout, *curr_clause->get_clause()); tout << std::endl;);
+            //     for(literal_index lit_idx: curr_clause->m_arith_literals){
+            //         nra_literal const * curr_literal = m_nra_literals[lit_idx];
+            //         add_literal_arith_operation(curr_literal);
+            //     }
+            // }
 
+
+            // consider insertion several random clause
             // int unsat_idx = rand_int() % m_unsat_clauses.size();
             // int cls_idx = m_unsat_clauses[unsat_idx];
             // nra_clause const * curr_clause = m_nra_clauses[cls_idx];
@@ -1177,6 +1196,28 @@ namespace nlsat {
             //     nra_literal const * curr_literal = m_nra_literals[lit_idx];
             //     add_literal_arith_operation(curr_literal);
             // }
+
+            if(m_unsat_clauses.size() > 5) {
+                 unsigned_vector m_random_index;
+                 random_select_several_from_table(m_unsat_clauses, 5, m_random_index);
+                 for (clause_index cls_idx: m_random_index) {
+                    nra_clause const * curr_clause = m_nra_clauses[cls_idx];
+                    for (literal_index lit_idx : curr_clause->m_arith_literals) {
+                        nra_literal const *curr_literal = m_nra_literals[lit_idx];
+                        add_literal_arith_operation(curr_literal);
+                    }
+                 }
+            }
+            // insert all literals from unsat clauses
+            else {
+                for(clause_index cls_idx: m_unsat_clauses) {
+                    nra_clause const * curr_clause = m_nra_clauses[cls_idx];
+                    for(literal_index lit_idx: curr_clause->m_arith_literals) {
+                        nra_literal const * curr_literal = m_nra_literals[lit_idx];
+                        add_literal_arith_operation(curr_literal);
+                    }
+                }    
+            }
 
             // loop operation arith variables
             LSTRACE(display_arith_operations(tout););
