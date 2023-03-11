@@ -1036,7 +1036,7 @@ namespace nlsat {
                 return best_bool_var_index;
             }
             // update clause weight
-            if(rand_int() % 10000 > smooth_probability){
+            if(rand_int() % 500 > smooth_probability){
                 update_clause_weight();
             }
             else {
@@ -1228,7 +1228,7 @@ namespace nlsat {
 */            
             // update clause weight
             // ^ PAWS
-            if(rand_int() % 10000 > smooth_probability){
+            if(rand_int() % 500 > smooth_probability){
                 update_clause_weight();
             }
             else {
