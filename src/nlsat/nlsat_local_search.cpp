@@ -1024,10 +1024,10 @@ namespace nlsat {
             }
             // reset is chosen to false
             reset_chosen_bool();
-            int best_bool_score = INT_MIN;
+            int best_bool_score = -10;
             bool_var best_bool_var_index = select_best_from_bool_operations(best_bool_score);
             // untabu decreasing bool variable exists
-            if(best_bool_var_index != null_var/* && best_bool_score > 0*/){
+            if(best_bool_var_index != null_var && best_bool_score > 0){
                 // std::cout << "best_bool_score = " << best_bool_score << std::endl;
                 LSTRACE(tout << "end of pick bool move\n";);
                 LSTRACE(tout << "show time of end picking bool move\n";
@@ -1036,7 +1036,7 @@ namespace nlsat {
                 return best_bool_var_index;
             }
             // update clause weight
-            if(rand_int() % 50 > smooth_probability){
+            if(rand_int() % 500 > smooth_probability){
                 update_clause_weight();
             }
             else {
@@ -1184,29 +1184,22 @@ namespace nlsat {
             // loop operation arith variables
             LSTRACE(display_arith_operations(tout););
             literal_index best_literal_index;
-
-            if (m_nra_operation_index.size() > 0) {
-                if (rand_int() % 10 < 6) {
-                    best_arith_score = INT_MIN;
-                    best_arith_index = select_best_from_arith_operations(best_arith_score, best_value, best_literal_index);
-                    if(best_arith_index != null_var/* && best_arith_score > 0*/){
-                        // std::cout << "best_arith_score = " << best_arith_score << std::endl;
-                        LSTRACE(
-                            tout << "LEVEL I: choose var " << best_arith_index << std::endl;
-                            tout << "show value: "; m_am.display(tout, best_value); tout << std::endl;
-                            tout << "best literal index: " << best_literal_index << std::endl;
-                        );
-                        LSTRACE(tout << "show time of end picking nra move\n";
-                            TimeElapsed();
-                        );
-                        return best_arith_index;
-                    }
-                } else {
-                    int rand_index = rand_int() % m_nra_operation_index.size();
-                    best_arith_index = m_nra_operation_index[rand_index];
-                    m_am.set(best_value, m_nra_operation_value[rand_index]);
-                    return best_arith_index;
-                }
+            // anum best_value_level1;
+            best_arith_score = -10;
+            best_arith_index = select_best_from_arith_operations(best_arith_score, best_value, best_literal_index);
+            // var best_arith_index_level1 = select_best_from_arith_operations(INT_MIN, best_value_level1, best_literal_index_level1);
+            // untabu decreasing arith variable exists
+            if(best_arith_index != null_var && best_arith_score > 0){
+                // std::cout << "best_arith_score = " << best_arith_score << std::endl;
+                LSTRACE(
+                    tout << "LEVEL I: choose var " << best_arith_index << std::endl;
+                    tout << "show value: "; m_am.display(tout, best_value); tout << std::endl;
+                    tout << "best literal index: " << best_literal_index << std::endl;
+                );
+                LSTRACE(tout << "show time of end picking nra move\n";
+                    TimeElapsed();
+                );
+                return best_arith_index;
             }
             LSTRACE(tout << "LEVEL I stuck\n";);
 
@@ -1235,18 +1228,18 @@ namespace nlsat {
 */            
             // update clause weight
             // ^ PAWS
-            if(rand_int() % 50 > smooth_probability){
+            if(rand_int() % 500 > smooth_probability){
                 update_clause_weight();
             }
             else {
                 smooth_clause_weight();
             }
 
-            // if (rand_int() % 10 == 0) {
-            //     if (best_arith_index != null_var) {
-            //         return best_arith_index;
-            //     }
-            // }
+            if (rand_int() % 10 == 0) {
+                if (best_arith_index != null_var) {
+                    return best_arith_index;
+                }
+            }
 
             if (rand_int() % 20 == 0) {
                 random_walk();
@@ -1817,23 +1810,20 @@ namespace nlsat {
         void smooth_clause_weight(){
             for(clause_index i = 0; i < m_num_clauses; i++){
                 nra_clause * curr_clause = m_nra_clauses[i];
-                if (curr_clause->get_weight() > 1) {
-                    curr_clause->dec_weight();
-                }
                 // smooth weight for sat clause with weight > 1
-                // if(!m_unsat_clauses.contains(i) && curr_clause->get_weight() > 1){
-                //     curr_clause->dec_weight();
-                //     m_total_clause_weight--;
-                //     // increase critical bool literal's score
-                //     if(curr_clause->get_sat_count() == 1){
-                //         SASSERT(curr_clause->get_critical_index() != null_var);
-                //         nra_literal const * curr_literal = m_nra_literals[curr_clause->get_critical_index()];
-                //         if(curr_literal->is_bool()){
-                //             nra_bool_var * curr_bool = m_bool_vars[curr_literal->get_bool_index()];
-                //             curr_bool->inc_score();
-                //         }
-                //     }
-                // }
+                if(!m_unsat_clauses.contains(i) && curr_clause->get_weight() > 1){
+                    curr_clause->dec_weight();
+                    m_total_clause_weight--;
+                    // increase critical bool literal's score
+                    if(curr_clause->get_sat_count() == 1){
+                        SASSERT(curr_clause->get_critical_index() != null_var);
+                        nra_literal const * curr_literal = m_nra_literals[curr_clause->get_critical_index()];
+                        if(curr_literal->is_bool()){
+                            nra_bool_var * curr_bool = m_bool_vars[curr_literal->get_bool_index()];
+                            curr_bool->inc_score();
+                        }
+                    }
+                }
             }
         }
 
@@ -2268,7 +2258,7 @@ namespace nlsat {
                     enter_bool_mode();
                 }
                 // Search
-                if(rand_int() % 2 == 0){
+                if(is_bool_search){
                     // pick bool variable
                     bool_var picked_b = pick_critical_bool_move();
                     LSTRACE(tout << "picked bool var: " << picked_b << std::endl;);
