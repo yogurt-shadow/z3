@@ -1008,51 +1008,55 @@ namespace nlsat {
             reset_arith_operation();
             SASSERT(!m_unsat_clauses.empty());
 
-            int unsat_idx = rand_int() % m_unsat_clauses.size();
-            int cls_idx = m_unsat_clauses[unsat_idx];
-            nra_clause const * curr_clause = m_nra_clauses[cls_idx];
+            // Start at a random location in the middle
+            int offset = rand_int() % m_unsat_clauses.size();
 
-            for (literal_index lit_index : curr_clause->m_arith_literals) {
-                nra_literal const * curr_literal = m_nra_literals[lit_index];
-                add_literal_arith_operation(curr_literal);
-            }
+            for (int i = 0; i < m_unsat_clauses.size(); i++) {
+                int cls_idx = m_unsat_clauses[(i + offset) % m_unsat_clauses.size()];
+                nra_clause const * curr_clause = m_nra_clauses[cls_idx];
 
-            for (literal_index lit_index : curr_clause->m_bool_literals) {
-                nra_literal const * curr_literal = m_nra_literals[lit_index];
-                bool_var idx = curr_literal->get_bool_index();
-                if(m_bool_is_chosen[idx]){
-                    continue;
+                for (literal_index lit_index : curr_clause->m_arith_literals) {
+                    nra_literal const * curr_literal = m_nra_literals[lit_index];
+                    add_literal_arith_operation(curr_literal);
                 }
-                nra_bool_var const * curr_bool = m_bool_vars[idx];
-                // not in tabulist, choose the bool var
-                if(m_step > curr_bool->get_tabu()){
-                    m_bool_is_chosen[idx] = true;
-                    m_bool_operation_index.push_back(idx);
+
+                for (literal_index lit_index : curr_clause->m_bool_literals) {
+                    nra_literal const * curr_literal = m_nra_literals[lit_index];
+                    bool_var idx = curr_literal->get_bool_index();
+                    if(m_bool_is_chosen[idx]){
+                        continue;
+                    }
+                    nra_bool_var const * curr_bool = m_bool_vars[idx];
+                    // not in tabulist, choose the bool var
+                    if(m_step > curr_bool->get_tabu()){
+                        m_bool_is_chosen[idx] = true;
+                        m_bool_operation_index.push_back(idx);
+                    }
                 }
-            }
 
-            // reset is chosen to false
-            reset_chosen_bool();
+                // reset is chosen to false
+                reset_chosen_bool();
 
-            int best_bool_score = INT_MIN;
-            bool_var best_bool_var_index = select_best_from_bool_operations(best_bool_score);
+                int best_bool_score = INT_MIN;
+                bool_var best_bool_var_index = select_best_from_bool_operations(best_bool_score);
 
-            int best_arith_score = INT_MIN;
-            var best_arith_index;
-            literal_index best_literal_index;
+                int best_arith_score = INT_MIN;
+                var best_arith_index;
+                literal_index best_literal_index;
 
-            best_arith_index = select_best_from_arith_operations(best_arith_score, best_value, best_literal_index);
+                best_arith_index = select_best_from_arith_operations(best_arith_score, best_value, best_literal_index);
 
-            if (best_bool_score > 0 &&
-                (best_bool_score > best_arith_score ||
-                 (best_bool_score == best_arith_score && rand_int() % 2 == 0))) {
-                bvar = best_bool_var_index;
-                return 0;  // bool operation
-            }
+                if (best_bool_score > 0 &&
+                    (best_bool_score > best_arith_score ||
+                    (best_bool_score == best_arith_score && rand_int() % 2 == 0))) {
+                    bvar = best_bool_var_index;
+                    return 0;  // bool operation
+                }
 
-            if (best_arith_score > 0) {
-                avar = best_arith_index;
-                return 1;  // arith operation
+                if (best_arith_score > 0) {
+                    avar = best_arith_index;
+                    return 1;  // arith operation
+                }
             }
 
             // update clause weight
@@ -1063,19 +1067,7 @@ namespace nlsat {
                 smooth_clause_weight();
             }
 
-            if (rand_int() % 10 == 0) {
-                if (best_bool_var_index != null_var) {
-                    bvar = best_bool_var_index;
-                    return 0;
-                } else if (best_arith_index != null_var) {
-                    avar = best_arith_index;
-                    return 1;
-                }
-            }
-
-            if (rand_int() % 20 == 0) {
-                random_walk();
-            }
+            random_walk();
 
             LSTRACE(tout << "end of pick move\n";);
             LSTRACE(tout << "show time of end picking move\n";
@@ -1173,79 +1165,6 @@ namespace nlsat {
                 }
                 insert_in_complement(v, union_st, l->get_index());
             }
-        }
-
-        var pick_critical_nra_move(anum & best_value){
-            LSTRACE(tout << "start of pick nra move\n";
-                show_ls_assignment(tout);
-                display_clause_weight(tout);
-            );
-            LSTRACE(tout << "show time of start picking nra move\n";
-                TimeElapsed();
-            );
-            int best_arith_score;
-            var best_arith_index;
-
-            // Level I.
-            // consider literal in unsat clauses
-            // add bounded interval set
-            reset_arith_operation();
-            LSTRACE(tout << "LEVEL I: consider literals in unsat clauses\n";);
-            SASSERT(!m_unsat_clauses.empty());
-
-            int unsat_idx = rand_int() % m_unsat_clauses.size();
-            int cls_idx = m_unsat_clauses[unsat_idx];
-            nra_clause const * curr_clause = m_nra_clauses[cls_idx];
-            for (literal_index lit_idx: curr_clause->m_arith_literals) {
-                nra_literal const * curr_literal = m_nra_literals[lit_idx];
-                add_literal_arith_operation(curr_literal);
-            }
-
-            // loop operation arith variables
-            LSTRACE(display_arith_operations(tout););
-            literal_index best_literal_index;
-            // anum best_value_level1;
-            best_arith_score = -10;
-            best_arith_index = select_best_from_arith_operations(best_arith_score, best_value, best_literal_index);
-            // var best_arith_index_level1 = select_best_from_arith_operations(INT_MIN, best_value_level1, best_literal_index_level1);
-            // untabu decreasing arith variable exists
-            if(best_arith_index != null_var && best_arith_score > 0){
-                // std::cout << "best_arith_score = " << best_arith_score << std::endl;
-                LSTRACE(
-                    tout << "LEVEL I: choose var " << best_arith_index << std::endl;
-                    tout << "show value: "; m_am.display(tout, best_value); tout << std::endl;
-                    tout << "best literal index: " << best_literal_index << std::endl;
-                );
-                LSTRACE(tout << "show time of end picking nra move\n";
-                    TimeElapsed();
-                );
-                return best_arith_index;
-            }
-            LSTRACE(tout << "LEVEL I stuck\n";);
-
-            // update clause weight
-            // ^ PAWS
-            if(rand_int() % 500 > smooth_probability){
-                update_clause_weight();
-            }
-            else {
-                smooth_clause_weight();
-            }
-
-            if (rand_int() % 10 == 0) {
-                if (best_arith_index != null_var) {
-                    return best_arith_index;
-                }
-            }
-
-            if (rand_int() % 20 == 0) {
-                random_walk();
-            }
-            LSTRACE(tout << "end of pick nra move\n";);
-            LSTRACE(tout << "show time of end picking nra move\n";
-                TimeElapsed();
-            );
-            return null_var;
         }
 
         // pick var with coeff !=0, move to zero
