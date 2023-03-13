@@ -2244,7 +2244,7 @@ namespace nlsat {
                 }
 
                 // Restart
-                if(no_improve_cnt > 100000){
+                if(no_improve_cnt > 10000){
                     LSTRACE(tout << "no improve count: " << no_improve_cnt << std::endl;
                         tout << "restart\n";
                         SPLIT_LINE(std::cout);
