@@ -8,9 +8,15 @@ using namespace std;
 
 const string instance_path = "../ls_instance_server.txt";
 
+<<<<<<< HEAD
 const string output_path = "z3_nra_v3.csv";
 const string output_label_path = "z3_nra_v3_label.csv";
 const string input_folder = "z3_nra_v3/"; 
+=======
+const string output_path = "z3_nra_newest.csv";
+const string output_label_path = "z3_nra_newest_label.csv";
+const string input_folder = "z3_nra_newest/"; 
+>>>>>>> c992be1ecb8d510b1f8f8eb5e9dc1ee617c4d74b
 
 vector<string> instance_vec;
 unordered_map<string, string> m_ins_label;
@@ -149,7 +155,11 @@ void write_ins_statistics() {
             m_labels[curr_label]->num_unsolved++;
         }
         outFile << curr_instance << ", " << curr_result << ", " << curr_bool << ", " << curr_arith
+<<<<<<< HEAD
         << ", " << curr_conf << ", " << curr_dec << ", " << curr_stg << ", " << curr_step << endl;
+=======
+        << ", " << curr_conf << ", " << curr_dec << ", " << curr_stg << ", " << curr_added << endl;
+>>>>>>> c992be1ecb8d510b1f8f8eb5e9dc1ee617c4d74b
 
         m_labels[curr_label]->num_bool += self_stoi(curr_bool);
         m_labels[curr_label]->num_arith += self_stoi(curr_arith);
