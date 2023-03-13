@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 name, result, bool var, arith var, conflict, decision, stage, step
-=======
-name, result, bool var, arith var, conflict, decision, stage, learned added
->>>>>>> c992be1ecb8d510b1f8f8eb5e9dc1ee617c4d74b
 MADWiFi-encode_ie_ok.i_3_4_3.bpl_3, timeout, , , , , , 
 afnp2014.c.i_3_5_3.bpl_5, timeout, , , , , , 
 array1.i_3_2_2.bpl_9, timeout, , , , , , 
