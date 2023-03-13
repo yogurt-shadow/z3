@@ -134,6 +134,7 @@ namespace nlsat {
         unsigned                                             no_improve_cnt_bool;
         unsigned                                             no_improve_cnt_nra;
         unsigned                                             no_improve_cnt;
+        unsigned                                             no_improve_cnt_mode;
         unsigned                                             m_best_found_cost_bool;
         unsigned                                             m_best_found_cost_nra;
 
@@ -144,6 +145,7 @@ namespace nlsat {
         var                                                  m_outer_step;
         const unsigned                                       max_step        =       UINT_MAX;
         bool                                                 is_bool_search;
+        bool                                                 is_random_walk;
 
         /**
          * * Time
@@ -180,7 +182,7 @@ namespace nlsat {
                          bool_var_vector const & pure_bool_convert, unsigned seed, unsigned & step, 
                          unsigned & stuck, double & ratio, substitute_value_vector const & vec)
         : m_am(am), m_pm(pm), m_ism(ism), m_evaluator(ev), m_assignment(ass), 
-        m_clauses(cls), m_atoms(ats), m_rand_seed(seed), m_solver(s), m_cutoff(1200), is_bool_search(false),
+        m_clauses(cls), m_atoms(ats), m_rand_seed(seed), m_solver(s), m_cutoff(1200), is_bool_search(false), is_random_walk(false),
         m_nra_operation_table(m_am, m_nra_operation_index, m_nra_operation_value),
         m_step(step), m_stuck(stuck), m_stuck_ratio(ratio), m_cache(cache), m_sub_value(vec),
         m_time_label(1), m_pure_bool_vars(pure_bool_vars), m_pure_bool_convert(pure_bool_convert), m_bvalues(bvalues)
@@ -1010,8 +1012,11 @@ namespace nlsat {
 
             // Start at a random location in the middle
             int offset = rand_int() % m_unsat_clauses.size();
-
-            for (int i = 0; i < m_unsat_clauses.size(); i++) {
+            int len = m_unsat_clauses.size();
+            if (len > 20) {
+                len = 20;
+            }
+            for (int i = 0; i < len; i++) {
                 int cls_idx = m_unsat_clauses[(i + offset) % m_unsat_clauses.size()];
                 nra_clause const * curr_clause = m_nra_clauses[cls_idx];
 
@@ -1046,16 +1051,31 @@ namespace nlsat {
 
                 best_arith_index = select_best_from_arith_operations(best_arith_score, best_value, best_literal_index);
 
-                if (best_bool_score > 0 &&
-                    (best_bool_score > best_arith_score ||
-                    (best_bool_score == best_arith_score && rand_int() % 2 == 0))) {
-                    bvar = best_bool_var_index;
-                    return 0;  // bool operation
-                }
+                if (is_random_walk) {
+                    if (best_bool_score != INT_MIN &&
+                        (best_bool_score > best_arith_score ||
+                        (best_bool_score == best_arith_score && rand_int() % 2 == 0))) {
+                        bvar = best_bool_var_index;
+                        return 0;  // bool operation
+                    }
 
-                if (best_arith_score > 0) {
-                    avar = best_arith_index;
-                    return 1;  // arith operation
+                    if (best_arith_score != INT_MIN) {
+                        avar = best_arith_index;
+                        return 1;  // arith operation
+                    }
+                }
+                else {
+                    if (best_bool_score > 0 &&
+                        (best_bool_score > best_arith_score ||
+                        (best_bool_score == best_arith_score && rand_int() % 2 == 0))) {
+                        bvar = best_bool_var_index;
+                        return 0;  // bool operation
+                    }
+
+                    if (best_arith_score > 0) {
+                        avar = best_arith_index;
+                        return 1;  // arith operation
+                    }
                 }
             }
 
@@ -2141,6 +2161,17 @@ namespace nlsat {
                 LSTRACE(tout << "step: " << m_step << std::endl;
                     tout << "no improve cnt: " << no_improve_cnt << std::endl;
                 );
+                if (is_random_walk) {
+                    if (no_improve_cnt_mode > 500) {
+                        is_random_walk = false;  // change to greedy mode
+                        no_improve_cnt_mode = 0;
+                    } 
+                } else {
+                    if (no_improve_cnt_mode > 1000) {
+                        is_random_walk = true;   // change to random walk mode
+                        no_improve_cnt_mode = 0;
+                    }
+                }
                 // Succeed
                 if(m_unsat_clauses.empty()){
                     SPLIT_LINE(std::cout);
@@ -2205,9 +2236,11 @@ namespace nlsat {
                 // update improvement
                 if(update_solution_info()){
                     no_improve_cnt = 0;
+                    no_improve_cnt_mode = 0;
                 }
                 else {
                     no_improve_cnt++;
+                    no_improve_cnt_mode++;
                 }
 
                 // Restart
