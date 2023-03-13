@@ -1026,7 +1026,7 @@ namespace nlsat {
         if(s == nullptr || s->m_num_intervals == 0){
             return;
         }
-        anum lower_w, upper_w, res_w;
+        anum lower_w, upper_w;
         // first interval's lower threshold
         if(!s->m_intervals[0].m_lower_inf){
             // (
@@ -1037,8 +1037,7 @@ namespace nlsat {
             // [
             else {
                 m_am.sub(s->m_intervals[0].m_lower, m_min, lower_w);
-                m_am.select(lower_w, s->m_intervals[0].m_lower, res_w);
-                vec.push_back(res_w);
+                vec.push_back(lower_w);
             }
         }
         // last interval's upper threshold
@@ -1051,8 +1050,7 @@ namespace nlsat {
             // ]
             else {
                 m_am.add(s->m_intervals[s->m_num_intervals - 1].m_upper, m_min, upper_w);
-                m_am.select(s->m_intervals[s->m_num_intervals - 1].m_upper, upper_w, res_w);
-                vec.push_back(res_w);
+                vec.push_back(upper_w);
             }
         }
         // middle interval's threshold
@@ -1068,7 +1066,7 @@ namespace nlsat {
             }
             else {
                 SASSERT(com < 0);
-                anum w1, w2, wres;
+                anum w1, w2;
                 // )
                 if(lower.m_upper_open){
                     m_am.set(w1, lower.m_upper);
@@ -1077,9 +1075,8 @@ namespace nlsat {
                 else {
                     // w1 = lower_upper + min
                     m_am.add(lower.m_upper, m_min, w1);
-                    m_am.select(lower.m_upper, w1, wres);
-                    if(m_am.lt(wres, upper.m_lower)){
-                        vec.push_back(wres);
+                    if(m_am.lt(w1, upper.m_lower)){
+                        vec.push_back(w1);
                     }
                 }
                 // (
@@ -1090,9 +1087,8 @@ namespace nlsat {
                 else {
                     // w2 = upper_lower - min
                     m_am.sub(upper.m_lower, m_min, w2);
-                    m_am.select(w2, upper.m_lower, wres);
-                    if(m_am.gt(wres, lower.m_upper)){
-                        vec.push_back(wres);
+                    if(m_am.gt(w2, lower.m_upper)){
+                        vec.push_back(w2);
                     }
                 }
             }
