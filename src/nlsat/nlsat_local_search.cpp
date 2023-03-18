@@ -1627,8 +1627,10 @@ namespace nlsat {
             m_assignment.set(v, value);
 
             critical_subscore_nra(v, value);
-            // update arith score
-            update_arith_score(v, value);
+            // update arith score, except when the problem is already solved
+            if (m_unsat_clauses.size() > 0) {
+                update_arith_score(v, value);
+            }
             nra_arith_var * v_var = m_arith_vars[v];
             v_var->set_last_move(m_step);
             v_var->set_tabu(m_step + 3 + rand_int() % 10);
