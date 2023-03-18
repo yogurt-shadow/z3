@@ -560,6 +560,7 @@ namespace nlsat {
             // Update score in response to updating variable v to new value
             // We assume that satisfiability of clauses (and literals in it) has already
             // been updated. Loop over variables that share a clause with v.
+            m_vars_visited.reset();
             nra_arith_var * m_arith_var = m_arith_vars[v];
             for (clause_index c_idx : m_arith_var->m_clauses) {
                 nra_clause const * curr_clause = m_nra_clauses[c_idx];
@@ -568,14 +569,20 @@ namespace nlsat {
                     var v2 = *it;
                     compute_arith_var_clause_info(v2, c_idx);
                 }
+                for(var v : curr_clause->m_vars) {
+                    if (!m_vars_visited.contains(v)) {
+                        m_vars_visited.insert(v);
+                    }
+                }
             }
-            for (var v = 0; v < m_arith_vars.size(); v++){
-                compute_boundary(v);
+            for (auto it = m_vars_visited.begin(); it != m_vars_visited.end(); it++){
+                compute_boundary(*it);
             }
         }
 
         void update_bool_score(bool_var b) {
             // Update score in response to flipping boolean variable
+            m_vars_visited.reset();
             nra_bool_var * m_bool_var = m_bool_vars[b];
             for (clause_index c_idx : m_bool_var->m_clauses) {
                 nra_clause const * curr_clause = m_nra_clauses[c_idx];
@@ -584,9 +591,14 @@ namespace nlsat {
                     var v2 = *it;
                     compute_arith_var_clause_info(v2, c_idx);
                 }
+                for(var v : curr_clause->m_vars) {
+                    if (!m_vars_visited.contains(v)) {
+                        m_vars_visited.insert(v);
+                    }
+                }
             }
-            for (var v = 0; v < m_arith_vars.size(); v++){
-                compute_boundary(v);
+            for (auto it = m_vars_visited.begin(); it != m_vars_visited.end(); it++){
+                compute_boundary(*it);
             }
         }
 
@@ -1203,14 +1215,14 @@ namespace nlsat {
                 m_literal_index = m_nra_operation_literal_index[i];
                 m_am.set(m_arith_value, m_nra_operation_value[i]);
 
-                int curr_score = get_arith_critical_score(m_arith_index, m_arith_value);
-                int curr_score2 = get_arith_score(m_arith_index, m_arith_value);
-                if (curr_score != curr_score2) {
-                    std::cout << "Error: " << curr_score << " vs " << curr_score2 << std::endl;
-                    exit(0);
-                } else {
-                    // std::cout << "Correct: " << curr_score << std::endl;
-                }
+                // int curr_score = get_arith_critical_score(m_arith_index, m_arith_value);
+                int curr_score = get_arith_score(m_arith_index, m_arith_value);
+                // if (curr_score != curr_score2) {
+                //     std::cout << "Error: " << curr_score << " vs " << curr_score2 << std::endl;
+                //     exit(0);
+                // } else {
+                //     // std::cout << "Correct: " << curr_score << std::endl;
+                // }
                 nra_arith_var const * curr_arith = m_arith_vars[m_arith_index];
                 // compare arith score and last move
                 if(curr_score > best_score || (curr_score == best_score && curr_arith->get_last_move() < best_last_move)){
@@ -1798,6 +1810,7 @@ namespace nlsat {
          */
         void update_clause_weight(){
             // update unsat clauses weight
+            m_vars_visited.reset();
             for(clause_index idx: m_unsat_clauses){
                 nra_clause * cls = m_nra_clauses[idx];
                 cls->inc_weight();
@@ -1807,15 +1820,21 @@ namespace nlsat {
                     nra_bool_var * curr_bool = m_bool_vars[curr_literal->get_bool_index()];
                     curr_bool->inc_score();
                 }
+                for(var v : cls->m_vars) {
+                    if (!m_vars_visited.contains(v)) {
+                        m_vars_visited.insert(v);
+                    }
+                }
             }
             m_total_clause_weight += m_unsat_clauses.size();
-            for (var v = 0; v < m_arith_vars.size(); v++){
-                compute_boundary(v);
+            for (auto it = m_vars_visited.begin(); it != m_vars_visited.end(); it++){
+                compute_boundary(*it);
             }
             LSTRACE(display_clause_weight(tout););
         }
 
         void smooth_clause_weight(){
+            m_vars_visited.reset();
             for(clause_index i = 0; i < m_num_clauses; i++){
                 nra_clause * curr_clause = m_nra_clauses[i];
                 // smooth weight for sat clause with weight > 1
@@ -1832,9 +1851,14 @@ namespace nlsat {
                         }
                     }
                 }
+                for(var v : curr_clause->m_vars) {
+                    if (!m_vars_visited.contains(v)) {
+                        m_vars_visited.insert(v);
+                    }
+                }
             }
-            for (var v = 0; v < m_arith_vars.size(); v++){
-                compute_boundary(v);
+            for (auto it = m_vars_visited.begin(); it != m_vars_visited.end(); it++){
+                compute_boundary(*it);
             }
         }
 

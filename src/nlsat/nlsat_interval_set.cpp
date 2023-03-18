@@ -1270,6 +1270,16 @@ namespace nlsat {
         m_am.set(w, s->m_intervals[irrational_i].m_upper);
     }
 
+    void interval_set_manager::push_boundary(vector<anum_boundary> & boundaries, anum const & val, bool is_open, int inc_score) {
+        for (auto it = boundaries.begin(); it != boundaries.end(); it++) {
+            if (it->is_open == is_open && m_am.eq(it->value, val)) {
+                it->score += inc_score;
+                return;
+            }
+        }
+        boundaries.push_back(anum_boundary(val, is_open, inc_score));
+    }
+
     void interval_set_manager::add_boundaries(interval_set const * s, vector<anum_boundary> & boundaries, int & start_score, int weight) {
         for (unsigned j = 0; j < s->m_num_intervals; j++) {
             if (s->m_intervals[j].m_lower_inf) {
@@ -1277,20 +1287,20 @@ namespace nlsat {
                 start_score -= weight;
             } else if (s->m_intervals[j].m_lower_open) {
                 // (x, ...), change at x]
-                boundaries.push_back(anum_boundary(s->m_intervals[j].m_lower, true, -weight));
+                push_boundary(boundaries, s->m_intervals[j].m_lower, true, -weight);
             } else {
                 // [x, ...), change at x)
-                boundaries.push_back(anum_boundary(s->m_intervals[j].m_lower, false, -weight));
+                push_boundary(boundaries, s->m_intervals[j].m_lower, false, -weight);
             }
 
             if (s->m_intervals[j].m_upper_inf) {
                 // oo is infeasible
             } else if (s->m_intervals[j].m_upper_open) {
                 // (..., x), change at x)
-                boundaries.push_back(anum_boundary(s->m_intervals[j].m_upper, false, weight));
+                push_boundary(boundaries, s->m_intervals[j].m_upper, false, weight);
             } else {
                 // (..., x], change at x]
-                boundaries.push_back(anum_boundary(s->m_intervals[j].m_upper, true, weight));
+                push_boundary(boundaries, s->m_intervals[j].m_upper, true, weight);
             }
         }
     }
