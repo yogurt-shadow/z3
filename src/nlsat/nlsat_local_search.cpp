@@ -368,6 +368,9 @@ namespace nlsat {
             for(var v = 0; v < m_arith_vars.size(); v++){
                 nra_arith_var * curr = m_arith_vars[v];
                 curr->m_infeasible_st = m_ism.mk_complement(curr->m_feasible_st);
+                if (curr->m_infeasible_st != nullptr) {
+                    m_ism.inc_ref(curr->m_infeasible_st);
+                }
             }
         }
 
@@ -457,48 +460,6 @@ namespace nlsat {
             return true;
         }
 
-        // return false for ICP
-        bool process_clause(nra_clause const * cls, var x){
-            nra_arith_var const * curr_arith = m_arith_vars[x];
-            for(literal_index l: cls->m_literals){
-                nra_literal const * curr_literal = m_nra_literals[l];
-                if(is_assigned_literal(curr_literal)){
-                    continue;
-                }
-                else {
-                    SASSERT(curr_literal->m_vars.contains(x));
-                    interval_set_ref curr_st(m_ism), union_st(m_ism);
-                    curr_st = m_evaluator.infeasible_intervals(curr_literal->get_atom(), curr_literal->sign(), nullptr, x);
-                    if(curr_arith->m_infeasible_st != nullptr){
-                        m_ism.inc_ref(curr_arith->m_infeasible_st);
-                    }
-                    union_st = m_ism.mk_union(curr_st, curr_arith->m_infeasible_st);
-                    // stuck
-                    if(m_ism.is_full(union_st)){
-                        continue;
-                    }
-                    // select arith for var
-                    scoped_anum w(m_am);
-                    m_ism.peek_in_complement(union_st, false, w, true);
-                    m_assignment.set(x, w);
-                    return true;
-                }
-            }
-            // random select
-            if(m_ism.is_full(curr_arith->m_infeasible_st)){
-                return false;
-            }
-            if(m_ism.contains_zero(curr_arith->m_infeasible_st)){
-                m_assignment.set(x, m_zero);
-            }
-            else {
-                scoped_anum w(m_am);
-                m_ism.peek_in_complement(curr_arith->m_infeasible_st, false, w, true);
-                m_assignment.set(x, w);
-            }
-            return true;
-        }
-
         void update_unit_var_clauses(var x){
             for(clause_index i = 0; i < m_num_clauses; i++){
                 nra_clause * cls = m_nra_clauses[i];
@@ -512,20 +473,6 @@ namespace nlsat {
             }
         }
 
-        var random_select_one_from_table(var_table const & vec){
-            SASSERT(!vec.empty());
-            var res = null_var;
-            unsigned curr = 1;
-            for(auto ele: vec){
-                if(rand_int() % curr == 0){
-                    res = ele;
-                }
-                curr++;
-            }
-            SASSERT(res != null_var);
-            return res;
-        }
-        
         // first init: ICP
         bool construct_assignment(bool first_init){
             return first_init ? init_assignment() : restart_assignment();
@@ -589,9 +536,6 @@ namespace nlsat {
                 // [old_value, old_value]
                 old_value_interval = m_ism.mk_point_interval(old_value);
                 interval_set_ref curr_st(m_ism);
-                if(curr_arith->m_infeasible_st != nullptr){
-                    m_ism.inc_ref(curr_arith->m_infeasible_st);
-                }
                 curr_st = m_ism.mk_union(old_value_interval, curr_arith->m_infeasible_st);
                 // happens for ==
                 if(m_ism.is_full(curr_st)){
@@ -774,29 +718,6 @@ namespace nlsat {
             return l->sign() != b->get_value();
         }
 
-        // given delta, check sat status of arith literal
-        bool is_arith_sat(anum const & w, nra_literal const * l) const {
-            SASSERT(l->is_arith());
-            ineq_atom const * a = l->get_atom();
-            switch(a->get_kind()){
-                // ==
-                case atom::kind::EQ:
-                    return m_am.is_zero(w) != l->sign();
-
-                // >
-                case atom::kind::GT:
-                    return m_am.is_pos(w) != l->sign();
-
-                // <
-                case atom::kind::LT:
-                    return m_am.is_neg(w) != l->sign();
-
-                default:
-                UNREACHABLE();
-            }
-            UNREACHABLE();
-        }
-
         void set_const_anum(){
             m_am.set(m_zero, 0);
             m_am.set(m_one, 1);
@@ -958,35 +879,13 @@ namespace nlsat {
 
         bool_var select_best_from_bool_operations(int & best_score){
             // set BMS and cnt
-            unsigned cnt;
-            bool BMS;
-            if(m_bool_operation_index.size() > 45){
-                BMS = true;
-                cnt = 45;
-            }
-            else {
-                BMS = false;
-                cnt = m_bool_operation_index.size();
-            }
+            unsigned cnt = m_bool_operation_index.size();
             unsigned best_last_move = UINT_MAX;
             bool_var m_curr_operation, best_bool_var_index = null_var;
             // loop bool operations
             for(unsigned i = 0; i < cnt; i++){
-                if(BMS){
-                    // swap
-                    unsigned rand_index = rand_int() % (m_bool_operation_index.size() - i);
-                    unsigned temp = m_bool_operation_index[m_bool_operation_index.size() - i - 1];
-                    m_curr_operation = m_bool_operation_index[rand_index];
-                    m_bool_operation_index[rand_index] = temp;
-                } 
-                else {
-                    m_curr_operation = m_bool_operation_index[i];
-                }
-                // Score for pure bool variables are calculated before
+                m_curr_operation = m_bool_operation_index[i];
                 nra_bool_var const * curr_bool = m_bool_vars[m_curr_operation];
-//                if(curr_bool->get_score() > best_score || (curr_bool->get_score() == best_score && curr_bool->get_last_move() < best_last_move)){
-//                    best_score = curr_bool->get_score();
-                // int score = curr_bool->get_score();
                 int score = get_bool_critical_score(m_curr_operation);
                 if(score > best_score || (score == best_score && curr_bool->get_last_move() < best_last_move)){
                     best_score = score;
@@ -1104,46 +1003,18 @@ namespace nlsat {
         }
 
         var select_best_from_arith_operations(int & best_score, anum & best_value, literal_index & best_literal_index){
-            bool BMS;
-            unsigned cnt;
+            unsigned cnt = m_nra_operation_index.size();
             var m_arith_index;
             scoped_anum m_arith_value(m_am);
             literal_index m_literal_index;
-            if(m_nra_operation_index.size() > 45){
-                cnt = 45;
-                BMS = true;
-            }
-            else {
-                BMS = false;
-                cnt = m_nra_operation_index.size();
-            }
-            LSTRACE(
-                if(BMS){
-                    tout << "BMS enabled\n";
-                } else {
-                    tout << "BMS disabled\n";
-                }
-            );
             unsigned best_last_move = UINT_MAX, best_arith_index = null_var;
             best_literal_index = null_var;
             for(unsigned i = 0; i < cnt; i++){
-                if(BMS){
-                    // swap
-                    unsigned rand_index = rand_int() % (m_nra_operation_index.size() - i);
-                    m_arith_index = m_nra_operation_index[rand_index];
-                    m_literal_index = m_nra_operation_literal_index[rand_index];
-                    m_am.set(m_arith_value, m_nra_operation_value[rand_index]);
-                    m_nra_operation_index[rand_index] = m_nra_operation_index[m_nra_operation_index.size() - i - 1];
-                    m_am.set(m_nra_operation_value[rand_index], m_nra_operation_value[m_nra_operation_index.size() - i - 1]);;
-                    m_nra_operation_literal_index[rand_index] = m_nra_operation_literal_index[m_nra_operation_index.size() - i - 1];
-                }
-                else {
-                    m_arith_index = m_nra_operation_index[i];
-                    m_literal_index = m_nra_operation_literal_index[i];
-                    m_am.set(m_arith_value, m_nra_operation_value[i]);
-                }
+                m_arith_index = m_nra_operation_index[i];
+                m_literal_index = m_nra_operation_literal_index[i];
+                m_am.set(m_arith_value, m_nra_operation_value[i]);
+
                 int curr_score = get_arith_critical_score(m_arith_index, m_arith_value);
-                LSTRACE(tout << "show score in pick nra move: " << curr_score << std::endl;);
                 nra_arith_var const * curr_arith = m_arith_vars[m_arith_index];
                 // compare arith score and last move
                 if(curr_score > best_score || (curr_score == best_score && curr_arith->get_last_move() < best_last_move)){
@@ -1175,9 +1046,6 @@ namespace nlsat {
                 curr_st = m_evaluator.infeasible_intervals(l->get_atom(), l->sign(), nullptr, v);
                 if(m_ism.is_full(curr_st)){
                     continue;
-                }
-                if(curr_arith->m_infeasible_st != nullptr){
-                    m_ism.inc_ref(curr_arith->m_infeasible_st);
                 }
                 interval_set_ref union_st(m_ism);
                 union_st = m_ism.mk_union(curr_st, curr_arith->m_infeasible_st);
@@ -1890,9 +1758,6 @@ namespace nlsat {
                 }
                 else {
                     interval_set_ref curr_st(m_ism);
-                    if(curr_arith->m_infeasible_st != nullptr){
-                        m_ism.inc_ref(curr_arith->m_infeasible_st);
-                    }
                     curr_st = m_ism.mk_union(old_value_interval, curr_arith->m_infeasible_st);
                     // happens for ==
                     // in this case, we ignore infeasible set, and choose a value except old value
@@ -2047,9 +1912,6 @@ namespace nlsat {
                     continue;
                 }
                 nra_arith_var const * curr_var = m_arith_vars[v];
-                if(curr_var->m_infeasible_st != nullptr){
-                    m_ism.inc_ref(curr_var->m_infeasible_st);
-                }
                 union_st = m_ism.mk_union(curr_st, curr_var->m_infeasible_st);
                 if(m_ism.is_full(union_st)){
                     continue;
