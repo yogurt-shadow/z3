@@ -1270,6 +1270,31 @@ namespace nlsat {
         m_am.set(w, s->m_intervals[irrational_i].m_upper);
     }
 
+    void interval_set_manager::add_boundaries(interval_set const * s, vector<anum_boundary> & boundaries, int & start_score, int weight) {
+        for (unsigned j = 0; j < s->m_num_intervals; j++) {
+            if (s->m_intervals[j].m_lower_inf) {
+                // -oo is infeasible
+                start_score -= weight;
+            } else if (s->m_intervals[j].m_lower_open) {
+                // (x, ...), change at x]
+                boundaries.push_back(anum_boundary(s->m_intervals[j].m_lower, true, -weight));
+            } else {
+                // [x, ...), change at x)
+                boundaries.push_back(anum_boundary(s->m_intervals[j].m_lower, false, -weight));
+            }
+
+            if (s->m_intervals[j].m_upper_inf) {
+                // oo is infeasible
+            } else if (s->m_intervals[j].m_upper_open) {
+                // (..., x), change at x)
+                boundaries.push_back(anum_boundary(s->m_intervals[j].m_upper, false, weight));
+            } else {
+                // (..., x], change at x]
+                boundaries.push_back(anum_boundary(s->m_intervals[j].m_upper, true, weight));
+            }
+        }
+    }
+
     std::ostream& interval_set_manager::display(std::ostream & out, interval_set const * s) const {
         if (s == nullptr) {
             out << "{}";

@@ -402,6 +402,194 @@ namespace nlsat {
             LSTRACE(tout << "end of init literal\n";);
         }
 
+        void init_arith_var_info() {
+            // For each arith variable, compute the current infeasible set
+            // for each clause and literal it appears in
+            for (var v = 0; v < m_arith_vars.size(); v++){
+                // std::cout << "considering variable " << v << std::endl;
+                compute_arith_var_info(v);
+                compute_boundary(v);
+            }
+        }
+
+        void compute_arith_var_info(var v) {
+            // Compute infeasible set information for variable
+            nra_arith_var * m_arith_var = m_arith_vars[v];
+            for (unsigned i = 0; i < m_arith_var->m_clauses.size(); i++) {
+                clause_index c_idx = m_arith_var->m_clauses[i];
+                nra_clause const * curr_clause = m_nra_clauses[c_idx];
+                interval_set_ref result_st(m_ism);
+                result_st = m_ism.mk_full();
+                for (unsigned j = 0; j < curr_clause->m_arith_literals.size(); j++) {
+                    literal_index l_idx = curr_clause->m_arith_literals[j];
+                    nra_literal * curr_literal = m_nra_literals[l_idx];
+                    if (!curr_literal->m_vars.contains(v)) {
+                        continue;
+                    }
+                    // std::cout << "clause " << c_idx << " literal " << l_idx << std::endl;
+                    interval_set_ref curr_st(m_ism);
+                    curr_st = m_evaluator.infeasible_intervals(curr_literal->get_atom(), curr_literal->sign(), nullptr, v);
+                    result_st = m_ism.mk_intersection(result_st, curr_st);
+                }
+                m_arith_var->m_clause_intervals[i] = result_st;
+                if (result_st != nullptr) {
+                    m_ism.inc_ref(result_st);
+                }
+            }
+        }
+
+        void compute_arith_var_clause_info(var v, clause_index c_idx) {
+            // Compute infeasible set information for variable
+            nra_arith_var * m_arith_var = m_arith_vars[v];
+            for (unsigned i = 0; i < m_arith_var->m_clauses.size(); i++) {
+                if (c_idx != m_arith_var->m_clauses[i]) {
+                    continue;
+                }
+                nra_clause const * curr_clause = m_nra_clauses[c_idx];
+                interval_set_ref result_st(m_ism);
+                result_st = m_ism.mk_full();
+                for (unsigned j = 0; j < curr_clause->m_arith_literals.size(); j++) {
+                    literal_index l_idx = curr_clause->m_arith_literals[j];
+                    nra_literal * curr_literal = m_nra_literals[l_idx];
+                    if (!curr_literal->m_vars.contains(v)) {
+                        continue;
+                    }
+                    // std::cout << "clause " << c_idx << " literal " << l_idx << std::endl;
+                    interval_set_ref curr_st(m_ism);
+                    curr_st = m_evaluator.infeasible_intervals(curr_literal->get_atom(), curr_literal->sign(), nullptr, v);
+                    result_st = m_ism.mk_intersection(result_st, curr_st);
+                }
+                m_arith_var->m_clause_intervals[i] = result_st;
+                if (result_st != nullptr) {
+                    m_ism.inc_ref(result_st);
+                }
+            }
+        }
+
+        void compute_boundary(var v) {
+            // Compute boundary information for variable
+            // std::cout << "compute boundary for " << v << std::endl;
+            nra_arith_var * m_arith_var = m_arith_vars[v];
+            m_arith_var->m_start_score = 0;
+            m_arith_var->m_boundaries.reset();
+            for (unsigned i = 0; i < m_arith_var->m_clauses.size(); i++) {
+                clause_index c_idx = m_arith_var->m_clauses[i];
+                nra_clause const * curr_clause = m_nra_clauses[c_idx];
+
+                // std::cout << "clause " << c_idx << " weight " << curr_clause->get_weight() << std::endl;
+                unsigned before_sat_count = curr_clause->get_sat_count();
+
+                interval_set const * s = m_arith_var->m_clause_intervals[i];
+                if (s == nullptr) {
+                    continue;
+                }
+                if (before_sat_count > 0) {
+                    // Potential break case, test whether some other literals are true
+                    bool always_sat = false;
+                    for (unsigned j = 0; j < curr_clause->m_arith_literals.size(); j++) {
+                        literal_index l_idx = curr_clause->m_arith_literals[j];
+                        nra_literal * curr_literal = m_nra_literals[l_idx];
+                        if (curr_literal->get_sat_status() && !curr_literal->m_vars.contains(v)) {
+                            always_sat = true;
+                        }
+                    }
+                    for (unsigned j = 0; j < curr_clause->m_bool_literals.size(); j++) {
+                        literal_index l_idx = curr_clause->m_bool_literals[j];
+                        nra_literal * curr_literal = m_nra_literals[l_idx];
+                        if (curr_literal->get_sat_status()) {
+                            always_sat = true;
+                        }
+                    }
+                    if (always_sat) {
+                        continue;
+                    }
+                    // break case: infeasible intervals decrease score by 1
+                    // std::cout << "break" << std::endl;
+                    // m_ism.display(std::cout, s);
+                    // std::cout << std::endl;
+                    m_ism.add_boundaries(s, m_arith_var->m_boundaries, m_arith_var->m_start_score, curr_clause->get_weight());
+                }
+
+                if (before_sat_count == 0) {
+                    // make case: feasible intervals increase score by 1
+                    // std::cout << "make" << std::endl;
+                    // m_ism.display(std::cout, s);
+                    // std::cout << std::endl;
+                    m_arith_var->m_start_score += curr_clause->get_weight();
+                    m_ism.add_boundaries(s, m_arith_var->m_boundaries, m_arith_var->m_start_score, curr_clause->get_weight());
+                }
+            }
+            std::sort(m_arith_var->m_boundaries.begin(), m_arith_var->m_boundaries.end(), lt_anum_boundary(m_am));
+            // int score = m_arith_var->m_start_score;
+            // std::cout << "start " << score << std::endl;
+            // for (unsigned j = 0; j < m_arith_var->m_boundaries.size(); j++) {
+            //     score += m_arith_var->m_boundaries[j].score;
+            //     m_am.display(std::cout, m_arith_var->m_boundaries[j].value);
+            //     std::cout << " " << m_arith_var->m_boundaries[j].is_open << " " << score << std::endl;
+            // }
+        }
+
+        int get_arith_score(var v, anum const & new_value) {
+            // Obtain score from the index for updating variable v to new value
+            nra_arith_var * m_arith_var = m_arith_vars[v];
+            // std::cout << "query var " << v << " at value ";
+            // m_am.display(std::cout, new_value);
+            // std::cout << std::endl;
+            int score;
+            // score = m_arith_var->m_start_score;
+            // std::cout << "start " << score << std::endl;
+            // for (unsigned j = 0; j < m_arith_var->m_boundaries.size(); j++) {
+            //     score += m_arith_var->m_boundaries[j].score;
+            //     m_am.display(std::cout, m_arith_var->m_boundaries[j].value);
+            //     std::cout << " " << m_arith_var->m_boundaries[j].is_open << " " << score << std::endl;
+            // }
+            score = m_arith_var->m_start_score;
+            for (unsigned j = 0; j < m_arith_var->m_boundaries.size(); j++) {
+                if (m_am.lt(new_value, m_arith_var->m_boundaries[j].value)) {
+                    return score;
+                }
+                if (m_am.eq(new_value, m_arith_var->m_boundaries[j].value) && m_arith_var->m_boundaries[j].is_open) {
+                    return score;
+                }
+                score += m_arith_var->m_boundaries[j].score;
+            }
+            return score;
+        }
+
+        void update_arith_score(var v, anum const & new_value) {
+            // Update score in response to updating variable v to new value
+            // We assume that satisfiability of clauses (and literals in it) has already
+            // been updated. Loop over variables that share a clause with v.
+            nra_arith_var * m_arith_var = m_arith_vars[v];
+            for (clause_index c_idx : m_arith_var->m_clauses) {
+                nra_clause const * curr_clause = m_nra_clauses[c_idx];
+                // Update for each variable in that clause
+                for (auto it = curr_clause->m_vars.begin(); it != curr_clause->m_vars.end(); it++) {
+                    var v2 = *it;
+                    compute_arith_var_clause_info(v2, c_idx);
+                }
+            }
+            for (var v = 0; v < m_arith_vars.size(); v++){
+                compute_boundary(v);
+            }
+        }
+
+        void update_bool_score(bool_var b) {
+            // Update score in response to flipping boolean variable
+            nra_bool_var * m_bool_var = m_bool_vars[b];
+            for (clause_index c_idx : m_bool_var->m_clauses) {
+                nra_clause const * curr_clause = m_nra_clauses[c_idx];
+                // Update for each variable in that clause
+                for (auto it = curr_clause->m_vars.begin(); it != curr_clause->m_vars.end(); it++) {
+                    var v2 = *it;
+                    compute_arith_var_clause_info(v2, c_idx);
+                }
+            }
+            for (var v = 0; v < m_arith_vars.size(); v++){
+                compute_boundary(v);
+            }
+        }
+
         /**
          * Init Solution
          */
@@ -418,6 +606,7 @@ namespace nlsat {
             update_solution_info();
             m_best_found_cost_bool = UINT_MAX;
             m_best_found_cost_nra = UINT_MAX;
+            init_arith_var_info();
             LSTRACE(tout << "end of init solution\n";
                 display_unsat_clauses(tout);
             );
@@ -1015,6 +1204,13 @@ namespace nlsat {
                 m_am.set(m_arith_value, m_nra_operation_value[i]);
 
                 int curr_score = get_arith_critical_score(m_arith_index, m_arith_value);
+                int curr_score2 = get_arith_score(m_arith_index, m_arith_value);
+                if (curr_score != curr_score2) {
+                    std::cout << "Error: " << curr_score << " vs " << curr_score2 << std::endl;
+                    exit(0);
+                } else {
+                    // std::cout << "Correct: " << curr_score << std::endl;
+                }
                 nra_arith_var const * curr_arith = m_arith_vars[m_arith_index];
                 // compare arith score and last move
                 if(curr_score > best_score || (curr_score == best_score && curr_arith->get_last_move() < best_last_move)){
@@ -1160,10 +1356,12 @@ namespace nlsat {
                     SASSERT(after_sat_count >= 0);
                     // unsat --> sat
                     if(before_sat_count == 0 && after_sat_count > 0){
+                        // std::cout << "make clause " << c_idx << " literal " << l_idx << " weight " << curr_clause->get_weight() << std::endl;
                         res_score += curr_clause->get_weight();
                     }
                     // sat --> unsat
                     else if(before_sat_count > 0 && after_sat_count == 0){
+                        // std::cout << "break clause " << c_idx << " literal " << l_idx << " weight " << curr_clause->get_weight() << std::endl;
                         res_score -= curr_clause->get_weight();
                     }
                     make_break = 0;
@@ -1253,6 +1451,7 @@ namespace nlsat {
             // flip the bool variable
             b_var->set_value(!b_var->get_value());
             // update bool score
+            update_bool_score(b);
             b_var->set_score(b_var->get_score() - origin_score);
             // update step
             b_var->set_last_move(m_outer_step);
@@ -1417,6 +1616,7 @@ namespace nlsat {
 
             critical_subscore_nra(v, value);
             // update arith score
+            update_arith_score(v, value);
             nra_arith_var * v_var = m_arith_vars[v];
             v_var->set_last_move(m_step);
             v_var->set_tabu(m_step + 3 + rand_int() % 10);
@@ -1609,6 +1809,9 @@ namespace nlsat {
                 }
             }
             m_total_clause_weight += m_unsat_clauses.size();
+            for (var v = 0; v < m_arith_vars.size(); v++){
+                compute_boundary(v);
+            }
             LSTRACE(display_clause_weight(tout););
         }
 
@@ -1629,6 +1832,9 @@ namespace nlsat {
                         }
                     }
                 }
+            }
+            for (var v = 0; v < m_arith_vars.size(); v++){
+                compute_boundary(v);
             }
         }
 

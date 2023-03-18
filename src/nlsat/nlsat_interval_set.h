@@ -23,7 +23,7 @@ Revision History:
 #include "math/polynomial/algebraic_numbers.h"
 
 namespace nlsat {
-      struct interval {
+    struct interval {
         unsigned  m_lower_open:1;
         unsigned  m_upper_open:1;
         unsigned  m_lower_inf:1;
@@ -35,6 +35,22 @@ namespace nlsat {
     };
 
     class interval_set;
+
+    // Algebraic number, together with open-closed and score
+    struct anum_boundary {
+        anum value;
+        bool is_open;
+        int score;
+        anum_boundary(anum const & _v, bool _is_open, int _score): value(_v), is_open(_is_open), score(_score) {}
+    };
+
+    struct lt_anum_boundary {
+        anum_manager & m_am;
+        lt_anum_boundary(anum_manager & _m): m_am(_m) {}
+        bool operator()(anum_boundary const & a1, anum_boundary const &a2) const {
+            return m_am.lt(a1.value, a2.value) || (m_am.eq(a1.value, a2.value) && a1.is_open < a2.is_open);
+        }
+    };
 
     class interval_set_manager {
         anum m_one, m_zero, m_max, m_min, m_neg_max, m_10k;
@@ -145,6 +161,8 @@ namespace nlsat {
            \pre !is_full(s)
         */
         void peek_in_complement(interval_set const * s, bool is_int, anum & w, bool randomize);
+
+        void add_boundaries(interval_set const * s, vector<anum_boundary> & boundaries, int & start_score, int weight);
     };
 
     typedef obj_ref<interval_set, interval_set_manager> interval_set_ref;
@@ -154,6 +172,5 @@ namespace nlsat {
         return out;
     }
 
-   using interval_set_vector = vector<interval_set *>;
+    using interval_set_vector = vector<interval_set *>;
 };
-
