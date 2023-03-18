@@ -18,6 +18,7 @@ Revision History:
 --*/
 #pragma once
 
+#include <iostream>
 #include "nlsat/nlsat_types.h"
 #include "math/polynomial/algebraic_numbers.h"
 
