@@ -2479,7 +2479,7 @@ namespace nlsat {
                 LSTRACE(tout << "step: " << m_step << std::endl;
                     tout << "no improve cnt: " << no_improve_cnt << std::endl;
                 );
-                is_random_walk = (rand_int() % 100 < 50);
+                is_random_walk = (rand_int() % 100 < 30);
                 // if (is_random_walk) {
                 //     if (no_improve_cnt_mode > 500) {
                 //         is_random_walk = false;  // change to greedy mode
