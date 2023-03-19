@@ -432,6 +432,9 @@ namespace nlsat {
                     curr_st = m_evaluator.infeasible_intervals(curr_literal->get_atom(), curr_literal->sign(), nullptr, v);
                     result_st = m_ism.mk_intersection(result_st, curr_st);
                 }
+                if (m_arith_var->m_clause_intervals[i] != nullptr) {
+                    m_ism.dec_ref(m_arith_var->m_clause_intervals[i]);
+                }
                 m_arith_var->m_clause_intervals[i] = result_st;
                 if (result_st != nullptr) {
                     m_ism.inc_ref(result_st);
@@ -459,6 +462,9 @@ namespace nlsat {
                     interval_set_ref curr_st(m_ism);
                     curr_st = m_evaluator.infeasible_intervals(curr_literal->get_atom(), curr_literal->sign(), nullptr, v);
                     result_st = m_ism.mk_intersection(result_st, curr_st);
+                }
+                if (m_arith_var->m_clause_intervals[i] != nullptr) {
+                    m_ism.dec_ref(m_arith_var->m_clause_intervals[i]);
                 }
                 m_arith_var->m_clause_intervals[i] = result_st;
                 if (result_st != nullptr) {
@@ -1323,16 +1329,18 @@ namespace nlsat {
                 }
 
                 int total_size = best_bool_index.size() + best_arith_index.size();
-                int r = rand_int() % total_size;
-                if (r < best_bool_index.size()) {
-                    bvar = best_bool_index[r];
-                    best_score = get_bool_critical_score(bvar);
-                    return 0;  // bool operation
-                } else {
-                    avar = best_arith_index[r - best_bool_index.size()];
-                    best_value = arith_vals[r - best_bool_index.size()];
-                    best_score = best_scores[r - best_bool_index.size()];
-                    return 1;  // arith operation
+                if (total_size > 0) {
+                    int r = rand_int() % total_size;
+                    if (r < best_bool_index.size()) {
+                        bvar = best_bool_index[r];
+                        best_score = get_bool_critical_score(bvar);
+                        return 0;  // bool operation
+                    } else {
+                        avar = best_arith_index[r - best_bool_index.size()];
+                        best_value = arith_vals[r - best_bool_index.size()];
+                        best_score = best_scores[r - best_bool_index.size()];
+                        return 1;  // arith operation
+                    }
                 }
             }
             else {
