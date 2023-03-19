@@ -552,17 +552,21 @@ namespace nlsat {
             nra_arith_var * m_arith_var = m_arith_vars[v];
             int score = m_arith_var->m_start_score;
             int len = m_arith_var->m_boundaries.size();
+            anum_vector vec = anum_vector();
             if (score == best_score) {
                 // Return value before left boundary
                 if (m_arith_var->m_boundaries[0].is_open) {
                     // x] case, can include x
-                    m_am.set(best_value, m_arith_var->m_boundaries[0].value);
+                    anum w;
+                    m_am.set(w, m_arith_var->m_boundaries[0].value);
+                    vec.push_back(w);
                 }
                 else {
                     // x) case, cannot include x
-                    m_am.sub(m_arith_var->m_boundaries[0].value, m_min, best_value);
+                    anum w;
+                    m_am.sub(m_arith_var->m_boundaries[0].value, m_min, w);
+                    vec.push_back(w);
                 }
-                return;
             }
             for (unsigned i = 0; i < len; i++) {
                 score += m_arith_var->m_boundaries[i].score;
@@ -571,29 +575,36 @@ namespace nlsat {
                     if (i == len - 1) {
                         if (m_arith_var->m_boundaries[len-1].is_open) {
                             // x] case, cannot include x
-                            m_am.add(m_arith_var->m_boundaries[len-1].value, m_max, best_value);
+                            anum w;
+                            m_am.add(m_arith_var->m_boundaries[len-1].value, m_max, w);
+                            vec.push_back(w);
                         }
                         else {
                             // x) case, can include x
-                            m_am.set(best_value, m_arith_var->m_boundaries[len-1].value);
+                            anum w;
+                            m_am.set(w, m_arith_var->m_boundaries[len-1].value);
+                            vec.push_back(w);
                         }
-                        return;
                     }
                     // Return value in the middle
                     else {
                         if (m_am.eq(m_arith_var->m_boundaries[i].value, m_arith_var->m_boundaries[i+1].value)) {
                             SASSERT(!m_arith_var->m_boundaries[i].is_open && m_arith_var->m_boundaries[i+1].is_open);
-                            m_am.set(best_value, m_arith_var->m_boundaries[i].value);
+                            anum w;
+                            m_am.set(w, m_arith_var->m_boundaries[i].value);
+                            vec.push_back(w);
                         }
                         else {
-                            m_am.select(m_arith_var->m_boundaries[i].value, m_arith_var->m_boundaries[i+1].value, best_value);
+                            anum w;
+                            m_am.select(m_arith_var->m_boundaries[i].value, m_arith_var->m_boundaries[i+1].value, w);
+                            vec.push_back(w);
                         }
-                        return;
                     }
                 }
             }
-            // Should not reach here
-            SASSERT(false);
+            SASSERT(vec.size() > 0);
+            best_value = vec[rand_int() % vec.size()];
+            return;
         }
 
         int get_arith_score(var v, anum const & new_value) {
@@ -1182,37 +1193,56 @@ namespace nlsat {
 
             int curr_score;
             int best_arith_score = INT_MIN;
-            var best_arith_index;
+            vector<var> best_arith_index = vector<var>();
             for (var v = 0; v < m_arith_vars.size(); v++) {
                 curr_score = get_best_arith_score(v);
                 if (curr_score > best_arith_score) {
                     best_arith_score = curr_score;
-                    best_arith_index = v;
+                    best_arith_index.reset();
+                    best_arith_index.push_back(v);
+                } else if (curr_score == best_arith_score) {
+                    best_arith_index.push_back(v);
                 }
             }
 
             int best_bool_score = INT_MIN;
-            bool_var best_bool_index;
+            vector<bool_var> best_bool_index = vector<bool_var>();
             for (bool_var b = 0; b < m_bool_vars.size(); b++) {
                 curr_score = get_bool_critical_score(b);
                 if (curr_score > best_bool_score) {
                     best_bool_score = curr_score;
-                    best_bool_index = b;
+                    best_bool_index.reset();
+                    best_bool_index.push_back(b);
+                } else if (curr_score == best_bool_score) {
+                    best_bool_index.push_back(b);
                 }
             }
 
             if (best_bool_score > 0 || best_arith_score > 0) {
                 // Has decreasing move
-                if (best_bool_score > best_arith_score || (best_bool_score == best_arith_score && rand_int() % 2 == 0)) {
-                    bvar = best_bool_index;
+                if (best_bool_score > best_arith_score) {
+                    bvar = best_bool_index[rand_int() % best_bool_index.size()];
                     best_score = best_bool_score;
                     return 0;  // bool operation
                 }
-                else {
-                    avar = best_arith_index;
+                else if (best_bool_score < best_arith_score) {
+                    avar = best_arith_index[rand_int() % best_arith_index.size()];
                     best_score = best_arith_score;
                     get_best_arith_value(avar, best_arith_score, best_value);
                     return 1;  // arith operation
+                } else {
+                    int total_size = best_bool_index.size() + best_arith_index.size();
+                    int r = rand_int() % total_size;
+                    if (r < best_bool_index.size()) {
+                        bvar = best_bool_index[r];
+                        best_score = best_bool_score;
+                        return 0;  // bool operation
+                    } else {
+                        avar = best_arith_index[r - best_bool_index.size()];
+                        best_score = best_arith_score;
+                        get_best_arith_value(avar, best_arith_score, best_value);
+                        return 1;  // arith operation
+                    }
                 }
             }
 
