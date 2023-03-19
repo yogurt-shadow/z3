@@ -564,7 +564,7 @@ namespace nlsat {
                 else {
                     // x) case, cannot include x
                     anum w;
-                    m_am.sub(m_arith_var->m_boundaries[0].value, m_min, w);
+                    m_am.int_lt(m_arith_var->m_boundaries[0].value, w);
                     vec.push_back(w);
                 }
             }
@@ -576,7 +576,7 @@ namespace nlsat {
                         if (m_arith_var->m_boundaries[len-1].is_open) {
                             // x] case, cannot include x
                             anum w;
-                            m_am.add(m_arith_var->m_boundaries[len-1].value, m_max, w);
+                            m_am.int_gt(m_arith_var->m_boundaries[len-1].value, w);
                             vec.push_back(w);
                         }
                         else {
