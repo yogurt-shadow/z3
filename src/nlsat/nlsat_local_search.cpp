@@ -38,6 +38,7 @@ namespace nlsat {
         anum                                                 m_zero, 
                                                              m_one, 
                                                              m_two, 
+                                                             m_10k,
                                                              m_min, 
                                                              m_max;
 
@@ -529,6 +530,72 @@ namespace nlsat {
             // }
         }
 
+        int get_best_arith_score(var v) {
+            // Obtain the best score for variable v
+            nra_arith_var * m_arith_var = m_arith_vars[v];
+            int score = m_arith_var->m_start_score;
+            if (m_arith_var->m_boundaries.size() == 0) {
+                return INT_MIN;
+            }
+            int best_score = score;
+            for (unsigned i = 0; i < m_arith_var->m_boundaries.size(); i++) {
+                score += m_arith_var->m_boundaries[i].score;
+                if (score > best_score) {
+                    best_score = score;
+                }
+            }
+            return best_score;
+        }
+
+        void get_best_arith_value(var v, int best_score, anum & best_value) {
+            // Obtian the best value for variable v (where the best score is known)
+            nra_arith_var * m_arith_var = m_arith_vars[v];
+            int score = m_arith_var->m_start_score;
+            int len = m_arith_var->m_boundaries.size();
+            if (score == best_score) {
+                // Return value before left boundary
+                if (m_arith_var->m_boundaries[0].is_open) {
+                    // x] case, can include x
+                    m_am.set(best_value, m_arith_var->m_boundaries[0].value);
+                }
+                else {
+                    // x) case, cannot include x
+                    m_am.sub(m_arith_var->m_boundaries[0].value, m_min, best_value);
+                }
+                return;
+            }
+            for (unsigned i = 0; i < len; i++) {
+                score += m_arith_var->m_boundaries[i].score;
+                if (score == best_score) {
+                    // Return value after right boundary
+                    if (i == len - 1) {
+                        if (m_arith_var->m_boundaries[len-1].is_open) {
+                            // x] case, cannot include x
+                            m_am.add(m_arith_var->m_boundaries[len-1].value, m_max, best_value);
+                        }
+                        else {
+                            // x) case, can include x
+                            m_am.set(best_value, m_arith_var->m_boundaries[len-1].value);
+                        }
+                        return;
+                    }
+                    // Return value in the middle
+                    else {
+                        if (m_am.eq(m_arith_var->m_boundaries[i].value, m_arith_var->m_boundaries[i+1].value)) {
+                            SASSERT(!m_arith_var->m_boundaries[i].is_open && m_arith_var->m_boundaries[i+1].is_open);
+                            m_am.set(best_value, m_arith_var->m_boundaries[i].value);
+                        }
+                        else {
+                            m_am.select(m_arith_var->m_boundaries[i].value, m_arith_var->m_boundaries[i+1].value, best_value);
+                        }
+                        return;
+                    }
+                }
+            }
+            // Should not reach here
+            SASSERT(false);
+        }
+
         int get_arith_score(var v, anum const & new_value) {
             // Obtain score from the index for updating variable v to new value
             nra_arith_var * m_arith_var = m_arith_vars[v];
@@ -924,7 +991,9 @@ namespace nlsat {
             m_am.set(m_one, 1);
             m_am.set(m_two, 2);
             m_am.set(m_max, INT_MAX);
-            m_am.div(m_one, m_max, m_min);
+            // m_min = 0.0001
+            m_am.set(m_10k, 10000);
+            m_am.div(m_one, m_10k, m_min);
             LSTRACE(display_const_anum(tout););
         }
 
@@ -1100,7 +1169,7 @@ namespace nlsat {
         /**
          * * Critical Move
          */
-        int pick_critical_move(bool_var & bvar, var & avar, anum & best_value){
+        int pick_critical_move(bool_var & bvar, var & avar, anum & best_value, int & best_score){
             LSTRACE(tout << "show time of start picking move\n";
                 TimeElapsed();
             );
@@ -1111,72 +1180,39 @@ namespace nlsat {
             reset_arith_operation();
             SASSERT(!m_unsat_clauses.empty());
 
-            // Start at a random location in the middle
-            int offset = rand_int() % m_unsat_clauses.size();
-            int len = m_unsat_clauses.size();
-            if (len > 20) {
-                len = 20;
+            int curr_score;
+            int best_arith_score = INT_MIN;
+            var best_arith_index;
+            for (var v = 0; v < m_arith_vars.size(); v++) {
+                curr_score = get_best_arith_score(v);
+                if (curr_score > best_arith_score) {
+                    best_arith_score = curr_score;
+                    best_arith_index = v;
+                }
             }
-            for (int i = 0; i < len; i++) {
-                int cls_idx = m_unsat_clauses[(i + offset) % m_unsat_clauses.size()];
-                nra_clause const * curr_clause = m_nra_clauses[cls_idx];
 
-                for (literal_index lit_index : curr_clause->m_arith_literals) {
-                    nra_literal const * curr_literal = m_nra_literals[lit_index];
-                    add_literal_arith_operation(curr_literal);
+            int best_bool_score = INT_MIN;
+            bool_var best_bool_index;
+            for (bool_var b = 0; b < m_bool_vars.size(); b++) {
+                curr_score = get_bool_critical_score(b);
+                if (curr_score > best_bool_score) {
+                    best_bool_score = curr_score;
+                    best_bool_index = b;
                 }
+            }
 
-                for (literal_index lit_index : curr_clause->m_bool_literals) {
-                    nra_literal const * curr_literal = m_nra_literals[lit_index];
-                    bool_var idx = curr_literal->get_bool_index();
-                    if(m_bool_is_chosen[idx]){
-                        continue;
-                    }
-                    nra_bool_var const * curr_bool = m_bool_vars[idx];
-                    // not in tabulist, choose the bool var
-                    if(m_step > curr_bool->get_tabu()){
-                        m_bool_is_chosen[idx] = true;
-                        m_bool_operation_index.push_back(idx);
-                    }
-                }
-
-                // reset is chosen to false
-                reset_chosen_bool();
-
-                int best_bool_score = INT_MIN;
-                bool_var best_bool_var_index = select_best_from_bool_operations(best_bool_score);
-
-                int best_arith_score = INT_MIN;
-                var best_arith_index;
-                literal_index best_literal_index;
-
-                best_arith_index = select_best_from_arith_operations(best_arith_score, best_value, best_literal_index);
-
-                if (is_random_walk) {
-                    if (best_bool_score != INT_MIN &&
-                        (best_bool_score > best_arith_score ||
-                        (best_bool_score == best_arith_score && rand_int() % 2 == 0))) {
-                        bvar = best_bool_var_index;
-                        return 0;  // bool operation
-                    }
-
-                    if (best_arith_score != INT_MIN) {
-                        avar = best_arith_index;
-                        return 1;  // arith operation
-                    }
+            if (best_bool_score > 0 || best_arith_score > 0) {
+                // Has decreasing move
+                if (best_bool_score > best_arith_score || (best_bool_score == best_arith_score && rand_int() % 2 == 0)) {
+                    bvar = best_bool_index;
+                    best_score = best_bool_score;
+                    return 0;  // bool operation
                 }
                 else {
-                    if (best_bool_score > 0 &&
-                        (best_bool_score > best_arith_score ||
-                        (best_bool_score == best_arith_score && rand_int() % 2 == 0))) {
-                        bvar = best_bool_var_index;
-                        return 0;  // bool operation
-                    }
-
-                    if (best_arith_score > 0) {
-                        avar = best_arith_index;
-                        return 1;  // arith operation
-                    }
+                    avar = best_arith_index;
+                    best_score = best_arith_score;
+                    get_best_arith_value(avar, best_arith_score, best_value);
+                    return 1;  // arith operation
                 }
             }
 
@@ -2228,6 +2264,16 @@ namespace nlsat {
             }
         }
 
+        int get_total_weight() {
+            int result = 0;
+            for (int i = 0; i < m_unsat_clauses.size(); i++) {
+                clause_index curr_index = m_unsat_clauses[i];
+                nra_clause const * curr_clause = m_nra_clauses[curr_index];
+                result += curr_clause->get_weight();
+            }
+            return result;
+        }
+
         /**
          * Local Search
          */
@@ -2305,8 +2351,10 @@ namespace nlsat {
                 bool_var picked_b;
                 var picked_v;
                 scoped_anum next_value(m_am);
-                int mode = pick_critical_move(picked_b, picked_v, next_value);
+                int best_score;
+                int mode = pick_critical_move(picked_b, picked_v, next_value, best_score);
 
+                int before_weight = get_total_weight();
                 if (mode == 0) {  // bool operation
                     critical_bool_move(picked_b);
                     if(update_bool_info()){
@@ -2315,6 +2363,7 @@ namespace nlsat {
                     else {
                         no_improve_cnt_bool++;
                     }
+                    SASSERT(before_weight - get_total_weight() == best_score);
                 } else if (mode == 1) {  // arith operation
                     critical_nra_move(picked_v, next_value);
                     // update arith improvement
@@ -2324,6 +2373,7 @@ namespace nlsat {
                     else {
                         no_improve_cnt_nra++;
                     }
+                    SASSERT(before_weight - get_total_weight() == best_score);
                 } else {
                     // No operation
                 }
