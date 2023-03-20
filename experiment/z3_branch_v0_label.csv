@@ -1,0 +1,16 @@
+name, total, bool var, arith var, sat, unsat, solved, unsolved
+20200911-Pine, 240, 168, 672, 168, 0, 168, 72
+meti-tarski, 4399, 4322, 13640, 4322, 0, 4322, 77
+hycomp, 514, 9635, 4275, 105, 0, 105, 409
+UltimateAutomizer, 49, 14, 3365, 14, 0, 14, 35
+20161105-Sturm-MGC, 2, 0, 0, 0, 0, 0, 2
+20180501-Economics-Mulligan, 95, 82, 1371, 82, 0, 82, 13
+2019-ezsmt, 61, 9548, 1130, 11, 0, 11, 50
+kissing, 45, 18, 227, 18, 0, 18, 27
+20170501-Heizmann-UltimateInvariantSynthesis, 68, 0, 0, 0, 0, 0, 68
+hong, 12, 0, 0, 0, 0, 0, 12
+LassoRanker, 676, 251, 1914831, 251, 0, 251, 425
+zankl, 138, 87, 5162, 87, 0, 87, 51
+20161105-Sturm-MBO, 297, 24, 167, 24, 0, 24, 273
+20211101-Geogebra, 112, 91, 558, 91, 0, 91, 21
+20220314-Uncu, 70, 118, 245, 70, 0, 70, 0
