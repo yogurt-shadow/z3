@@ -96,3 +96,6 @@ CMakeSettings.json
 .DS_Store
 dbg/**
 *.wsp
+
+# wzh
+.history
