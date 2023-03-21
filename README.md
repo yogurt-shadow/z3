@@ -3,13 +3,14 @@
 1. no operation (stuck)
    1. avoid no operation state
 
-![](https://cdn.nlark.com/yuque/0/2023/jpeg/26979990/1679370129364-1582a927-648e-4900-b64a-311821b7d951.jpeg)
+![](pictures/pic1.jpeg)
 
       1. tie breaking
       2. even don't insert no operation states (what if all states are no operation ones)
    2. add more operations
 
-![](https://cdn.nlark.com/yuque/0/2023/jpeg/26979990/1679370229216-b9e042c7-d9d6-4890-8ce2-46315c579566.jpeg)
+![](pictures/pic2.jpeg)
+
 
       1. critical move sat literals in clause whose sat count >= 2
       2. current random sample
