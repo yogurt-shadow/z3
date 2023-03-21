@@ -479,6 +479,13 @@ namespace nlsat {
             nra_arith_var * m_arith_var = m_arith_vars[v];
             m_arith_var->m_start_score = 0;
             m_arith_var->m_boundaries.reset();
+
+            // If variable has infeasible set, add it with large weight
+            if (m_arith_var->m_infeasible_st != nullptr) {
+                m_ism.add_boundaries(m_arith_var->m_infeasible_st, m_arith_var->m_boundaries,
+                                     m_arith_var->m_start_score, INT_MAX / 2);
+            }
+
             for (unsigned i = 0; i < m_arith_var->m_clauses.size(); i++) {
                 clause_index c_idx = m_arith_var->m_clauses[i];
                 nra_clause const * curr_clause = m_nra_clauses[c_idx];
@@ -537,7 +544,8 @@ namespace nlsat {
         }
 
         int get_best_arith_score(var v) {
-            // Obtain the best score for variable v
+            // Obtain the best score for variable v. Scores less than INT_MIN / 4
+            // must be due to infeasible set of a variable, and hence discarded.
             nra_arith_var * m_arith_var = m_arith_vars[v];
             int score = m_arith_var->m_start_score;
             if (m_arith_var->m_boundaries.size() == 0) {
@@ -549,6 +557,9 @@ namespace nlsat {
                 if (score > best_score) {
                     best_score = score;
                 }
+            }
+            if (best_score < INT_MIN / 4) {
+                return INT_MIN;
             }
             return best_score;
         }
@@ -562,6 +573,7 @@ namespace nlsat {
 
         void get_best_arith_value(var v, int best_score, anum & best_value) {
             // Obtain the best value for variable v (where the best score is known)
+            SASSERT(best_score != INT_MIN);
             nra_arith_var * m_arith_var = m_arith_vars[v];
             int score = m_arith_var->m_start_score;
             int len = m_arith_var->m_boundaries.size();
@@ -644,7 +656,7 @@ namespace nlsat {
                 // x] case, can include x
                 anum w;
                 m_am.set(w, m_arith_var->m_boundaries[0].value);
-                if (!contains_value(s, w)) {
+                if (!contains_value(s, w) && score >= INT_MIN / 4) {
                     scores.push_back(score);
                     vec.push_back(w);
                 }
@@ -653,7 +665,7 @@ namespace nlsat {
                 // x) case, cannot include x
                 anum w;
                 m_am.int_lt(m_arith_var->m_boundaries[0].value, w);
-                if (!contains_value(s, w)) {
+                if (!contains_value(s, w) && score >= INT_MIN / 4) {
                     scores.push_back(score);
                     vec.push_back(w);
                 }
@@ -667,7 +679,7 @@ namespace nlsat {
                         // x] case, cannot include x
                         anum w;
                         m_am.int_gt(m_arith_var->m_boundaries[len-1].value, w);
-                        if (!contains_value(s, w)) {
+                        if (!contains_value(s, w) && score >= INT_MIN / 4) {
                             scores.push_back(score);
                             vec.push_back(w);
                         }
@@ -676,7 +688,7 @@ namespace nlsat {
                         // x) case, can include x
                         anum w;
                         m_am.set(w, m_arith_var->m_boundaries[len-1].value);
-                        if (!contains_value(s, w)) {
+                        if (!contains_value(s, w) && score >= INT_MIN / 4) {
                             scores.push_back(score);
                             vec.push_back(w);
                         }
@@ -688,7 +700,7 @@ namespace nlsat {
                         SASSERT(!m_arith_var->m_boundaries[i].is_open && m_arith_var->m_boundaries[i+1].is_open);
                         anum w;
                         m_am.set(w, m_arith_var->m_boundaries[i].value);
-                        if (!contains_value(s, w)) {
+                        if (!contains_value(s, w) && score >= INT_MIN / 4) {
                             scores.push_back(score);
                             vec.push_back(w);
                         }
@@ -696,17 +708,20 @@ namespace nlsat {
                     else {
                         anum w;
                         m_am.select(m_arith_var->m_boundaries[i].value, m_arith_var->m_boundaries[i+1].value, w);
-                        if (!contains_value(s, w)) {
+                        if (!contains_value(s, w) && score >= INT_MIN / 4) {
                             scores.push_back(score);
                             vec.push_back(w);
                         }
                     }
                 }
             }
-            SASSERT(vec.size() > 0);
+            if (vec.size() == 0) {
+                return false;
+            }
             int r = rand_int() % vec.size();
             best_value = vec[r];
             best_score = scores[r];
+            SASSERT(best_score >= INT_MIN / 4);
             return true;
         }
 
@@ -1309,13 +1324,13 @@ namespace nlsat {
                     for (var v : curr_literal->m_vars) {
                         if (!m_vars_visited.contains(v)) {
                             m_vars_visited.insert(v);
-                        }
-                        anum best_value;
-                        int best_score;
-                        if (get_best_arith_value_clause(v, best_value, c_idx, best_score)) {
-                            best_arith_index.push_back(v);
-                            arith_vals.push_back(best_value);
-                            best_scores.push_back(best_score);
+                            anum best_value;
+                            int best_score;
+                            if (get_best_arith_value_clause(v, best_value, c_idx, best_score)) {
+                                best_arith_index.push_back(v);
+                                arith_vals.push_back(best_value);
+                                best_scores.push_back(best_score);
+                            }
                         }
                     }
                 }
@@ -1846,6 +1861,11 @@ namespace nlsat {
             );
             LSTRACE(show_ls_assignment(tout););
             m_assignment.set(v, value);
+
+            // std::cout << "var: " << v << std::endl;
+            // std::cout << "value: "; m_am.display(std::cout, old_value);
+            // std::cout << "->";
+            // m_am.display(std::cout, value); std::cout << std::endl;
 
             critical_subscore_nra(v, value);
             // update arith score, except when the problem is already solved
