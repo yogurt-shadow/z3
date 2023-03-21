@@ -4,45 +4,33 @@
 /**
  * * local search for nlsat on nonlinear real arithmetic
  *
- * @author wzh
- * @date 23/03/12
- * @version z3_nra_v3
- * Insert only one unsat literal in unsat clauses
- * how can we design heuristic algorithms to decrease score with less unsat clauses or literals ?
- *
- * @date 23/03/12
- * @version z3_nra_v3_1
- * Sample Heuristic: use rational rather than anum
- *
- *
- * @date 23/03/12
- * @version z3_nra_v4
- * record ability of literal's multi-valued
- *
- */
+ * @date 23/03/21
+ * 1. tie breaking with no operation random walk
+ * 2. no insert operation for stuck states
+ * */
 
 namespace nlsat {
     struct ls_helper::imp {
         /**
          * * Basic Manager
          */
-        anum_manager& m_am;
-        pmanager& m_pm;
-        interval_set_manager& m_ism;
-        evaluator& m_evaluator;
-        polynomial::cache& m_cache;
-        solver& m_solver;
+        anum_manager                             &                 m_am;
+        pmanager                                 &                 m_pm;
+        interval_set_manager                     &                 m_ism;
+        evaluator                                &                 m_evaluator;
+        polynomial::cache                        &                 m_cache;
+        solver                                   &                 m_solver;
 
         /**
          * * Assignment
          */
-        assignment& m_assignment;
-        svector<lbool>& m_bvalues;
+        assignment                               &                 m_assignment;
+        svector<lbool>                           &                 m_bvalues;
 
         /**
          * * whether the value is fixed, i.e. can only be that point value
          */
-        bool_vector m_var_value_fixed;
+        bool_vector                                                m_var_value_fixed;
 
         /**
          * ^ Const Anum
@@ -51,146 +39,165 @@ namespace nlsat {
          * ^ Delta: 1/max
          * ^ Max: INT_MAX
          */
-        anum m_zero,
-            m_one,
-            m_two,
-            m_min,
-            m_max;
+        anum                                                       m_zero,
+                                                                   m_one,
+                                                                   m_two,
+                                                                   m_min,
+                                                                   m_max;
 
         /**
          * * Arith Var
          */
-        nra_arith_var_vector m_arith_vars;
+        nra_arith_var_vector                                       m_arith_vars;
         // ^ arith vars that are visited
-        var_table m_vars_visited;
-        // ^ literals that have been inserted from
-        var_table m_literal_added;
+        var_table                                                  m_vars_visited;
 
         /**
          * * Bool Var
          */
-        nra_bool_var_vector m_bool_vars;
+        nra_bool_var_vector                                        m_bool_vars;
         // ^ pure bool index --> atom index
-        const bool_var_vector& m_pure_bool_vars;
+        const bool_var_vector                  &                   m_pure_bool_vars;
         // ^ atom index --> pure bool index
-        const bool_var_vector& m_pure_bool_convert;
-        bool_var m_max_bool_var;
+        const bool_var_vector                  &                   m_pure_bool_convert;
+        bool_var                                                   m_max_bool_var;
 
         /**
          * * Literal
          */
-        nra_literal_vector m_nra_literals;
-        var m_num_bool_literals;
-        var m_num_arith_literals;
+        nra_literal_vector                                         m_nra_literals;
+        unsigned                                                   m_num_bool_literals;
+        unsigned                                                   m_num_arith_literals;
 
-        literal_vector m_literal_visited;
-        // ^ used for set literal anum
-        var_vector m_literal_index_visited;
+        literal_vector                                             m_literal_visited;
+        // ^ used for set literal anum and calculate score (avoid calculate same literals more times)
+        var_vector                                                 m_literal_index_visited;
         // ^ store before sat information
-        bool_vector m_literal_before_sat;
+        bool_vector                                                m_literal_before_sat;
 
         /**
          * * Count duplicated literals in various clauses
-         * * Used for switch bool mode and arith mode
          */
-        unsigned m_num_unsat_literals;
-        unsigned m_num_bool_unsat_literals;
+        unsigned                                                   m_num_unsat_literals;
+        unsigned                                                   m_num_bool_unsat_literals;
 
         /**
          * Clause
          */
-        const clause_vector& m_clauses;
-        nra_clause_vector m_nra_clauses;
+        const clause_vector                   &                    m_clauses;
+        nra_clause_vector                                          m_nra_clauses;
 
         /**
          * * Used for init arith var's infeasible set
          */
         // only contain just one arith variable
-        var_table m_unit_var_clauses;
+        clause_index_table                                         m_unit_var_clauses;
         // only contain one literal
-        var_table m_unit_clauses;
+        clause_index_table                                         m_unit_clauses;
 
         // unsat clauses (index)
-        var_vector m_unsat_clauses;
+        var_vector                                                 m_unsat_clauses;
         // unsat clauses with pure bool var (index)
-        var_table m_unsat_clauses_bool;
+        clause_index_table                                         m_unsat_clauses_bool;
         // sat clause with false literals (index)
-        var_vector m_sat_clause_with_false_literals;
+        var_vector                                                 m_sat_clause_with_false_literals;
 
         /**
          * * Weight
          */
-        unsigned m_total_clause_weight;
-        const unsigned smooth_probability = 3;
+        unsigned                                                   m_total_clause_weight;
 
         /**
          * Atoms
          */
-        const atom_vector& m_atoms;
+        const atom_vector                    &                     m_atoms;
 
         /**
          * Information
          */
-        var m_num_vars;
-        var m_num_bool_vars;
-        var m_num_literals;
-        var m_num_clauses;
+        var                                                        m_num_vars;
+        var                                                        m_num_bool_vars;
+        var                                                        m_num_literals;
+        var                                                        m_num_clauses;
 
         /**
          * Random
          */
-        unsigned m_rand_seed;
-        random_gen m_rand;
+        unsigned                                                   m_rand_seed;
+        random_gen                                                 m_rand;
 
         /**
          * * improvement and restart
          */
-        unsigned m_best_found_restart;
-        unsigned no_improve_cnt_bool;
-        unsigned no_improve_cnt_nra;
-        unsigned no_improve_cnt;
-        unsigned m_best_found_cost_bool;
-        unsigned m_best_found_cost_nra;
+        unsigned                                                   m_best_found_restart;
+        unsigned                                                   no_improve_cnt_bool;
+        unsigned                                                   no_improve_cnt_arith;
+        unsigned                                                   no_improve_cnt;
+        unsigned                                                   m_best_found_cost_bool;
+        unsigned                                                   m_best_found_cost_nra;
 
         /**
          * * local search control
          */
-        var& m_step;
-        var m_outer_step;
-        const unsigned max_step = UINT_MAX;
-        bool is_bool_search;
+        var                                 &                      m_step;
+        var                                                        m_outer_step;
+        const unsigned                                             max_step = UINT_MAX;
+        bool                                                       is_bool_search;
 
         /**
          * * Time
          */
-        std::chrono::steady_clock::time_point m_start_time;
-        int m_time_label;
-        double m_best_cost_time;
-        double m_cutoff;
+        std::chrono::steady_clock::time_point                      m_start_time;
+        int                                                        m_time_label;
+        double                                                     m_best_cost_time;
+        double                                                     m_cutoff;
 
         /**
          * * Operation
          */
-        bool_vector m_bool_is_chosen;
-        bool_var_vector m_bool_operation_index;
+        bool_operation_table                                       m_bool_operation_table;
+        bool_vector                                                m_bool_is_chosen;
+        bool_var_vector                                            m_bool_operation_index;
 
-        anum_table m_nra_operation_table;
-        var_vector m_nra_operation_index;
-        anum_vector m_nra_operation_value;
-        var_vector m_nra_operation_literal_index;
+        /**
+         * operation table
+         * 1. var index
+         * 2. var value
+         * 3. literal index
+        */
+        arith_operation_table                                      m_nra_operation_table;
+        var_vector                                                 m_nra_operation_index;
+        anum_vector                                                m_nra_operation_value;
+        var_vector                                                 m_nra_operation_literal_index;
+
+        /**
+         * * State Information
+        */
+        // ^ whether first state, initialize true, otherwise false
+        bool                                                       m_first_state;
+        // ^ whether current state is stuck, i.e. no operation
+        bool                                                       m_state_stuck;
 
         /**
          * * Statistics
          */
         // ^ no stuck
-        unsigned& m_stuck;
+        unsigned                            &                      m_stuck;
         // ^ stuck step / whole step
-        double& m_stuck_ratio;
+        double                              &                      m_stuck_ratio;
 
-        const substitute_value_vector& m_sub_value;
+        const substitute_value_vector       &                      m_sub_value;
 
-        imp(solver& s, anum_manager& am, pmanager& pm, polynomial::cache& cache, interval_set_manager& ism, evaluator& ev, assignment& ass, svector<lbool>& bvalues, clause_vector const& cls, atom_vector const& ats, bool_var_vector const& pure_bool_vars, bool_var_vector const& pure_bool_convert, unsigned seed, unsigned& step, unsigned& stuck, double& ratio, substitute_value_vector const& vec)
-            : m_am(am), m_pm(pm), m_ism(ism), m_evaluator(ev), m_assignment(ass), m_clauses(cls), m_atoms(ats), m_rand_seed(seed), m_solver(s), m_cutoff(1200), is_bool_search(false), m_nra_operation_table(m_am, m_nra_operation_index, m_nra_operation_value), m_step(step), m_stuck(stuck), m_stuck_ratio(ratio), m_cache(cache), m_sub_value(vec), m_time_label(1), m_pure_bool_vars(pure_bool_vars), m_pure_bool_convert(pure_bool_convert), m_bvalues(bvalues) {
+        imp(solver& s, anum_manager& am, pmanager& pm, polynomial::cache& cache, interval_set_manager& ism, evaluator& ev, assignment& ass, svector<lbool>& bvalues, clause_vector const& cls, atom_vector const& ats, bool_var_vector const& pure_bool_vars, bool_var_vector const& pure_bool_convert, unsigned seed, 
+        unsigned& step, unsigned& stuck, double& ratio, substitute_value_vector const& vec)
+            : m_am(am), m_pm(pm), m_ism(ism), m_evaluator(ev), 
+            m_assignment(ass), m_clauses(cls), m_atoms(ats), 
+            m_rand_seed(seed), m_solver(s), m_cutoff(1200), 
+            is_bool_search(false), m_nra_operation_table(m_am, m_nra_operation_index, m_nra_operation_value, m_nra_operation_literal_index), 
+            m_bool_operation_table(m_bool_operation_index, m_bool_is_chosen, m_num_bool_vars),
+            m_step(step), m_stuck(stuck), m_stuck_ratio(ratio), m_cache(cache), m_sub_value(vec), m_time_label(1), 
+            m_pure_bool_vars(pure_bool_vars), m_pure_bool_convert(pure_bool_convert), m_bvalues(bvalues)
+        {
             set_const_anum();
             clear_statistics();
         }
@@ -209,18 +216,13 @@ namespace nlsat {
         }
 
         /**
-         * * Initialize
+         * * set number of arith vars
          */
         void set_var_num(unsigned x) {
-            LSTRACE(tout << "set arith variable number: " << x << std::endl;
-                    std::cout << "start of set arith variable number\n";);
             m_num_vars = x;
-            LSTRACE(display_vars(tout); display_clauses(tout););
             init_bool_vars();
             init_arith_vars();
             init_clauses();
-            LSTRACE(tout << "end of set arith variable numbers" << std::endl;
-                    std::cout << "end of set arith variable number\n";);
         }
 
         /**
@@ -246,12 +248,13 @@ namespace nlsat {
             for (var v = 0; v < m_num_vars; v++) {
                 interval_set* curr_full = m_ism.mk_full();
                 m_ism.inc_ref(curr_full);
-                // m_ism.inc_ref(curr_empty);
-                nra_arith_var* temp = new nra_arith_var(v, curr_full, nullptr);
-                m_arith_vars.push_back(temp);
+                m_arith_vars.push_back(new nra_arith_var(v, curr_full, nullptr));
             }
         }
 
+        /**
+         * @brief register clauses
+        */
         void init_clauses() {
             LSTRACE(tout << "begin init clauses\n";);
             m_num_clauses = m_clauses.size();
@@ -273,21 +276,18 @@ namespace nlsat {
                     LSTRACE(tout << "pre-init literal "; m_solver.display(tout, l); tout << std::endl;);
                     literal_index lit_index = find_literal_vector(m_literal_visited, l);
                     nra_literal* m_literal;
-                    if (lit_index == UINT_MAX) {
-                        // not register literal yet
+                    if (lit_index == UINT_MAX) { // not register literal yet
                         init_literal(l);
                         m_literal = m_nra_literals.back();
                         lit_index = m_nra_literals.size() - 1;
-                    } else {
-                        // registered literal
+                    } else { // registered literal
                         LSTRACE(tout << "already registered\n";);
                         SASSERT(m_nra_literals.size() > lit_index);
                         SASSERT(m_nra_literals[lit_index]->get_literal() == m_literal_visited[lit_index]);
                         m_literal = m_nra_literals[lit_index];
                     }
                     curr_literals.push_back(m_literal);
-                    // bool literal
-                    if (m_literal->is_bool()) {
+                    if (m_literal->is_bool()) { // bool literal
                         LSTRACE(tout << "bool literal, collect info for bool variables\n";);
                         SASSERT(m_literal->m_vars.empty());
                         bool_var b = m_literal->get_bool_index();
@@ -298,68 +298,56 @@ namespace nlsat {
                             b_var->add_clause(idx);
                         }
                         b_var->add_literal_clause(lit_index, idx);
-                        LSTRACE(tout << "bool var: " << b << std::endl;
-                                tout << "bool literals: "; display_literal_set(tout, b_var->m_literals);
-                                tout << std::endl;
-                                tout << "bool lit_cls: \n"; display_clause_set(tout, b_var->m_lit_cls);
-                                tout << std::endl;);
-                    } else {
-                        // loop arith var
+                    } else { // arith literal
                         LSTRACE(tout << "arith literal, collect info for arith variables\n";);
-                        for (var v : m_literal->m_vars) {
-                            // LSTRACE(tout << "show size: " << m_arith_vars.size() << std::endl;);
+                        for (var v : m_literal->m_vars) { // record arith vars in clauses
                             if (!m_clause_vars.contains(v)) {
                                 m_clause_vars.insert(v);
                                 m_arith_vars[v]->add_clause(idx);
                             }
-                            m_arith_vars[v]->add_literal_clause(lit_index, idx);
+                            m_arith_vars[v]->add_literal_clause(lit_index, idx); // record literal-clause pair for arith var
                             LSTRACE(tout << "collect arith var " << v << " succeed\n";);
                         }
                     }
                 }
                 nra_clause* temp_clause = new nra_clause(idx, m_clauses[idx], curr_literals, m_clause_vars, m_clause_bool_vars);
                 m_nra_clauses.push_back(temp_clause);
-                // only one arith var and no bool literal
-                if (m_clause_vars.size() == 1 && temp_clause->bool_size() == 0) {
+                if (m_clause_vars.size() == 1 && temp_clause->bool_size() == 0) { // only one arith var and no bool literal
                     m_unit_var_clauses.insert(idx);
-                    // var cls_var = *m_clause_vars.begin();
                     var cls_var = null_var;
-                    for (var v : m_clause_vars) {
+                    for (var v : m_clause_vars) { // get that one arith var
                         cls_var = v;
                     }
                     SASSERT(cls_var != null_var);
                     nra_arith_var* curr_var = m_arith_vars[cls_var];
-                    // curr_st = /\. st, stands for infeasible set of a variable
-                    interval_set_ref curr_st(m_ism);
+                    interval_set_ref curr_st(m_ism); // curr_st = /\. st, stands for infeasible set of a variable
                     curr_st = m_ism.mk_full();
                     for (literal_index l_idx : temp_clause->m_literals) {
                         nra_literal const* loop_literal = m_nra_literals[l_idx];
                         SASSERT(loop_literal->is_arith());
                         SASSERT(loop_literal->m_vars.size() == 1 && loop_literal->m_vars[0] == cls_var);
-                        // we get infeasible set
                         interval_set_ref loop_st(m_ism);
                         loop_st = m_evaluator.infeasible_intervals(loop_literal->get_atom(), loop_literal->sign(), temp_clause->get_clause(), cls_var);
                         curr_st = m_ism.mk_intersection(curr_st, loop_st);
                     }
-                    // infeasible set --> feasible set
-                    curr_st = m_ism.mk_complement(curr_st);
-                    // intersect feasible set
-                    curr_var->m_feasible_st = m_ism.mk_intersection(curr_var->m_feasible_st, curr_st);
+                    curr_st = m_ism.mk_complement(curr_st); // infeasible set --> feasible set
+                    curr_var->m_feasible_st = m_ism.mk_intersection(curr_var->m_feasible_st, curr_st); // intersect feasible set
                 }
-                // only one literal
-                if (temp_clause->size() == 1) {
+                if (temp_clause->size() == 1) { // only one literal, i.e. unit clause
                     m_unit_clauses.insert(idx);
                 }
                 LSTRACE(tout << "end of this clause\n";);
             }
             LSTRACE(tout << "end of init clauses\n";);
-            init_arith_infeasible_set();
+            init_arith_infeasible_set(); // initialize arith var's infeasible set
             LSTRACE(tout << "show arith var's feasible set:\n";
                     display_arith_intervals(tout););
         }
 
+        /**
+         * @brief initialize arith var's infeasible set
+        */
         void init_arith_infeasible_set() {
-            // m_var_init_st.reset();
             m_var_value_fixed.resize(m_arith_vars.size(), false);
             for (var v = 0; v < m_arith_vars.size(); v++) {
                 nra_arith_var* curr = m_arith_vars[v];
@@ -367,22 +355,17 @@ namespace nlsat {
             }
         }
 
+        /**
+         * @brief register literal
+        */
         void init_literal(literal l) {
-            LSTRACE(tout << "init literal "; m_solver.display(tout, l); tout << std::endl;);
             bool is_bool = is_bool_literal(l);
-            // bool literal: pure bool index
-            // arith literal: null_var
+            // bool literal: pure bool index, arith literal: null_var
             bool_var b_idx = is_bool ? m_pure_bool_convert[l.var()] : null_var;
             literal_index m_index = m_nra_literals.size();
             var_table m_vars;
             get_literal_vars(l, m_vars);
-            LSTRACE(tout << "show literal vars: "; display_var_table(tout, m_vars); tout << std::endl;);
-            nra_literal* temp = new nra_literal(m_index, b_idx, l, is_bool, m_vars, m_atoms[l.var()]);
-            // LSCTRACE(m_atoms[l.var()] != nullptr,
-            //     tout << "show literal atom:\n";
-            //     m_solver.display(tout, *(temp->get_atom()));
-            // );
-            m_nra_literals.push_back(temp);
+            m_nra_literals.push_back(new nra_literal(m_index, b_idx, l, is_bool, m_vars, m_atoms[l.var()]));
             m_literal_visited.push_back(l);
             m_num_literals++;
             if (is_bool) {
@@ -391,7 +374,6 @@ namespace nlsat {
                 m_num_arith_literals++;
             }
             SASSERT(m_nra_literals.size() == m_literal_visited.size());
-            LSTRACE(tout << "end of init literal\n";);
         }
 
         /**
@@ -412,6 +394,8 @@ namespace nlsat {
             m_best_found_cost_nra = UINT_MAX;
             LSTRACE(tout << "end of init solution\n";
                     display_unsat_clauses(tout););
+            // when restart, record first state
+            m_first_state = true;
             return true;
         }
 
@@ -637,7 +621,7 @@ namespace nlsat {
             return false;
         }
 
-        bool update_nra_info() {
+        bool update_arith_info() {
             if (m_unsat_clauses.size() < m_best_found_cost_nra) {
                 m_best_found_cost_nra = m_unsat_clauses.size();
                 return true;
@@ -793,7 +777,7 @@ namespace nlsat {
          */
         void enter_nra_mode() {
             is_bool_search = false;
-            no_improve_cnt_nra = 0;
+            no_improve_cnt_arith = 0;
             m_best_found_cost_nra = m_unsat_clauses.size();
             LSTRACE(tout << "enter nra mode\n";);
         }
@@ -859,21 +843,16 @@ namespace nlsat {
 
         void insert_in_complement(var v, interval_set const* s, literal_index l_idx) {
             SASSERT(!m_ism.is_full(s));
-            LSTRACE(
-                tout << "insertion var " << v << std::endl;
-                tout << "show set of insert: "; m_ism.display(tout, s); tout << std::endl;);
             anum_vector w_vec;
             m_ism.peek_in_complement_heuristic(s, w_vec);
             for (auto ele : w_vec) {
-                if (m_assignment.is_assigned(v) && m_am.eq(ele, m_assignment.value(v))) {
+                if (m_assignment.is_assigned(v) && m_am.eq(ele, m_assignment.value(v))) { // re-self move
                     continue;
                 }
                 if (m_nra_operation_table.contains(v, ele)) {
                     continue;
                 }
-                m_nra_operation_index.push_back(v);
-                m_nra_operation_value.push_back(ele);
-                m_nra_operation_literal_index.push_back(l_idx);
+                m_nra_operation_table.insert_operation(v, ele, l_idx);
             }
         }
 
@@ -905,8 +884,6 @@ namespace nlsat {
                 m_unsat_clauses_bool.insert(m_index);
             }
             m_sat_clause_with_false_literals.erase(m_index);
-            // m_num_unsat_literals += cls->size();
-            // m_num_bool_unsat_literals += cls->bool_size();
         }
 
         bool is_bool_literal(literal l) const {
@@ -917,6 +894,10 @@ namespace nlsat {
             return !is_bool_literal(l);
         }
 
+        /**
+         * @brief find literal in vec, used for initializing literals
+         * @return index in array
+        */
         unsigned find_literal_vector(literal_vector const& vec, literal l) const {
             for (unsigned i = 0; i < vec.size(); i++) {
                 if (vec[i] == l) {
@@ -937,7 +918,6 @@ namespace nlsat {
         }
 
         bool_var select_best_from_bool_operations(int& best_score) {
-            // set BMS and cnt
             unsigned cnt;
             bool BMS;
             if (m_bool_operation_index.size() > 45) {
@@ -949,18 +929,15 @@ namespace nlsat {
             }
             unsigned best_last_move = UINT_MAX;
             bool_var m_curr_operation, best_bool_var_index = null_var;
-            // loop bool operations
-            for (unsigned i = 0; i < cnt; i++) {
+            for (unsigned i = 0; i < cnt; i++) { // loop bool operations
                 if (BMS) {
-                    // swap
                     unsigned rand_index = rand_int() % (m_bool_operation_index.size() - i);
-                    unsigned temp = m_bool_operation_index[m_bool_operation_index.size() - i - 1];
+                    bool_var temp = m_bool_operation_index[m_bool_operation_index.size() - i - 1];
                     m_curr_operation = m_bool_operation_index[rand_index];
-                    m_bool_operation_index[rand_index] = temp;
+                    m_bool_operation_index[rand_index] = temp; // swap
                 } else {
                     m_curr_operation = m_bool_operation_index[i];
                 }
-                // Score for pure bool variables are calculated before
                 nra_bool_var const* curr_bool = m_bool_vars[m_curr_operation];
                 if (curr_bool->get_score() > best_score || (curr_bool->get_score() == best_score && curr_bool->get_last_move() < best_last_move)) {
                     best_score = curr_bool->get_score();
@@ -971,67 +948,37 @@ namespace nlsat {
             return best_bool_var_index;
         }
 
-        /**
-         * * Critical Move
-         */
-        bool_var pick_critical_bool_move() {
-            LSTRACE(tout << "show time of start picking bool move\n";
-                    TimeElapsed(););
-            LSTRACE(tout << "start of pick bool move\n";
-                    show_ls_assignment(tout););
-            m_bool_operation_index.reset();
-            for (clause_index cls_idx : m_unsat_clauses_bool) {
-                nra_clause const* curr_clause = m_nra_clauses[cls_idx];
-                for (literal_index lit_index : curr_clause->m_bool_literals) {
-                    nra_literal const* curr_literal = m_nra_literals[lit_index];
-                    bool_var idx = curr_literal->get_bool_index();
-                    // ignore chosen bool var
-                    if (m_bool_is_chosen[idx]) {
+        void insert_bool_operation_from_unsat_clauses() {
+            for(clause_index c_idx: m_unsat_clauses_bool) {
+                nra_clause const * curr_clause = m_nra_clauses[c_idx];
+                for(literal_index l_idx: curr_clause->m_bool_literals) {
+                    nra_literal const * curr_literal = m_nra_literals[l_idx];
+                    bool_var b_idx = curr_literal->get_bool_index();
+                    SASSERT(b_idx != null_var);
+                    if(m_bool_operation_table.contains(b_idx)) { // ignore chosen bool var
                         continue;
                     }
-                    nra_bool_var const* curr_bool = m_bool_vars[idx];
-                    // not in tabulist, choose the bool var
-                    if (m_step > curr_bool->get_tabu()) {
-                        m_bool_is_chosen[idx] = true;
-                        m_bool_operation_index.push_back(idx);
+                    nra_bool_var const * curr_bool = m_bool_vars[b_idx];
+                    if(m_step > curr_bool->get_tabu()) { // not in tabulist, choose the bool var
+                        m_bool_operation_table.insert(b_idx);
                     }
                 }
             }
-            // reset is chosen to false
-            reset_chosen_bool();
-            // int best_bool_score = -10;
-            int best_bool_score = 0;
-            bool_var best_bool_var_index = select_best_from_bool_operations(best_bool_score);
-            // untabu decreasing bool variable exists
-            if (best_bool_var_index != null_var && best_bool_score > 0) {
-                LSTRACE(tout << "end of pick bool move\n";);
-                LSTRACE(tout << "show time of end picking bool move\n";
-                        TimeElapsed(););
-                return best_bool_var_index;
-            }
-            // update clause weight
-            if (rand_int() % 500 > smooth_probability) {
-                update_clause_weight();
-            } else {
-                smooth_clause_weight();
-            }
-
-            // if (rand_int() % 10 == 0) {
-            // if (best_bool_var_index != null_var) {
-            //     return best_bool_var_index;
-            // }
-            // }
-            random_walk();
-            LSTRACE(tout << "end of pick bool move\n";);
-            LSTRACE(tout << "show time of end picking bool move\n";
-                    TimeElapsed(););
-            return null_var;
         }
 
-        void reset_chosen_bool() {
-            for (bool_var idx : m_bool_operation_index) {
-                m_bool_is_chosen[idx] = false;
+        /**
+         * @brief pick bool move with score > 0
+         */
+        bool_var pick_bool_move(int & best_score) {
+            m_bool_operation_table.reset();
+            insert_bool_operation_from_unsat_clauses();
+            int best_bool_score = 0;
+            bool_var best_bool_var_index = select_best_from_bool_operations(best_bool_score);
+            if (best_bool_score > 0) { // untabu decreasing bool variable exists
+                best_score = best_bool_score;
+                return best_bool_var_index;
             }
+            return null_var;
         }
 
         var select_best_from_arith_operations(int& best_score, anum& best_value, literal_index& best_literal_index) {
@@ -1074,7 +1021,6 @@ namespace nlsat {
                 int curr_score = get_arith_critical_score(m_arith_index, m_arith_value);
                 LSTRACE(tout << "show score in pick nra move: " << curr_score << std::endl;);
                 nra_arith_var const* curr_arith = m_arith_vars[m_arith_index];
-                // compare arith score and last move
                 if (curr_score > best_score || (curr_score == best_score && curr_arith->get_last_move() < best_last_move)) {
                     best_score = curr_score;
                     best_last_move = curr_arith->get_last_move();
@@ -1086,30 +1032,27 @@ namespace nlsat {
             return best_arith_index;
         }
 
-        void add_literal_arith_operation(nra_literal const* l) {
-            LSTRACE(tout << "add operation for literal\n";
-                    m_solver.display(tout, l->m_literal); tout << std::endl;);
+        void add_arith_operation_from_unsat_literal(nra_literal const* l) {
             SASSERT(l->is_arith());
-            if (m_literal_added.contains(l->get_index())) {
+            if (m_nra_operation_table.contains_literal(l->get_index())) {
                 return;
             }
-            m_literal_added.insert(l->get_index());
             for (var v : l->m_vars) {
                 nra_arith_var const* curr_arith = m_arith_vars[v];
-                if (m_step <= curr_arith->get_tabu()) {
+                if (m_step <= curr_arith->get_tabu()) { // still in tabu
                     continue;
                 }
                 interval_set_ref curr_st(m_ism);
                 curr_st = m_evaluator.infeasible_intervals(l->get_atom(), l->sign(), nullptr, v);
-                if (m_ism.is_full(curr_st)) {
+                if (m_ism.is_full(curr_st)) { // full interval
                     continue;
                 }
                 if (curr_arith->m_infeasible_st != nullptr) {
                     m_ism.inc_ref(curr_arith->m_infeasible_st);
                 }
                 interval_set_ref union_st(m_ism);
-                union_st = m_ism.mk_union(curr_st, curr_arith->m_infeasible_st);
-                if (m_ism.is_full(union_st)) {
+                union_st = m_ism.mk_union(curr_st, curr_arith->m_infeasible_st); // union var's init infeasible set
+                if (m_ism.is_full(union_st)) { // full interval
                     continue;
                 }
                 insert_in_complement(v, union_st, l->get_index());
@@ -1132,150 +1075,41 @@ namespace nlsat {
             SASSERT(res.size() == num);
         }
 
-        var pick_critical_nra_move(anum& best_value) {
-            LSTRACE(tout << "start of pick nra move\n";
-                    show_ls_assignment(tout);
-                    display_clause_weight(tout););
-            LSTRACE(tout << "show time of start picking nra move\n";
-                    TimeElapsed(););
-            int best_arith_score;
-            var best_arith_index;
-
-            // Level I.
-            // consider literal in unsat clauses
-            // add bounded interval set
-            reset_arith_operation();
-            LSTRACE(tout << "LEVEL I: consider literals in unsat clauses\n";);
-            SASSERT(!m_unsat_clauses.empty());
-
-            // for(clause_index cls_idx: m_unsat_clauses){
-            //     nra_clause const * curr_clause = m_nra_clauses[cls_idx];
-            //     LSTRACE(tout << "consider clause: "; m_solver.display(tout, *curr_clause->get_clause()); tout << std::endl;);
-            //     for(literal_index lit_idx: curr_clause->m_arith_literals){
-            //         nra_literal const * curr_literal = m_nra_literals[lit_idx];
-            //         add_literal_arith_operation(curr_literal);
-            //     }
-            // }
-
-            /**
-             * @version z3_nra_v2
-             * @date 23/03/10
-             * Insert up to 5 unsat clauses each step with each literals
-             */
-            // consider insertion several random clause
-            // int unsat_idx = rand_int() % m_unsat_clauses.size();
-            // int cls_idx = m_unsat_clauses[unsat_idx];
-            // nra_clause const * curr_clause = m_nra_clauses[cls_idx];
-            // for (literal_index lit_idx: curr_clause->m_arith_literals) {
-            //     nra_literal const * curr_literal = m_nra_literals[lit_idx];
-            //     add_literal_arith_operation(curr_literal);
-            // }
-
-            // if(m_unsat_clauses.size() > 5) {
-            //      unsigned_vector m_random_index;
-            //      random_select_several_from_table(m_unsat_clauses, 5, m_random_index);
-            //      for (clause_index cls_idx: m_random_index) {
-            //         nra_clause const * curr_clause = m_nra_clauses[cls_idx];
-            //         for (literal_index lit_idx : curr_clause->m_arith_literals) {
-            //             nra_literal const *curr_literal = m_nra_literals[lit_idx];
-            //             add_literal_arith_operation(curr_literal);
-            //         }
-            //      }
-            // }
-            // // insert all literals from unsat clauses
-            // else {
-            //     for(clause_index cls_idx: m_unsat_clauses) {
-            //         nra_clause const * curr_clause = m_nra_clauses[cls_idx];
-            //         for(literal_index lit_idx: curr_clause->m_arith_literals) {
-            //             nra_literal const * curr_literal = m_nra_literals[lit_idx];
-            //             add_literal_arith_operation(curr_literal);
-            //         }
-            //     }
-            // }
-
-            /**
-             * @version z3_nra_v3
-             * @date 23/03/11
-             * Insert only one unsat literal for each unsat clause
-             */
-            for (clause_index cls_idx : m_unsat_clauses) {
-                nra_clause const* curr_clause = m_nra_clauses[cls_idx];
-                if (curr_clause->m_arith_literals.empty()) {
-                    continue;
+        /**
+         * @brief currently we insert operations from all unsat clauses
+        */
+        void insert_arith_operation_from_unsat_clauses() {
+            for(clause_index c_idx: m_unsat_clauses) {
+                nra_clause const * curr_clause = m_nra_clauses[c_idx];
+                for(literal_index l_idx: curr_clause->m_arith_literals) {
+                    nra_literal const * curr_literal = m_nra_literals[l_idx];
+                    add_arith_operation_from_unsat_literal(curr_literal);
                 }
-                literal_index lit_idx = curr_clause->m_arith_literals[rand_int() % curr_clause->m_arith_literals.size()];
-                nra_literal const* curr_literal = m_nra_literals[lit_idx];
-                add_literal_arith_operation(curr_literal);
             }
+        }
 
-            // loop operation arith variables
-            LSTRACE(display_arith_operations(tout););
+        /**
+         * @brief pick arith var with score > 0
+        */
+        var pick_arith_move(anum& best_value, int & best_score) {
+            m_nra_operation_table.reset();
+            SASSERT(!m_unsat_clauses.empty());
+            insert_arith_operation_from_unsat_clauses(); // insert operation from all unsat clauses
+            var best_arith_index;
+            int best_arith_score = 0;
             literal_index best_literal_index;
-            // anum best_value_level1;
-            // best_arith_score = -10;
-            best_arith_score = 0;
+            // select arith critical move with score > 0
             best_arith_index = select_best_from_arith_operations(best_arith_score, best_value, best_literal_index);
-            // var best_arith_index_level1 = select_best_from_arith_operations(INT_MIN, best_value_level1, best_literal_index_level1);
-            // untabu decreasing arith variable exists
-            if (best_arith_index != null_var && best_arith_score > 0) {
-                LSTRACE(
-                    tout << "LEVEL I: choose var " << best_arith_index << std::endl;
-                    tout << "show value: "; m_am.display(tout, best_value); tout << std::endl;
-                    tout << "best literal index: " << best_literal_index << std::endl;);
-                LSTRACE(tout << "show time of end picking nra move\n";
-                        TimeElapsed(););
+            if (best_arith_score > 0) { // untabu decreasing arith variable exists
+                best_score = best_arith_score;
                 return best_arith_index;
             }
-            LSTRACE(tout << "LEVEL I stuck\n";);
-
-            /*
-                        // Level II.
-                        // consider sat clause with false literals
-                        LSTRACE(tout << "Level II: consider literals in sat clause\n";);
-                        if(!m_sat_clause_with_false_literals.empty()){
-                            reset_arith_operation();
-                            add_swap_operation();
-                            best_arith_score = 1;
-                            best_arith_index = select_best_from_arith_operations(best_arith_score, best_value, best_literal_index);
-                            if(best_arith_index != null_var){
-                                LSTRACE(
-                                    tout << "LEVEL II: choose var " << best_arith_index << std::endl;
-                                    tout << "show value: "; m_am.display(tout, best_value); tout << std::endl;
-                                    tout << "best literal index: " << best_literal_index << std::endl;
-                                );
-                                LSTRACE(tout << "show time of end picking nra move\n";
-                                    TimeElapsed();
-                                );
-                                return best_arith_index;
-                            }
-                        }
-                        LSTRACE(tout << "LEVEL II stuck\n";);
-            */
-            // update clause weight
-            // ^ PAWS
-            if (rand_int() % 500 > smooth_probability) {
-                update_clause_weight();
-            } else {
-                smooth_clause_weight();
-            }
-
-            // if (rand_int() % 10 == 0) {
-            // if (best_arith_index != null_var) {
-            //     return best_arith_index;
-            // }
-            // }
-
-            // if (rand_int() % 20 == 0) {
-            //     random_walk();
-            // }
-            random_walk();
-            LSTRACE(tout << "end of pick nra move\n";);
-            LSTRACE(tout << "show time of end picking nra move\n";
-                    TimeElapsed(););
             return null_var;
         }
 
-        // pick var with coeff !=0, move to zero
+        /**
+         * @brief get multi-poly in ineq atom
+        */
         poly* get_atom_polys(ineq_atom const* a) const {
             LSTRACE(tout << "size: " << a->size() << std::endl;);
             SASSERT(a->size() > 0);
@@ -1285,55 +1119,22 @@ namespace nlsat {
                 p = m_pm.mul(p, curr);
             }
             return p;
-            // return nullptr;
-        }
-
-        // get variables in unsat unit clauses
-        void get_unsat_unit_vars(var_table& vec) {
-            vec.reset();
-            for (clause_index cls_idx : m_unsat_clauses) {
-                if (m_unit_clauses.contains(cls_idx)) {
-                    nra_clause const* cls = m_nra_clauses[cls_idx];
-                    for (var v : cls->m_vars) {
-                        if (!vec.contains(v)) {
-                            vec.insert(v);
-                        }
-                    }
-                }
-            }
-        }
-
-        void reset_arith_operation() {
-            m_nra_operation_index.reset();
-            m_nra_operation_value.reset();
-            m_nra_operation_literal_index.reset();
-            m_literal_added.reset();
         }
 
         /**
-         * Score
+         * @brief calculate score for an arith move
          */
-        // get score for critical nra move
         int get_arith_critical_score(var v, anum const& new_value) {
-            LSTRACE(tout << "start of get arith critical score\n";
-                    TimeElapsed(););
             int res_score = 0;
-            // store old assignment
-            scoped_anum old_value(m_am);
+            scoped_anum old_value(m_am); // store old assignment
             m_am.set(old_value, m_assignment.value(v));
-            LSTRACE(tout << "var: " << v << std::endl;
-                    tout << "value: "; m_am.display(tout, old_value); tout << "->";
-                    m_am.display(tout, new_value);
-                    tout << std::endl;);
             nra_arith_var const* m_arith_var = m_arith_vars[v];
-            // assign new value
-            m_assignment.set(v, new_value);
+            m_assignment.set(v, new_value); // assign new value temporarily
             // loop all literal-clause pairs in this arith variable
             // literal 0 1 3 4 1 ...
             // clause  0 0 1 1 1 ...
             SASSERT(m_arith_var->m_literals.size() == m_arith_var->m_lit_cls.size());
             int make_break = 0;
-
             m_literal_index_visited.reset();
             m_literal_before_sat.reset();
             for (unsigned i = 0; i < m_arith_var->m_literals.size(); i++) {
@@ -1341,29 +1142,20 @@ namespace nlsat {
                 clause_index c_idx = m_arith_var->m_lit_cls[i];
                 nra_literal* curr_literal = m_nra_literals[l_idx];
                 nra_clause const* curr_clause = m_nra_clauses[c_idx];
-                LSTRACE(
-                    tout << "consider literal: "; m_solver.display(tout, curr_literal->m_literal); tout << std::endl;
-                    tout << "consider clause: "; m_solver.display(tout, *curr_clause->get_clause()); tout << std::endl;);
                 SASSERT(curr_literal->is_arith());
                 unsigned find_result = find_index_vector(m_literal_index_visited, l_idx);
                 bool before_sat, after_sat;
-                // not found
-                if (find_result == null_var) {
+                if (find_result == null_var) { // not visited yet
                     before_sat = curr_literal->get_sat_status();
                     set_literal_anum(curr_literal);
                     after_sat = curr_literal->get_sat_status();
                     m_literal_index_visited.push_back(l_idx);
                     m_literal_before_sat.push_back(before_sat);
-                }
-                // found
-                else {
+                } else { // visited before
                     before_sat = m_literal_before_sat[find_result];
                     after_sat = curr_literal->get_sat_status();
                 }
                 make_break += (after_sat - before_sat);
-                LSTRACE(
-                    tout << "bool value: "; tout << (before_sat ? "true" : "false"); tout << "->"; tout << (after_sat ? "true" : "false"); tout << std::endl;);
-
                 // the end of a clause block (claus block means an area of the same clause index)
                 // time to count clause count
                 if (i == m_arith_var->m_literals.size() - 1 || (c_idx != m_arith_var->m_lit_cls[i + 1])) {
@@ -1373,12 +1165,10 @@ namespace nlsat {
                     unsigned after_sat_count = before_sat_count + make_break;
                     LSTRACE(tout << "sat count in get score: " << before_sat_count << "->" << after_sat_count << std::endl;);
                     SASSERT(after_sat_count >= 0);
-                    // unsat --> sat
-                    if (before_sat_count == 0 && after_sat_count > 0) {
+                    if (before_sat_count == 0 && after_sat_count > 0) { // unsat --> sat
                         res_score += curr_clause->get_weight();
                     }
-                    // sat --> unsat
-                    else if (before_sat_count > 0 && after_sat_count == 0) {
+                    else if (before_sat_count > 0 && after_sat_count == 0) { // sat --> unsat
                         res_score -= curr_clause->get_weight();
                     }
                     make_break = 0;
@@ -1404,123 +1194,106 @@ namespace nlsat {
         /**
          * Critical Move
          */
-        void critical_bool_move(bool_var b) {
-            LSTRACE(tout << "start of critical bool move\n";);
-            LSTRACE(tout << "show time entering critical bool move\n";
-                    TimeElapsed(););
+        void execute_critical_bool_move(bool_var b) {
             nra_bool_var* b_var = m_bool_vars[b];
             int origin_score = b_var->get_score();
-            critical_subscore_bool(b);
-            // flip the bool variable
-            b_var->set_value(!b_var->get_value());
-            // update bool score
-            b_var->set_score(b_var->get_score() - origin_score);
-            // update step
-            b_var->set_last_move(m_outer_step);
+            update_state_after_bool_move(b);
+            b_var->set_value(!b_var->get_value()); // flip the bool variable
+            b_var->set_last_move(m_outer_step); // update last move and tabu
             b_var->set_tabu(m_outer_step + 1 + rand_int() % 3);
+            update_bool_score(b);
             m_outer_step++;
-            LSTRACE(tout << "end of critical bool move\n";);
-            LSTRACE(tout << "show time exiting critical bool move\n";
-                    TimeElapsed(););
+        }
+
+        void update_bool_score(bool_var b) {
+            nra_bool_var * b_var = m_bool_vars[b];
+            int score = 0;
+            for(auto c_idx: b_var->m_clauses) {
+                nra_clause const * curr_clause = m_nra_clauses[c_idx];
+                if(!curr_clause->get_sat_status()) { // unsat clause
+                    score += curr_clause->get_weight(); // increase score because it can satisfy clause
+                } else if(curr_clause->get_sat_count() == 1) { // sat clause with count == 1
+                    literal_index critical_index = curr_clause->get_critical_index();
+                    SASSERT(critical_index != null_var);
+                    nra_literal const* min_literal = m_nra_literals[critical_index];
+                    if(min_literal->is_bool() && min_literal->get_bool_index() == b) { // critical literal is b or !b
+                        score -= curr_clause->get_weight(); // decrease score because it can unsatisfy clause
+                    }
+                }
+            }
+            b_var->set_score(score);
         }
 
         // has not been flipped yet
-        void critical_subscore_bool(bool_var b) {
-            // has not been assigned
+        void update_state_after_bool_move(bool_var b) {
             nra_bool_var* b_var = m_bool_vars[b];
-            LSTRACE(tout << "start of critical subscore bool for bool var: " << b << std::endl;);
             int make_break = 0;
-            m_literal_index_visited.reset();
+            m_literal_index_visited.reset(); // reset literal which has been visited
             // same literal may appear, because same literals can be found in different clauses
             // in this case, we update literal's sat status at last
-
             for (unsigned i = 0; i < b_var->m_literals.size(); i++) {
                 literal_index l_idx = b_var->m_literals[i];
-                if (!m_literal_index_visited.contains(l_idx)) {
+                if (!m_literal_index_visited.contains(l_idx)) { // mark visited
                     m_literal_index_visited.push_back(l_idx);
                 }
                 nra_literal* curr_literal = m_nra_literals[l_idx];
-                bool before_sat = curr_literal->get_sat_status();
-                LSTRACE(tout << "consider literal ";
-                        m_solver.display(tout, curr_literal->m_literal); tout << std::endl;);
-                // true --> false
-                if (before_sat) {
-                    LSTRACE(tout << "true --> false\n";);
+                bool before_sat = curr_literal->get_sat_status(); // before sat status
+                if (before_sat) { // true --> false
                     make_break = -1;
-                }
-                // false --> true
-                else {
-                    LSTRACE(tout << "false --> true\n";);
+                } else { // false --> true
                     make_break = 1;
                 }
-                // we assume that for a bool variable,
-                // it won't appear in the same clause twice or more
+                // same literal can not appear twice or more in one clause
                 clause_index c_idx = b_var->m_lit_cls[i];
                 nra_clause* curr_clause = m_nra_clauses[c_idx];
                 unsigned before_sat_count = curr_clause->get_sat_count();
                 literal_index before_critical_literal = null_var;
-                if (before_sat_count == 1) {
+                if (before_sat_count == 1) { // only sat count == 1 has critical literal
                     before_critical_literal = curr_clause->get_critical_index();
                     SASSERT(before_critical_literal != null_var);
                 }
-                unsigned after_sat_count = before_sat_count + make_break;
+                int after_sat_count = before_sat_count + make_break;
+                SASSERT(after_sat_count >= 0);
                 curr_clause->set_sat_count(after_sat_count);
-                LSTRACE(tout << "show clause:\n";
-                        m_solver.display(tout, *curr_clause->get_clause()); tout << std::endl;
-                        tout << "before sat count: " << before_sat_count << std::endl;
-                        show_ls_assignment(tout););
-
-                // set critical literal index
-                if (after_sat_count == 1) {
+                if (after_sat_count == 1) { // update critical literal
                     SASSERT(before_sat_count == 2 || before_sat_count == 0);
-                    // 2 --> 1
-                    // critical index must be sat literals except critical moved one
-                    if (before_sat_count == 2) {
+                    if (before_sat_count == 2) { // 2 --> 1
+                        // critical index must be sat literals except critical moved one, because before_sat = true, after_sat  =false
                         curr_clause->set_critical_index(find_sat_literal_except(curr_clause, l_idx));
-                    }
-                    // 0 --> 1
-                    // critical index must be critical moved one
-                    else if (before_sat_count == 0) {
+                    } else if (before_sat_count == 0) { // 0 --> 1
+                        // critical index must be critical moved one, because of flipped
                         curr_clause->set_critical_index(l_idx);
-                    } else {
+                    } else { // no other cases
                         UNREACHABLE();
                     }
-                } else {
+                } else { // only sat count == 1 has critical literal
                     curr_clause->set_critical_index(null_var);
                 }
 
-                // sat --> unsat
-                if (before_sat > 0 && after_sat_count == 0) {
+                if (before_sat > 0 && after_sat_count == 0) { // sat --> unsat
                     unsat_clause(curr_clause);
                     m_num_unsat_literals += curr_clause->size();
                     m_num_bool_unsat_literals += curr_clause->bool_size();
-                }
-                // unsat --> sat
-                else if (before_sat == 0 && after_sat_count > 0) {
+                } else if (before_sat == 0 && after_sat_count > 0) { // unsat --> sat
                     sat_clause(curr_clause);
                     m_num_unsat_literals -= curr_clause->size();
                     m_num_bool_unsat_literals -= curr_clause->bool_size();
                 }
-                // sat clause with false literals
-                if (after_sat_count > 0 && after_sat_count < curr_clause->size()) {
+
+                if (after_sat_count > 0 && after_sat_count < curr_clause->size()) { // sat clause with false literals
                     m_sat_clause_with_false_literals.insert(c_idx);
                 } else {
                     m_sat_clause_with_false_literals.erase(c_idx);
                 }
-                // update bool variable score
+
                 if (make_break > 0) {
-                    // unsat --> sat
-                    // bool literal decrease score
-                    if (before_sat_count == 0) {
+                    if (before_sat_count == 0) { // 0 --> 1, every bool var decrease score (because they can not flip whole clause this time)
                         for (literal_index loop_idx : curr_clause->m_bool_literals) {
                             nra_literal const* loop_literal = m_nra_literals[loop_idx];
                             nra_bool_var* loop_bvar = m_bool_vars[loop_literal->get_bool_index()];
                             loop_bvar->set_score(loop_bvar->get_score() - curr_clause->get_weight());
                         }
-                    }
-                    // sat number: 1 --> x > 1
-                    // befre critical literal increase score
-                    else if (before_sat_count == 1) {
+                    } else if (before_sat_count == 1) { // 1 --> 2, critical bool var increase score (because its flip won't unsatisfy this clause)
                         nra_literal const* min_literal = m_nra_literals[before_critical_literal];
                         if (min_literal->is_bool()) {
                             nra_bool_var* min_bvar = m_bool_vars[min_literal->get_bool_index()];
@@ -1528,18 +1301,13 @@ namespace nlsat {
                         }
                     }
                 } else if (make_break < 0) {
-                    // sat == 1 --> unsat
-                    // all bool literal increase score
-                    if (after_sat_count == 0) {
+                    if (after_sat_count == 0) { // 1 --> 0, every bool var increase score (becuase they can flip this clause)
                         for (literal_index loop_idx : curr_clause->m_bool_literals) {
                             nra_literal const* loop_literal = m_nra_literals[loop_idx];
                             nra_bool_var* loop_bvar = m_bool_vars[loop_literal->get_bool_index()];
                             loop_bvar->set_score(loop_bvar->get_score() + curr_clause->get_weight());
                         }
-                    }
-                    // 2 --> 1
-                    // curr critical literal increase score
-                    else if (after_sat_count == 1) {
+                    } else if (after_sat_count == 1) { // critical bool var decrease score (because its flip will unsatisfy this clause)
                         literal_index curr_critical = curr_clause->get_critical_index();
                         nra_literal const* min_literal = m_nra_literals[curr_critical];
                         if (min_literal->is_bool()) {
@@ -1549,32 +1317,21 @@ namespace nlsat {
                     }
                 }
             }
+            // flip bool var's literal's sat status
             for (literal_index l_idx : m_literal_index_visited) {
                 nra_literal* curr_l = m_nra_literals[l_idx];
                 curr_l->flip_sat_status();
             }
-            LSTRACE(tout << "end of critical subscore bool\n";);
         }
 
-        void critical_nra_move(var v, anum const& value) {
-            scoped_anum old_value(m_am);
+        void execute_critical_arith_move(var v, anum const& value) {
+            scoped_anum old_value(m_am); // record old value
             m_am.set(old_value, m_assignment.value(v));
-            LSTRACE(tout << "start of critical nra move\n";
-                    tout << "var: " << v << std::endl;
-                    tout << "value: "; m_am.display(tout, old_value);
-                    tout << "->";
-                    m_am.display(tout, value); tout << std::endl;
-                    display_unsat_clauses(tout););
-            LSTRACE(show_ls_assignment(tout););
-            m_assignment.set(v, value);
-
-            critical_subscore_nra(v, value);
-            // update arith score
+            m_assignment.set(v, value); // set new value
+            update_state_after_arith_move(v, value);
             nra_arith_var* v_var = m_arith_vars[v];
             v_var->set_last_move(m_step);
             v_var->set_tabu(m_step + 3 + rand_int() % 10);
-            LSTRACE(tout << "end of critical nra move\n";
-                    display_unsat_clauses(tout););
         }
 
         literal_index find_sat_literal(nra_clause const* cls) const {
@@ -1588,6 +1345,9 @@ namespace nlsat {
             return null_var;
         }
 
+        /**
+         * @brief find sat literal in a clause except idx
+        */
         literal_index find_sat_literal_except(nra_clause const* cls, literal_index idx) const {
             SASSERT(m_nra_literals[idx]->get_sat_status());
             for (literal_index l_idx : cls->m_literals) {
@@ -1603,22 +1363,15 @@ namespace nlsat {
             return null_var;
         }
 
-        void critical_subscore_nra(var v, anum const& value) {
-            LSTRACE(tout << "start of nra subscore\n";
-                    tout << "var: " << v << std::endl;
-                    tout << "value: "; m_am.display(tout, value); tout << std::endl;
-                    show_ls_assignment(tout););
-            LSTRACE(tout << "show time entering critical nra move\n";
-                    TimeElapsed(););
-            // has been assigned
+        /**
+         * arith var has been assigned to a new value
+        */
+        void update_state_after_arith_move(var v, anum const& value) {
             nra_arith_var* v_var = m_arith_vars[v];
             int make_break = 0;
             var_vector m_literal_occured;
-            // check whether has been changed anum and sat_status
             m_literal_index_visited.reset();
             m_literal_before_sat.reset();
-            // if a literal has been reset literal, its before anum and before sat has also been changed
-
             for (unsigned i = 0; i < v_var->m_literals.size(); i++) {
                 literal_index l_idx = v_var->m_literals[i];
                 m_literal_occured.push_back(l_idx);
@@ -1626,81 +1379,57 @@ namespace nlsat {
                 clause_index c_idx = v_var->m_lit_cls[i];
                 nra_clause* curr_clause = m_nra_clauses[c_idx];
                 literal_index before_critical_index = null_var;
-                if (curr_clause->get_sat_count() == 1) {
+                if (curr_clause->get_sat_count() == 1) { // only clause with sat count == 1 has critical literal index
                     before_critical_index = curr_clause->get_critical_index();
                 }
-                LSTRACE(tout << "consider literal: "; m_solver.display(tout, curr_literal->m_literal); tout << std::endl;);
                 bool before_sat, after_sat;
-                // not found
                 unsigned find_result = find_index_vector(m_literal_index_visited, l_idx);
-                if (find_result == null_var) {
+                if (find_result == null_var) { // not considered yet
                     before_sat = curr_literal->get_sat_status();
-                    LSTRACE(tout << "not cached literal\n";);
                     set_literal_anum(curr_literal);
                     after_sat = curr_literal->get_sat_status();
-                    // insert literal
+                    // record this literal's state
                     m_literal_index_visited.push_back(l_idx);
                     m_literal_before_sat.push_back(before_sat);
                     SASSERT(m_literal_index_visited.size() == m_literal_before_sat.size());
-                }
-                // found cached
-                else {
-                    LSTRACE(tout << "cached literal\n";
-                            display_literal_vector(tout, m_literal_index_visited);
-                            display_bool_vector(tout, m_literal_before_sat);
-                            tout << "find result: " << find_result << std::endl;);
+                } else { // considered yet
                     before_sat = m_literal_before_sat[find_result];
                     after_sat = curr_literal->get_sat_status();
                 }
                 make_break += (after_sat - before_sat);
-                LSTRACE(
-                    tout << "critical move bool value: "; tout << (before_sat ? "true" : "false"); tout << "->"; tout << (after_sat ? "true" : "false"); tout << std::endl;);
-                // update delta informatiom
-                // the end of a clause block (claus block means an area of the same clause index)
-                // time to count clause count
+                // update clause information
                 if (i == v_var->m_literals.size() - 1 || c_idx != v_var->m_lit_cls[i + 1]) {
                     LSTRACE(tout << "enter new clause in critical nra move\n";);
                     unsigned before_sat_count = curr_clause->get_sat_count();
-                    unsigned after_sat_count = before_sat_count + make_break;
+                    int after_sat_count = before_sat_count + make_break;
+                    SASSERT(after_sat_count >= 0);
                     curr_clause->set_sat_count(after_sat_count);
-                    LSTRACE(tout << "consider clause: "; m_solver.display(tout, *curr_clause->get_clause()); tout << std::endl;);
-                    LSTRACE(
-                        tout << "make break: " << make_break << std::endl;
-                        tout << "critical sat count: " << before_sat_count << "->" << after_sat_count << std::endl;);
-                    // sat --> unsat
-                    if (before_sat_count > 0 && after_sat_count == 0) {
+                    if (before_sat_count > 0 && after_sat_count == 0) { // sat --> unsat
                         unsat_clause(curr_clause);
                         m_num_unsat_literals += curr_clause->size();
                         m_num_bool_unsat_literals += curr_clause->bool_size();
                     }
-                    // unsat --> sat
-                    else if (before_sat_count == 0 && after_sat_count > 0) {
+                    else if (before_sat_count == 0 && after_sat_count > 0) { // unsat --> sat
                         sat_clause(curr_clause);
                         m_num_unsat_literals -= curr_clause->size();
                         m_num_bool_unsat_literals -= curr_clause->bool_size();
                     }
 
-                    // critical index
-                    if (after_sat_count == 1) {
+                    if (after_sat_count == 1) { // set critical literal index
                         curr_clause->set_critical_index(find_sat_literal(curr_clause));
                     } else {
                         curr_clause->set_critical_index(null_var);
                     }
 
-                    // we update bool variable's score
+                    // update bool var's score
                     if (make_break > 0) {
-                        // unsat --> sat
-                        // all bool variable decrease score
-                        if (before_sat_count == 0) {
+                        if (before_sat_count == 0) { // all bool variable decrease score, because thy can not satisfy that clause
                             for (literal_index loop_idx : curr_clause->m_bool_literals) {
                                 nra_literal const* bool_literal = m_nra_literals[loop_idx];
                                 nra_bool_var* curr_bool = m_bool_vars[bool_literal->get_bool_index()];
                                 curr_bool->set_score(curr_bool->get_score() - curr_clause->get_weight());
                             }
-                        }
-                        // sat number: 1 --> x > 1
-                        // before bool critical literal increase score
-                        else if (before_sat_count == 1) {
+                        } else if (before_sat_count == 1) { // 1 --> x > 1, critical literal index (if bool) increase score, because its flip won't unsatisfy clause
                             nra_literal const* min_index_literal = m_nra_literals[before_critical_index];
                             if (min_index_literal->is_bool()) {
                                 nra_bool_var* curr_bool = m_bool_vars[min_index_literal->get_bool_index()];
@@ -1708,17 +1437,13 @@ namespace nlsat {
                             }
                         }
                     } else if (make_break < 0) {
-                        // sat --> unsat
-                        // all bool variable increase score
-                        if (after_sat_count == 0) {
-                            for (literal_index loop_idx : curr_clause->m_bool_literals) {
+                        if (after_sat_count == 0) { // sat --> unsat
+                            for (literal_index loop_idx : curr_clause->m_bool_literals) { // all bool var increase score
                                 nra_literal const* bool_literal = m_nra_literals[loop_idx];
                                 nra_bool_var* curr_bool = m_bool_vars[bool_literal->get_bool_index()];
                                 curr_bool->set_score(curr_bool->get_score() + curr_clause->get_weight());
                             }
-                        }
-                        // critical bool variable decrease score
-                        else if (after_sat_count == 1) {
+                        } else if (after_sat_count == 1) { // critical literal index (if bool) decrease score
                             literal_index min_index = curr_clause->get_critical_index();
                             SASSERT(min_index != null_var);
                             nra_literal const* min_index_literal = m_nra_literals[min_index];
@@ -1733,48 +1458,23 @@ namespace nlsat {
                     m_literal_occured.reset();
                 }
             }
-            LSTRACE(tout << "end of nra subscore\n";);
-            LSTRACE(tout << "show time exiting nra subscore\n";
-                    TimeElapsed(););
         }
 
         /**
          * Weight
          */
         void update_clause_weight() {
-            // update unsat clauses weight
             for (clause_index idx : m_unsat_clauses) {
                 nra_clause* cls = m_nra_clauses[idx];
                 cls->inc_weight();
-                // increase bool score for unsat clauses (because we increase weight for clause)
                 for (literal_index lit_idx : cls->m_bool_literals) {
                     nra_literal const* curr_literal = m_nra_literals[lit_idx];
                     nra_bool_var* curr_bool = m_bool_vars[curr_literal->get_bool_index()];
-                    curr_bool->inc_score();
+                    curr_bool->inc_score(); // increase bool score for unsat clauses (because we increase weight for clause)
                 }
             }
             m_total_clause_weight += m_unsat_clauses.size();
             LSTRACE(display_clause_weight(tout););
-        }
-
-        void smooth_clause_weight() {
-            for (clause_index i = 0; i < m_num_clauses; i++) {
-                nra_clause* curr_clause = m_nra_clauses[i];
-                // smooth weight for sat clause with weight > 1
-                if (!m_unsat_clauses.contains(i) && curr_clause->get_weight() > 1) {
-                    curr_clause->dec_weight();
-                    m_total_clause_weight--;
-                    // increase critical bool literal's score
-                    if (curr_clause->get_sat_count() == 1) {
-                        SASSERT(curr_clause->get_critical_index() != null_var);
-                        nra_literal const* curr_literal = m_nra_literals[curr_clause->get_critical_index()];
-                        if (curr_literal->is_bool()) {
-                            nra_bool_var* curr_bool = m_bool_vars[curr_literal->get_bool_index()];
-                            curr_bool->inc_score();
-                        }
-                    }
-                }
-            }
         }
 
         /**
@@ -1783,87 +1483,57 @@ namespace nlsat {
         void random_walk() {
             SASSERT(!m_unsat_clauses.empty());
             LSTRACE(tout << "start of random walk\n";);
-            reset_arith_operation();
-            m_bool_operation_index.reset();
-
-            // intsert operations
+            m_nra_operation_table.reset();
+            m_bool_operation_table.reset();
             for (unsigned i = 0; i < 3 && m_bool_operation_index.size() + m_nra_operation_index.size() < 5; i++) {
-                // ^ random choose a clause
-                clause_index c_idx = m_unsat_clauses[rand_int() % m_unsat_clauses.size()];
+                clause_index c_idx = m_unsat_clauses[rand_int() % m_unsat_clauses.size()]; // random select an unsat clause
                 nra_clause const* curr_clause = m_nra_clauses[c_idx];
-                LSTRACE(tout << "consider clause "; m_solver.display(tout, *curr_clause->get_clause()); tout << std::endl;);
-                // LSTRACE(display_var_set(tout, curr_clause->m_arith_literals));
-                // loop arith literals
-                // ^ add arith literal operations in this clause
                 for (literal_index l_idx : curr_clause->m_arith_literals) {
                     nra_literal const* curr_literal = m_nra_literals[l_idx];
-                    add_literal_arith_operation(curr_literal);
+                    add_arith_operation_from_unsat_literal(curr_literal);
                 }
-                // ^ add bool literal operations in this clause
-                // loop bool literals
                 for (literal_index l_idx : curr_clause->m_bool_literals) {
                     nra_literal const* curr_literal = m_nra_literals[l_idx];
                     SASSERT(curr_literal->is_bool());
-                    LSTRACE(tout << "consider literal "; m_solver.display(tout, curr_literal->m_literal); tout << std::endl;);
                     bool_var b = curr_literal->get_bool_index();
                     if (m_bool_is_chosen[b]) {
                         continue;
                     }
-                    m_bool_operation_index.push_back(b);
-                    m_bool_is_chosen[b] = true;
+                    m_bool_operation_table.insert(b);
                 }
             }
-            // end of insert operations, choose best operation (arith and bool)
-            // restore chosen bool variables
-            reset_chosen_bool();
-            LSTRACE(tout << "[debug] nra size: " << m_nra_operation_index.size() << std::endl;
-                    display_arith_operations(tout););
-            LSCTRACE(m_nra_operation_index.empty() && m_bool_operation_index.empty(), tout << "stuck in random walk operation\n";);
-
             // make move
             if (m_bool_operation_index.size() + m_nra_operation_index.size() == 0) {
-                LSTRACE(tout << "empty operation, return\n";
-                        show_ls_assignment(tout););
                 m_stuck++;
                 m_stuck_ratio = 1.0 * m_stuck / m_step;
                 no_operation_random_walk();
                 return;
             }
-            // arith move
-            if (m_bool_operation_index.empty() || (m_bool_operation_index.size() > 0 && m_nra_operation_index.size() > 0 && !is_bool_search)) {
+            if (m_bool_operation_index.empty() || (m_bool_operation_index.size() > 0 && m_nra_operation_index.size() > 0 && !is_bool_search)) { // arith move
                 anum best_arith_value;
                 literal_index best_literal_index;
                 int best_arith_score = INT_MIN;
                 var best_arith_index = select_best_from_arith_operations(best_arith_score, best_arith_value, best_literal_index);
                 SASSERT(best_arith_index != null_var);
-                LSTRACE(tout << "critical nra move in random walk\n";
-                        tout << "best arith index: " << best_arith_index << std::endl;);
-                critical_nra_move(best_arith_index, best_arith_value);
-            }
-            // bool move
-            else {
+                execute_critical_arith_move(best_arith_index, best_arith_value);
+            } else { // bool move
                 SASSERT(!m_bool_operation_index.empty());
-                // loop bool operation
                 int best_bool_score = INT_MIN;
                 bool_var best_bool_index = select_best_from_bool_operations(best_bool_score);
                 SASSERT(best_bool_index != null_var);
-                LSTRACE(tout << "critical bool move in random walk\n";);
-                critical_bool_move(best_bool_index);
+                execute_critical_bool_move(best_bool_index);
             }
         }
 
         void no_operation_random_walk() {
             SASSERT(!m_unsat_clauses.empty());
-            // ^ random select a clause
-            clause_index c_idx = m_unsat_clauses[rand_int() % m_unsat_clauses.size()];
+            clause_index c_idx = m_unsat_clauses[rand_int() % m_unsat_clauses.size()]; // random select a clause
             nra_clause const* cls = m_nra_clauses[c_idx];
             SASSERT(cls->size() != 0);
-            // ^ random select a literal
-            literal_index l_idx = cls->m_literals[rand_int() % cls->size()];
+            literal_index l_idx = cls->m_literals[rand_int() % cls->size()]; // random select a literal
             nra_literal const* lit = m_nra_literals[l_idx];
-            // ^ bool critical move
-            if (lit->is_bool()) {
-                critical_bool_move(lit->get_bool_index());
+            if (lit->is_bool()) { // bool move
+                execute_critical_bool_move(lit->get_bool_index());
             } else {
                 SASSERT(!lit->m_vars.empty());
                 var_vector non_zero_coeff_vars;
@@ -1942,7 +1612,7 @@ namespace nlsat {
                         }
                     }
                 }
-                critical_nra_move(picked_v, w);
+                execute_critical_arith_move(picked_v, w);
             }
         }
 
@@ -2064,64 +1734,6 @@ namespace nlsat {
             return true;
         }
 
-        /**
-         * Swap Operation
-         */
-        void add_swap_operation() {
-            LSTRACE(tout << "start of add swap operation\n";);
-            SASSERT(!m_sat_clause_with_false_literals.empty());
-            if (m_sat_clause_with_false_literals.size() < 20) {
-                for (unsigned i = 0; i < m_sat_clause_with_false_literals.size(); i++) {
-                    nra_clause const* cls = m_nra_clauses[m_sat_clause_with_false_literals[i]];
-                    for (literal_index l_idx : cls->m_arith_literals) {
-                        nra_literal const* lit = m_nra_literals[l_idx];
-                        // only consider false literal
-                        if (!lit->get_sat_status()) {
-                            add_literal_arith_operation(lit);
-                        }
-                    }
-                }
-            } else {
-                for (unsigned i = 0; m_nra_operation_index.size() < 20 && i < 50; i++) {
-                    clause_index c_idx = m_sat_clause_with_false_literals[rand_int() % m_sat_clause_with_false_literals.size()];
-                    nra_clause const* cls = m_nra_clauses[c_idx];
-                    for (literal_index l_idx : cls->m_arith_literals) {
-                        nra_literal const* lit = m_nra_literals[l_idx];
-                        if (!lit->get_sat_status()) {
-                            add_literal_arith_operation(lit);
-                        }
-                    }
-                }
-            }
-            LSTRACE(tout << "end of add swap operation\n";);
-        }
-
-        // TRACE
-        // std::ostream & check_solution_sat(std::ostream & out){
-        //     show_ls_assignment(out);
-        //     for(literal_index i = 0; i < m_nra_literals.size(); i++){
-        //         m_solver.display(out, m_nra_literals[i]->m_literal); out << std::endl;
-        //         nra_literal const * l = m_nra_literals[i];
-        //         if(l->is_bool()){
-        //             out << "bool value: " << (m_bool_vars[l->get_bool_index()]->get_value() ? "true" : "false") << std::endl;
-        //         }
-        //         else {
-        //             ineq_atom const * aa = l->get_atom();
-        //             SASSERT(aa->size() > 0);
-        //             scoped_anum curr(m_am);
-        //             m_am.set(curr, 1);
-        //             for(unsigned i = 0; i < aa->size(); i++){
-        //                 poly * p = aa->p(i);
-        //                 scoped_anum p_value(m_am);
-        //                 m_pm.eval(p, m_assignment, p_value);
-        //                 m_am.mul(curr, p_value, curr);
-        //             }
-        //             out << "value: "; m_am.display(out, curr); out << std::endl;
-        //         }
-        //     }
-        //     return out;
-        // }
-
         void propagate_sub_values() {
             for (auto ele : m_sub_value) {
                 var v = ele.m_var;
@@ -2136,9 +1748,16 @@ namespace nlsat {
         }
 
         /**
+         * Situation for entering bool search
+        */
+       bool check_bool_search() {
+            return m_num_bool_unsat_literals > 0 && rand_int() % 2 == 0;
+       }
+
+        /**
          * Local Search
          */
-        lbool local_search() {
+        lbool solve() {
             SPLIT_LINE(tout);
             // std::cout << "begin" << std::endl;
             LSTRACE(tout << "local search begin\n";
@@ -2155,12 +1774,7 @@ namespace nlsat {
             }
             m_outer_step = 1;
             for (m_step = 1; m_step < max_step; m_step++) {
-                // if (m_step % 100 == 0) {
-                //     std::cout << "step: " << m_step << " #unsat clauses: " << m_unsat_clauses.size() << std::endl;
-                // }
                 m_stuck_ratio = 1.0 * m_stuck / m_step;
-                LSTRACE(tout << "step: " << m_step << std::endl;
-                        tout << "no improve cnt: " << no_improve_cnt << std::endl;);
                 // Succeed
                 if (m_unsat_clauses.empty()) {
                     SPLIT_LINE(std::cout);
@@ -2181,63 +1795,46 @@ namespace nlsat {
                     SPLIT_LINE(std::cout);
                     return l_undef;
                 }
-                // Main
-                LSTRACE(tout << "enter main procedure\n";);
-                bool time_up_bool = no_improve_cnt_bool * m_num_unsat_literals > 5 * m_num_bool_unsat_literals;
-                bool time_up_nra = no_improve_cnt_nra * m_num_unsat_literals > 20 * (m_num_unsat_literals - m_num_bool_unsat_literals);
-                // Choose Mode
-                if (m_num_bool_unsat_literals == 0 || (is_bool_search && time_up_bool && m_num_bool_unsat_literals < m_num_unsat_literals)) {
-                    enter_nra_mode();
-                } else if (m_num_unsat_literals == m_num_bool_unsat_literals || (!is_bool_search && time_up_nra && m_num_bool_unsat_literals > 0)) {
+                // switch mode
+                if(check_bool_search()) {
                     enter_bool_mode();
+                } else {
+                    enter_nra_mode();
                 }
                 // Search
-                if (rand_int() % 2 == 0) {
-                    // pick bool variable
-                    bool_var picked_b = pick_critical_bool_move();
-                    LSTRACE(tout << "picked bool var: " << picked_b << std::endl;);
-                    if (picked_b != null_var) {
-                        critical_bool_move(picked_b);
+                if(is_bool_search) { 
+                    int best_bool_score;// case 1. bool search
+                    bool_var picked_b = pick_bool_move(best_bool_score);
+                    if(picked_b != null_var) { // greedy part
+                        execute_critical_bool_move(picked_b);
+                    } else { // random part
+                        update_clause_weight();
+                        random_walk();
                     }
-                    // update bool improvement
-                    if (update_bool_info()) {
+                    if(update_bool_info()) { // update bool improvement
                         no_improve_cnt_bool = 0;
-                    } else {
+                    }
+                    else {
                         no_improve_cnt_bool++;
                     }
-                } else {
-                    // pick arith variable and next value
+                } else { // case 2. arith search
                     scoped_anum next_value(m_am);
-                    var picked_v = pick_critical_nra_move(next_value);
-                    LSTRACE(tout << "picked arith var: " << picked_v << std::endl;
-                            tout << "picked arith value: "; m_am.display(tout, next_value); tout << std::endl;);
-                    if (picked_v != null_var) {
-                        critical_nra_move(picked_v, next_value);
+                    int best_arith_score;
+                    var picked_v = pick_arith_move(next_value, best_arith_score);
+                    if(picked_v != null_var) { // greedy part
+                        execute_critical_arith_move(picked_v, next_value);
+                    } else { // random part
+                        update_clause_weight();
+                        random_walk();
                     }
-                    // update arith improvement
-                    if (update_nra_info()) {
-                        no_improve_cnt_nra = 0;
+                    if(update_arith_info()) { // update arith improvement
+                        no_improve_cnt_arith = 0;
                     } else {
-                        no_improve_cnt_nra++;
+                        no_improve_cnt_arith++;
                     }
                 }
-                // update improvement
-                if (update_solution_info()) {
-                    no_improve_cnt = 0;
-                } else {
-                    no_improve_cnt++;
-                }
-
                 // Restart
                 if (no_improve_cnt > 100000) {
-                    // if(no_improve_cnt > 10000){
-                    LSTRACE(tout << "no improve count: " << no_improve_cnt << std::endl;
-                            tout << "restart\n";
-                            SPLIT_LINE(std::cout);
-                            SPLIT_LINE(tout);
-                            std::cout << "no improve, restart\n";
-                            SPLIT_LINE(std::cout);
-                            SPLIT_LINE(tout););
                     init_solution(false);
                     no_improve_cnt = 0;
                 }
@@ -2496,6 +2093,6 @@ namespace nlsat {
     }
 
     lbool ls_helper::local_search() {
-        return m_imp->local_search();
+        return m_imp->solve();
     }
 };  // namespace nlsat

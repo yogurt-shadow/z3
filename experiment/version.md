@@ -25,7 +25,7 @@
 ## Version Compare -z3-nra-ls
 |z3_branch_v0|d276ac1|
 
-## Solving Performance -wzh-ls
+## Solving Performance -z3-nra-ls
 **benchmark number: 6778**
 |name|sat solved|
 |-|-|

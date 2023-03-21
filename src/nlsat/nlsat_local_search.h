@@ -32,8 +32,8 @@
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n";)
 
 namespace nlsat {
-    typedef var literal_index;
-    typedef var clause_index;
+    using literal_index = var;
+    using clause_index = var;
     using var_pair = std::pair<var, var>;
     using poly_vector = vector<poly *>;
     using int_vector = vector<int>;
@@ -50,19 +50,51 @@ namespace nlsat {
         }
     };
 
-    typedef hashtable<var, var_hash, var_eq> var_table;
+    using var_table =  hashtable<var, var_hash, var_eq>;
+    using literal_index_table = var_table;
+    using clause_index_table = var_table;
 
-    class anum_table {
+    class bool_operation_table {
     private:
-        anum_manager & m_am;
-        const anum_vector & m_values;
-        const var_vector & m_vars;
+        unsigned & num_vars;
+        var_vector & m_bools;
+        bool_vector & m_chosen;
+
     public:
-        anum_table(anum_manager & am, var_vector const & vec1, anum_vector const & vec2)
-        : m_am(am), m_vars(vec1), m_values(vec2)
+        bool_operation_table(var_vector & bools, bool_vector & chosen, unsigned & num)
+        : m_bools(bools), m_chosen(chosen), num_vars(num)
         {}
 
-        ~anum_table(){}
+        ~bool_operation_table(){}
+
+        void reset() {
+            m_bools.reset();
+            m_chosen.resize(num_vars, false);;
+        }
+
+        bool contains(bool_var b) const {
+            return b < num_vars && m_chosen[b];
+        }
+
+        void insert(bool_var b) {
+            SASSERT(b < num_vars);
+            m_bools.push_back(b);
+            m_chosen[b] = true;
+        }
+    };
+
+    class arith_operation_table {
+    private:
+        anum_manager & m_am;
+        var_vector & m_vars;
+        anum_vector & m_values;
+        var_vector & m_literals;
+    public:
+        arith_operation_table(anum_manager & am, var_vector & vec1, anum_vector & vec2, var_vector & vec3)
+        : m_am(am), m_vars(vec1), m_values(vec2), m_literals(vec3)
+        {}
+
+        ~arith_operation_table(){}
 
         bool contains(var v, anum const & w) const {
             SASSERT(m_vars.size() == m_values.size());
@@ -72,6 +104,26 @@ namespace nlsat {
                 }
             }
             return false;
+        }
+
+        bool contains_literal(literal_index l_idx) const {
+            return m_literals.contains(l_idx);
+        }
+
+        void reset() {
+            m_vars.reset();
+            m_values.reset();
+            m_literals.reset();
+        }
+
+        unsigned size() const {
+            return m_vars.size();
+        }
+
+        void insert_operation(var v, anum val, literal_index l_idx) {
+            m_vars.push_back(v);
+            m_values.push_back(val);
+            m_literals.push_back(l_idx);
         }
     };
 
@@ -169,7 +221,7 @@ namespace nlsat {
         ~nra_literal(){}
     };
 
-    typedef ptr_vector<nra_literal> nra_literal_vector;
+    using nra_literal_vector = ptr_vector<nra_literal>;
 
     // Clause
     class nra_clause {
@@ -283,7 +335,7 @@ namespace nlsat {
         ~nra_clause(){}
     };
 
-    typedef ptr_vector<nra_clause> nra_clause_vector;
+    using nra_clause_vector = ptr_vector<nra_clause>;
 
     // Arith Variable
     class nra_arith_var {
