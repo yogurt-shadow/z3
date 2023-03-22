@@ -24,7 +24,8 @@
 |z3_nra_v4|4945|
 
 ## Version Compare -z3-nra-ls
-|z3_branch_v0|d276ac1|
+|z3_branch_v0|d276ac1 (baseline)|
+|z3_branch_v1|greedy first, random next, no operation last|
 
 ## Solving Performance -wzh-ls
 **benchmark number: 6778**

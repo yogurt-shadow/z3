@@ -1243,136 +1243,115 @@ struct ls_helper::imp {
         return best_bool_var_index;
     }
 
-    /**
-     * * Critical Move
-     */
-    int pick_critical_move(bool_var& bvar, var& avar, anum& best_value, int& best_score) {
-        LSTRACE(tout << "show time of start picking move\n";
-                TimeElapsed(););
-        LSTRACE(tout << "start of pick move\n";
-                show_ls_assignment(tout););
+    int pick_greedy_move(bool_var& bvar, var& avar, anum& best_value, int& best_score) {
         m_bool_operation_index.reset();
         reset_arith_operation();
         SASSERT(!m_unsat_clauses.empty());
-
-        if (is_random_walk) {
-            // Random walk case
-            clause_index c_idx = m_unsat_clauses[rand_int() % m_unsat_clauses.size()];
-            nra_clause const* curr_clause = m_nra_clauses[c_idx];
-
-            m_vars_visited.reset();
-
-            vector<var> best_arith_index = vector<var>();
-            anum_vector arith_vals = anum_vector();
-            vector<int> best_scores = vector<int>();
-            for (literal_index l_idx : curr_clause->m_arith_literals) {
-                nra_literal const* curr_literal = m_nra_literals[l_idx];
-                for (var v : curr_literal->m_vars) {
-                    if (!m_vars_visited.contains(v)) {
-                        m_vars_visited.insert(v);
-                    }
-                    anum best_value;
-                    int best_score;
-                    if (get_best_arith_value_clause(v, best_value, c_idx, best_score)) {
-                        best_arith_index.push_back(v);
-                        arith_vals.push_back(best_value);
-                        best_scores.push_back(best_score);
-                    }
-                }
+        // Greedy case
+        int curr_score;
+        int best_arith_score = INT_MIN;
+        vector<var> best_arith_index;
+        for (var v = 0; v < m_arith_vars.size(); v++) {
+            curr_score = get_best_arith_score(v);
+            if (curr_score > best_arith_score) {
+                best_arith_score = curr_score;
+                best_arith_index.reset();
+                best_arith_index.push_back(v);
+            } else if (curr_score == best_arith_score) {
+                best_arith_index.push_back(v);
             }
-
-            vector<bool_var> best_bool_index = vector<bool_var>();
-            for (literal_index l_idx : curr_clause->m_bool_literals) {
-                nra_literal const* curr_literal = m_nra_literals[l_idx];
-                SASSERT(curr_literal->is_bool());
-                bool_var b = curr_literal->get_bool_index();
+        }
+        int best_bool_score = INT_MIN;
+        vector<bool_var> best_bool_index;
+        for (bool_var b = 0; b < m_bool_vars.size(); b++) {
+            curr_score = get_bool_critical_score(b);
+            if (curr_score > best_bool_score) {
+                best_bool_score = curr_score;
+                best_bool_index.reset();
+                best_bool_index.push_back(b);
+            } else if (curr_score == best_bool_score) {
                 best_bool_index.push_back(b);
             }
-
-            int total_size = best_bool_index.size() + best_arith_index.size();
-            if (total_size > 0) {
+        }
+        if (best_bool_score > 0 || best_arith_score > 0) {
+            // Has decreasing move
+            if (best_bool_score > best_arith_score) {
+                bvar = best_bool_index[rand_int() % best_bool_index.size()];
+                best_score = best_bool_score;
+                return 0;  // bool operation
+            } else if (best_bool_score < best_arith_score) {
+                avar = best_arith_index[rand_int() % best_arith_index.size()];
+                best_score = best_arith_score;
+                get_best_arith_value(avar, best_arith_score, best_value);
+                return 1;  // arith operation
+            } else {
+                int total_size = best_bool_index.size() + best_arith_index.size();
                 int r = rand_int() % total_size;
                 if (r < best_bool_index.size()) {
                     bvar = best_bool_index[r];
-                    best_score = get_bool_critical_score(bvar);
+                    best_score = best_bool_score;
                     return 0;  // bool operation
                 } else {
                     avar = best_arith_index[r - best_bool_index.size()];
-                    best_value = arith_vals[r - best_bool_index.size()];
-                    best_score = best_scores[r - best_bool_index.size()];
-                    return 1;  // arith operation
-                }
-            }
-        } else {
-            // Greedy case
-            int curr_score;
-            int best_arith_score = INT_MIN;
-            vector<var> best_arith_index = vector<var>();
-            for (var v = 0; v < m_arith_vars.size(); v++) {
-                curr_score = get_best_arith_score(v);
-                if (curr_score > best_arith_score) {
-                    best_arith_score = curr_score;
-                    best_arith_index.reset();
-                    best_arith_index.push_back(v);
-                } else if (curr_score == best_arith_score) {
-                    best_arith_index.push_back(v);
-                }
-            }
-
-            int best_bool_score = INT_MIN;
-            vector<bool_var> best_bool_index = vector<bool_var>();
-            for (bool_var b = 0; b < m_bool_vars.size(); b++) {
-                curr_score = get_bool_critical_score(b);
-                if (curr_score > best_bool_score) {
-                    best_bool_score = curr_score;
-                    best_bool_index.reset();
-                    best_bool_index.push_back(b);
-                } else if (curr_score == best_bool_score) {
-                    best_bool_index.push_back(b);
-                }
-            }
-
-            if (best_bool_score > 0 || best_arith_score > 0) {
-                // Has decreasing move
-                if (best_bool_score > best_arith_score) {
-                    bvar = best_bool_index[rand_int() % best_bool_index.size()];
-                    best_score = best_bool_score;
-                    return 0;  // bool operation
-                } else if (best_bool_score < best_arith_score) {
-                    avar = best_arith_index[rand_int() % best_arith_index.size()];
                     best_score = best_arith_score;
                     get_best_arith_value(avar, best_arith_score, best_value);
                     return 1;  // arith operation
-                } else {
-                    int total_size = best_bool_index.size() + best_arith_index.size();
-                    int r = rand_int() % total_size;
-                    if (r < best_bool_index.size()) {
-                        bvar = best_bool_index[r];
-                        best_score = best_bool_score;
-                        return 0;  // bool operation
-                    } else {
-                        avar = best_arith_index[r - best_bool_index.size()];
-                        best_score = best_arith_score;
-                        get_best_arith_value(avar, best_arith_score, best_value);
-                        return 1;  // arith operation
-                    }
                 }
             }
         }
+        return -1;
+    }
 
+    int pick_random_move(bool_var& bvar, var& avar, anum& best_value, int& best_score, clause_index & c_idx) {
+        m_bool_operation_index.reset();
+        reset_arith_operation();
+        SASSERT(!m_unsat_clauses.empty());
+        // Random walk case
+        c_idx = m_unsat_clauses[rand_int() % m_unsat_clauses.size()];
+        nra_clause const* curr_clause = m_nra_clauses[c_idx];
+        vector<var> best_arith_index;
+        anum_vector arith_vals;
+        vector<int> best_scores;
+        for (var v : curr_clause->m_vars) {
+            anum best_value;
+            int best_score;
+            if (get_best_arith_value_clause(v, best_value, c_idx, best_score)) {
+                best_arith_index.push_back(v);
+                arith_vals.push_back(best_value);
+                best_scores.push_back(best_score);
+            }
+        }
+        vector<bool_var> best_bool_index;
+        for (literal_index l_idx : curr_clause->m_bool_literals) {
+            nra_literal const* curr_literal = m_nra_literals[l_idx];
+            SASSERT(curr_literal->is_bool());
+            bool_var b = curr_literal->get_bool_index();
+            best_bool_index.push_back(b);
+        }
+        int total_size = best_bool_index.size() + best_arith_index.size();
+        if (total_size > 0) {
+            int r = rand_int() % total_size;
+            if (r < best_bool_index.size()) {
+                bvar = best_bool_index[r];
+                best_score = get_bool_critical_score(bvar);
+                return 0;  // bool operation
+            } else {
+                avar = best_arith_index[r - best_bool_index.size()];
+                best_value = arith_vals[r - best_bool_index.size()];
+                best_score = best_scores[r - best_bool_index.size()];
+                return 1;  // arith operation
+            }
+        }
+        return -1;
+    }
+
+    void paws_weight() {
         // update clause weight
         if (rand_int() % 500 > smooth_probability) {
             update_clause_weight();
         } else {
             smooth_clause_weight();
         }
-
-        random_walk();
-
-        LSTRACE(tout << "end of pick move\n";);
-        LSTRACE(tout << "show time of end picking move\n";
-                TimeElapsed(););
-        return -1;  // no operation found
     }
 
     void reset_chosen_bool() {
@@ -2017,85 +1996,10 @@ struct ls_helper::imp {
         }
     }
 
-    /**
-     * Random Walk
-     */
-    void random_walk() {
+    void no_operation_random_walk(clause_index c_idx) {
+        m_stuck++;
+        m_stuck_ratio = m_stuck * 1.0 / m_step;
         SASSERT(!m_unsat_clauses.empty());
-        LSTRACE(tout << "start of random walk\n";);
-        reset_arith_operation();
-        m_bool_operation_index.reset();
-
-        // intsert operations
-        for (unsigned i = 0; i < 3 && m_bool_operation_index.size() + m_nra_operation_index.size() < 5; i++) {
-            // ^ random choose a clause
-            clause_index c_idx = m_unsat_clauses[rand_int() % m_unsat_clauses.size()];
-            nra_clause const* curr_clause = m_nra_clauses[c_idx];
-            LSTRACE(tout << "consider clause "; m_solver.display(tout, *curr_clause->get_clause()); tout << std::endl;);
-            // LSTRACE(display_var_set(tout, curr_clause->m_arith_literals));
-            // loop arith literals
-            // ^ add arith literal operations in this clause
-            for (literal_index l_idx : curr_clause->m_arith_literals) {
-                nra_literal const* curr_literal = m_nra_literals[l_idx];
-                add_literal_arith_operation(curr_literal);
-            }
-            // ^ add bool literal operations in this clause
-            // loop bool literals
-            for (literal_index l_idx : curr_clause->m_bool_literals) {
-                nra_literal const* curr_literal = m_nra_literals[l_idx];
-                SASSERT(curr_literal->is_bool());
-                LSTRACE(tout << "consider literal "; m_solver.display(tout, curr_literal->m_literal); tout << std::endl;);
-                bool_var b = curr_literal->get_bool_index();
-                if (m_bool_is_chosen[b]) {
-                    continue;
-                }
-                m_bool_operation_index.push_back(b);
-                m_bool_is_chosen[b] = true;
-            }
-        }
-        // end of insert operations, choose best operation (arith and bool)
-        // restore chosen bool variables
-        reset_chosen_bool();
-        LSTRACE(tout << "[debug] nra size: " << m_nra_operation_index.size() << std::endl;
-                display_arith_operations(tout););
-        LSCTRACE(m_nra_operation_index.empty() && m_bool_operation_index.empty(), tout << "stuck in random walk operation\n";);
-
-        // make move
-        if (m_bool_operation_index.size() + m_nra_operation_index.size() == 0) {
-            LSTRACE(tout << "empty operation, return\n";
-                    show_ls_assignment(tout););
-            m_stuck++;
-            m_stuck_ratio = 1.0 * m_stuck / m_step;
-            no_operation_random_walk();
-            return;
-        }
-        // arith move
-        if (m_bool_operation_index.empty() || (m_bool_operation_index.size() > 0 && m_nra_operation_index.size() > 0 && !is_bool_search)) {
-            anum best_arith_value;
-            literal_index best_literal_index;
-            int best_arith_score = INT_MIN;
-            var best_arith_index = select_best_from_arith_operations(best_arith_score, best_arith_value, best_literal_index);
-            SASSERT(best_arith_index != null_var);
-            LSTRACE(tout << "critical nra move in random walk\n";
-                    tout << "best arith index: " << best_arith_index << std::endl;);
-            critical_nra_move(best_arith_index, best_arith_value);
-        }
-        // bool move
-        else {
-            SASSERT(!m_bool_operation_index.empty());
-            // loop bool operation
-            int best_bool_score = INT_MIN;
-            bool_var best_bool_index = select_best_from_bool_operations(best_bool_score);
-            SASSERT(best_bool_index != null_var);
-            LSTRACE(tout << "critical bool move in random walk\n";);
-            critical_bool_move(best_bool_index);
-        }
-    }
-
-    void no_operation_random_walk() {
-        SASSERT(!m_unsat_clauses.empty());
-        // ^ random select a clause
-        clause_index c_idx = m_unsat_clauses[rand_int() % m_unsat_clauses.size()];
         nra_clause const* cls = m_nra_clauses[c_idx];
         SASSERT(cls->size() != 0);
         // ^ random select a literal
@@ -2382,7 +2286,7 @@ struct ls_helper::imp {
     /**
      * Local Search
      */
-    lbool local_search() {
+    lbool solve() {
         SPLIT_LINE(tout);
         // std::cout << "begin" << std::endl;
         LSTRACE(tout << "local search begin\n";
@@ -2406,17 +2310,6 @@ struct ls_helper::imp {
             LSTRACE(tout << "step: " << m_step << std::endl;
                     tout << "no improve cnt: " << no_improve_cnt << std::endl;);
             is_random_walk = (rand_int() % 100 < 30);
-            // if (is_random_walk) {
-            //     if (no_improve_cnt_mode > 500) {
-            //         is_random_walk = false;  // change to greedy mode
-            //         no_improve_cnt_mode = 0;
-            //     }
-            // } else {
-            //     if (no_improve_cnt_mode > 1000) {
-            //         is_random_walk = true;   // change to random walk mode
-            //         no_improve_cnt_mode = 0;
-            //     }
-            // }
             // Succeed
             if (m_unsat_clauses.empty()) {
                 SPLIT_LINE(std::cout);
@@ -2454,9 +2347,9 @@ struct ls_helper::imp {
             var picked_v;
             scoped_anum next_value(m_am);
             int best_score;
-            int mode = pick_critical_move(picked_b, picked_v, next_value, best_score);
-
+            int mode = pick_greedy_move(picked_b, picked_v, next_value, best_score);
             int before_weight = get_total_weight();
+            // greedy first
             if (mode == 0) {  // bool operation
                 critical_bool_move(picked_b);
                 if (update_bool_info()) {
@@ -2474,8 +2367,30 @@ struct ls_helper::imp {
                     no_improve_cnt_nra++;
                 }
                 SASSERT(before_weight - get_total_weight() == best_score);
-            } else {
-                // No operation
+            } else { // random next
+                paws_weight();
+                clause_index c_idx;
+                int random_mode = pick_random_move(picked_b, picked_v, next_value, best_score, c_idx);
+                if(random_mode == 0) {
+                    critical_bool_move(picked_b);
+                    if (update_bool_info()) {
+                        no_improve_cnt_bool = 0;
+                    } else {
+                        no_improve_cnt_bool++;
+                    }
+                    SASSERT(before_weight - get_total_weight() == best_score);
+                } else if(random_mode == 1) {
+                    critical_nra_move(picked_v, next_value);
+                    // update arith improvement
+                    if (update_nra_info()) {
+                        no_improve_cnt_nra = 0;
+                    } else {
+                        no_improve_cnt_nra++;
+                    }
+                    SASSERT(before_weight - get_total_weight() == best_score);
+                } else {
+                    no_operation_random_walk(c_idx);
+                }
             }
 
             // update improvement
@@ -2489,13 +2404,6 @@ struct ls_helper::imp {
 
             // Restart
             if (no_improve_cnt > m_restart_count) {
-                LSTRACE(tout << "no improve count: " << no_improve_cnt << std::endl;
-                        tout << "restart\n";
-                        SPLIT_LINE(std::cout);
-                        SPLIT_LINE(tout);
-                        std::cout << "no improve, restart\n";
-                        SPLIT_LINE(std::cout);
-                        SPLIT_LINE(tout););
                 init_solution(false);
                 no_improve_cnt = 0;
                 m_restart_count *= 2;
@@ -2755,6 +2663,6 @@ struct ls_helper::imp {
     }
 
     lbool ls_helper::local_search() {
-        return m_imp->local_search();
+        return m_imp->solve();
     }
 };  // namespace nlsat
