@@ -38,7 +38,7 @@ namespace nlsat {
         anum                                                 m_zero, 
                                                              m_one, 
                                                              m_two, 
-                                                             m_10k,
+                                                             m_10,
                                                              m_min, 
                                                              m_max;
 
@@ -364,6 +364,23 @@ namespace nlsat {
             );
         }
 
+        void analyze_problem() {
+            for (clause_index i = 0; i < m_nra_clauses.size(); i++) {
+                nra_clause const * cls = m_nra_clauses[i];
+                for (literal_index j = 0; j < cls->m_literals.size(); j++) {
+                    literal_index l_idx = cls->m_literals[j];
+                    nra_literal const * l = m_nra_literals[l_idx];
+                    if (l->is_arith()) {
+                        ineq_atom const * a = l->get_atom();
+                        // Display clauses containing equalities
+                        // if (a->is_eq()) {
+                        //     m_solver.display(std::cout, *cls->get_clause()); std::cout << std::endl;
+                        // }
+                    }
+                }
+            }
+        }
+
         void init_arith_infeasible_set(){
             // m_var_init_st.reset();
             m_var_value_fixed.resize(m_arith_vars.size(), false);
@@ -574,6 +591,56 @@ namespace nlsat {
             return m_ism.subset(pt_val, s);
         }
 
+        void get_numerator(anum const & val, mpq & num) {
+            mpq rat;
+            m_am.to_rational(val, rat);
+            m_am.qm().get_numerator(rat, num);
+        }
+
+        void get_denominator(anum const & val, mpq & den) {
+            mpq rat;
+            m_am.to_rational(val, rat);
+            m_am.qm().get_denominator(rat, den);
+        }
+
+        bool lt_denominator(anum const & val1, anum const & val2) {
+            mpq den1, den2;
+            get_denominator(val1, den1);
+            get_denominator(val2, den2);
+            return m_am.qm().lt(den1, den2);
+        }
+
+        bool is_simpler(anum const & val1, anum const & val2) {
+            // Return whether val2 is simpler than val1
+            if (m_am.is_rational(val1) && !m_am.is_rational(val2)) {
+                return false;
+            } else if (!m_am.is_rational(val1) && m_am.is_rational(val2)) {
+                return true;
+            } else if (!m_am.is_rational(val1) && !m_am.is_rational(val2)) {
+                return false;  // cannot compare
+            } else if (lt_denominator(val1, m_min) && lt_denominator(val2, m_min)) {
+                return false;  // does not compare less than 10000
+            } else {
+                return lt_denominator(val2, val1);
+            }
+        }
+
+        unsigned get_simplest_index(anum_vector & vs) {
+            // Return the index in vs with "simplest" number. Ties are
+            // broken by chance.
+            vector<int> best_indices = vector<int>();
+            best_indices.push_back(0);
+            for (int i = 1; i < vs.size(); i++) {
+                if (is_simpler(vs[best_indices[0]], vs[i])) {
+                    best_indices.reset();
+                    best_indices.push_back(i);
+                } else if (!is_simpler(vs[i], vs[best_indices[0]])) {
+                    best_indices.push_back(i);
+                }
+            }
+            return best_indices[rand_int() % best_indices.size()];
+        }
+
         void get_best_arith_value(var v, int best_score, anum & best_value) {
             // Obtain the best value for variable v (where the best score is known)
             SASSERT(best_score != INT_MIN);
@@ -631,7 +698,10 @@ namespace nlsat {
                 }
             }
             SASSERT(vec.size() > 0);
-            best_value = vec[rand_int() % vec.size()];
+            unsigned id = get_simplest_index(vec);
+            SASSERT(id >= 0 && id < vec.size());
+            best_value = vec[id];
+            // best_value = vec[rand_int() % vec.size()];
             return;
         }
 
@@ -751,9 +821,13 @@ namespace nlsat {
             if (vec.size() == 0) {
                 return false;
             }
-            int r = rand_int() % vec.size();
-            best_value = vec[r];
-            best_score = scores[r];
+            unsigned id = get_simplest_index(vec);
+            SASSERT(id >= 0 && id < vec.size());
+            best_value = vec[id];
+            best_score = scores[id];
+            // int r = rand_int() % vec.size();
+            // best_value = vec[r];
+            // best_score = scores[r];
             SASSERT(best_score >= INT_MIN / 4);
             return true;
         }
@@ -1153,9 +1227,9 @@ namespace nlsat {
             m_am.set(m_one, 1);
             m_am.set(m_two, 2);
             m_am.set(m_max, INT_MAX);
-            // m_min = 0.0001
-            m_am.set(m_10k, 10000);
-            m_am.div(m_one, m_10k, m_min);
+            // m_min = 0.1
+            m_am.set(m_10, 10);
+            m_am.div(m_one, m_10, m_min);
             LSTRACE(display_const_anum(tout););
         }
 
@@ -1384,10 +1458,17 @@ namespace nlsat {
                         best_score = get_bool_critical_score(bvar);
                         return 0;  // bool operation
                     } else {
-                        avar = best_arith_index[r - best_bool_index.size()];
-                        best_value = arith_vals[r - best_bool_index.size()];
-                        best_score = best_scores[r - best_bool_index.size()];
-                        return 1;  // arith operation
+                        SASSERT(arith_vals.size() > 0);
+                        unsigned id = get_simplest_index(arith_vals);
+                        avar = best_arith_index[id];
+                        best_value = arith_vals[id];
+                        best_score = best_scores[id];
+                        // avar = best_arith_index[r - best_bool_index.size()];
+                        // best_value = arith_vals[r - best_bool_index.size()];
+                        // best_score = best_scores[r - best_bool_index.size()];
+                        if (!is_simpler(best_value, m_min)) {
+                            return 1;  // arith operation
+                        }
                     }
                 }
             }
@@ -1396,14 +1477,24 @@ namespace nlsat {
                 int curr_score;
                 int best_arith_score = INT_MIN;
                 vector<var> best_arith_index = vector<var>();
+                anum_vector best_values = anum_vector();
                 for (var v = 0; v < m_arith_vars.size(); v++) {
                     curr_score = get_best_arith_score(v);
                     if (curr_score > best_arith_score) {
                         best_arith_score = curr_score;
-                        best_arith_index.reset();
-                        best_arith_index.push_back(v);
-                    } else if (curr_score == best_arith_score) {
-                        best_arith_index.push_back(v);
+                    }
+                }
+                if (best_arith_score != INT_MIN) {
+                    best_arith_index.reset();
+                    best_values.reset();
+                    for (var v = 0; v < m_arith_vars.size(); v++) {
+                        curr_score = get_best_arith_score(v);
+                        if (curr_score == best_arith_score) {
+                            best_arith_index.push_back(v);
+                            anum w;
+                            get_best_arith_value(v, curr_score, w);
+                            best_values.push_back(w);
+                        }
                     }
                 }
 
@@ -1428,9 +1519,14 @@ namespace nlsat {
                         return 0;  // bool operation
                     }
                     else if (best_bool_score < best_arith_score) {
-                        avar = best_arith_index[rand_int() % best_arith_index.size()];
+                        SASSERT(best_values.size() > 0);
+                        unsigned id = get_simplest_index(best_values);
+                        SASSERT(id >= 0 && id < best_values.size());
+                        avar = best_arith_index[id];
                         best_score = best_arith_score;
-                        get_best_arith_value(avar, best_arith_score, best_value);
+                        best_value = best_values[id];
+                        // avar = best_arith_index[rand_int() % best_arith_index.size()];
+                        // get_best_arith_value(avar, best_arith_score, best_value);
                         return 1;  // arith operation
                     } else {
                         int total_size = best_bool_index.size() + best_arith_index.size();
@@ -1440,9 +1536,15 @@ namespace nlsat {
                             best_score = best_bool_score;
                             return 0;  // bool operation
                         } else {
-                            avar = best_arith_index[r - best_bool_index.size()];
+                            SASSERT(best_values.size() > 0);
+                            unsigned id = get_simplest_index(best_values);
+                            SASSERT(id >= 0 && id < best_values.size());
+                            avar = best_arith_index[id];
                             best_score = best_arith_score;
-                            get_best_arith_value(avar, best_arith_score, best_value);
+                            best_value = best_values[id];
+                            // avar = best_arith_index[r - best_bool_index.size()];
+                            // best_score = best_arith_score;
+                            // get_best_arith_value(avar, best_arith_score, best_value);
                             return 1;  // arith operation
                         }
                     }
@@ -2525,6 +2627,7 @@ namespace nlsat {
             no_improve_cnt = 0;
             m_start_time = std::chrono::steady_clock::now();
             m_step = 0;
+            // analyze_problem();
             // ICP returns false
             if(!init_solution(true)){
                 LSTRACE(std::cout << "ICP returns false\n";);
