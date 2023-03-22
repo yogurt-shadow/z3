@@ -518,6 +518,10 @@ struct ls_helper::imp {
         // }
     }
 
+
+    /**
+     * @brief return best operation score of arith var
+    */
     int get_best_arith_score(var v) {
         // Obtain the best score for variable v
         nra_arith_var* m_arith_var = m_arith_vars[v];
@@ -542,12 +546,15 @@ struct ls_helper::imp {
         return m_ism.subset(pt_val, s);
     }
 
+    /**
+     * @brief give best score and arith var, find bext value
+    */
     void get_best_arith_value(var v, int best_score, anum& best_value) {
         // Obtain the best value for variable v (where the best score is known)
         nra_arith_var* m_arith_var = m_arith_vars[v];
         int score = m_arith_var->m_start_score;
         int len = m_arith_var->m_boundaries.size();
-        anum_vector vec = anum_vector();
+        anum_vector vec;
         if (score == best_score) {
             // Return value before left boundary
             if (m_arith_var->m_boundaries[0].is_open) {
@@ -557,6 +564,7 @@ struct ls_helper::imp {
                 vec.push_back(w);
             } else {
                 // x) case, cannot include x
+                // TODO: what if w == m_arith_var->m_boundaries[0]
                 anum w;
                 m_am.int_lt(m_arith_var->m_boundaries[0].value, w);
                 vec.push_back(w);
@@ -570,6 +578,7 @@ struct ls_helper::imp {
                     if (m_arith_var->m_boundaries[len - 1].is_open) {
                         // x] case, cannot include x
                         anum w;
+                        // TODO: what if w == m_arith_var->m_boundaries[0]
                         m_am.int_gt(m_arith_var->m_boundaries[len - 1].value, w);
                         vec.push_back(w);
                     } else {
@@ -605,9 +614,9 @@ struct ls_helper::imp {
         nra_arith_var* m_arith_var = m_arith_vars[v];
         int score = m_arith_var->m_start_score;
         int len = m_arith_var->m_boundaries.size();
-        anum_vector vec = anum_vector();
-        vector<int> scores = vector<int>();
-
+        anum_vector vec;
+        vector<int> scores;
+        // find interval set of that clause
         interval_set* s = nullptr;
         for (int i = 0; i < m_arith_var->m_clauses.size(); i++) {
             if (c_idx == m_arith_var->m_clauses[i]) {
@@ -1243,6 +1252,9 @@ struct ls_helper::imp {
         return best_bool_var_index;
     }
 
+    /**
+     * @brief
+    */
     int pick_greedy_move(bool_var& bvar, var& avar, anum& best_value, int& best_score) {
         m_bool_operation_index.reset();
         reset_arith_operation();
@@ -1252,13 +1264,13 @@ struct ls_helper::imp {
         int best_arith_score = INT_MIN;
         vector<var> best_arith_index;
         for (var v = 0; v < m_arith_vars.size(); v++) {
-            curr_score = get_best_arith_score(v);
+            curr_score = get_best_arith_score(v); // best operation score of the arith var
             if (curr_score > best_arith_score) {
                 best_arith_score = curr_score;
                 best_arith_index.reset();
                 best_arith_index.push_back(v);
             } else if (curr_score == best_arith_score) {
-                best_arith_index.push_back(v);
+                best_arith_index.push_back(v); // same score vector
             }
         }
         int best_bool_score = INT_MIN;
@@ -1273,7 +1285,7 @@ struct ls_helper::imp {
                 best_bool_index.push_back(b);
             }
         }
-        if (best_bool_score > 0 || best_arith_score > 0) {
+        if (best_bool_score > 0 || best_arith_score > 0) { // must greedy one
             // Has decreasing move
             if (best_bool_score > best_arith_score) {
                 bvar = best_bool_index[rand_int() % best_bool_index.size()];
@@ -1301,7 +1313,10 @@ struct ls_helper::imp {
         }
         return -1;
     }
-
+    
+    /**
+     * @brief 
+    */
     int pick_random_move(bool_var& bvar, var& avar, anum& best_value, int& best_score, clause_index & c_idx) {
         m_bool_operation_index.reset();
         reset_arith_operation();
@@ -1555,25 +1570,16 @@ struct ls_helper::imp {
             clause_index c_idx = m_bool_var->m_lit_cls[i];
             nra_literal* curr_literal = m_nra_literals[l_idx];
             nra_clause const* curr_clause = m_nra_clauses[c_idx];
-            LSTRACE(
-                tout << "consider literal: "; m_solver.display(tout, curr_literal->m_literal); tout << std::endl;
-                tout << "consider clause: "; m_solver.display(tout, *curr_clause->get_clause()); tout << std::endl;);
             SASSERT(curr_literal->is_bool());
             bool before_sat, after_sat;
             before_sat = is_literal_sat(curr_literal);
             after_sat = !before_sat;
             make_break += (after_sat - before_sat);
-            LSTRACE(
-                tout << "bool value: "; tout << (before_sat ? "true" : "false"); tout << "->"; tout << (after_sat ? "true" : "false"); tout << std::endl;);
-
             // the end of a clause block (claus block means an area of the same clause index)
             // time to count clause count
             if (i == m_bool_var->m_literals.size() - 1 || (c_idx != m_bool_var->m_lit_cls[i + 1])) {
-                LSTRACE(tout << "end for clause "; m_solver.display(tout, *curr_clause->get_clause()); tout << std::endl;);
                 unsigned before_sat_count = curr_clause->get_sat_count();
-                LSTRACE(tout << "show make break: " << make_break << std::endl;);
                 unsigned after_sat_count = before_sat_count + make_break;
-                LSTRACE(tout << "sat count in get score: " << before_sat_count << "->" << after_sat_count << std::endl;);
                 SASSERT(after_sat_count >= 0);
                 // unsat --> sat
                 if (before_sat_count == 0 && after_sat_count > 0) {
@@ -2303,9 +2309,6 @@ struct ls_helper::imp {
         }
         m_outer_step = 1;
         for (m_step = 1; m_step < max_step; m_step++) {
-            // if (m_step % 100 == 0) {
-            //     std::cout << "step: " << m_step << " #unsat clauses: " << m_unsat_clauses.size() << std::endl;
-            // }
             m_stuck_ratio = 1.0 * m_stuck / m_step;
             LSTRACE(tout << "step: " << m_step << std::endl;
                     tout << "no improve cnt: " << no_improve_cnt << std::endl;);
