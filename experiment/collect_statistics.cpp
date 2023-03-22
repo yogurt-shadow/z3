@@ -8,15 +8,9 @@ using namespace std;
 
 const string instance_path = "../ls_instance_server.txt";
 
-<<<<<<< HEAD
-const string output_path = "z3_nra_v3.csv";
-const string output_label_path = "z3_nra_v3_label.csv";
-const string input_folder = "z3_nra_v3/"; 
-=======
-const string output_path = "z3_nra_newest.csv";
-const string output_label_path = "z3_nra_newest_label.csv";
-const string input_folder = "z3_nra_newest/"; 
->>>>>>> c992be1ecb8d510b1f8f8eb5e9dc1ee617c4d74b
+const string output_path = "/home/wangz/code/z3/experiment/z3_nra_v4.csv";
+const string output_label_path = "/home/wangz/code/z3/experiment/z3_nra_v4_label.csv";
+const string input_folder = "z3_nra_v4/"; 
 
 vector<string> instance_vec;
 unordered_map<string, string> m_ins_label;

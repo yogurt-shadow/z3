@@ -8,7 +8,7 @@
 |z3_nra_v1| traditional one|
 |z3_nra_v2| random select 5 each step |
 |z3_nra_v3| insert one unsat literal for each unsat clause |
-|z3_nra_v4| sample heuristic: only threshold rational |
+|z3_nra_v4| format traditional one |
 
 ## Solving Performance -wzh-ls
 **benchmark number: 6778**
@@ -21,11 +21,12 @@
 |z3_nra_v1|5058|
 |z3_nra_v2|5123|
 |z3_nra_v3|5072|
+|z3_nra_v4|4945|
 
 ## Version Compare -z3-nra-ls
 |z3_branch_v0|d276ac1|
 
-## Solving Performance -z3-nra-ls
+## Solving Performance -wzh-ls
 **benchmark number: 6778**
 |name|sat solved|
 |-|-|
