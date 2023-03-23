@@ -592,19 +592,20 @@ namespace nlsat {
         }
 
         void get_numerator(anum const & val, mpq & num) {
-            mpq rat;
+            scoped_mpq rat(m_am.qm());
             m_am.to_rational(val, rat);
             m_am.qm().get_numerator(rat, num);
         }
 
         void get_denominator(anum const & val, mpq & den) {
-            mpq rat;
+            scoped_mpq rat(m_am.qm());
             m_am.to_rational(val, rat);
             m_am.qm().get_denominator(rat, den);
         }
 
         bool lt_denominator(anum const & val1, anum const & val2) {
-            mpq den1, den2;
+            scoped_mpq den1(m_am.qm());
+            scoped_mpq den2(m_am.qm());
             get_denominator(val1, den1);
             get_denominator(val2, den2);
             return m_am.qm().lt(den1, den2);
@@ -647,18 +648,18 @@ namespace nlsat {
             nra_arith_var * m_arith_var = m_arith_vars[v];
             int score = m_arith_var->m_start_score;
             int len = m_arith_var->m_boundaries.size();
-            anum_vector vec = anum_vector();
+            scoped_anum_vector vec(m_am);
             if (score == best_score) {
                 // Return value before left boundary
                 if (m_arith_var->m_boundaries[0].is_open) {
                     // x] case, can include x
-                    anum w;
+                    scoped_anum w(m_am);
                     m_am.set(w, m_arith_var->m_boundaries[0].value);
                     vec.push_back(w);
                 }
                 else {
                     // x) case, cannot include x
-                    anum w;
+                    scoped_anum w(m_am);
                     m_am.int_lt(m_arith_var->m_boundaries[0].value, w);
                     vec.push_back(w);
                 }
@@ -670,13 +671,13 @@ namespace nlsat {
                     if (i == len - 1) {
                         if (m_arith_var->m_boundaries[len-1].is_open) {
                             // x] case, cannot include x
-                            anum w;
+                            scoped_anum w(m_am);
                             m_am.int_gt(m_arith_var->m_boundaries[len-1].value, w);
                             vec.push_back(w);
                         }
                         else {
                             // x) case, can include x
-                            anum w;
+                            scoped_anum w(m_am);
                             m_am.set(w, m_arith_var->m_boundaries[len-1].value);
                             vec.push_back(w);
                         }
@@ -685,12 +686,12 @@ namespace nlsat {
                     else {
                         if (m_am.eq(m_arith_var->m_boundaries[i].value, m_arith_var->m_boundaries[i+1].value)) {
                             SASSERT(!m_arith_var->m_boundaries[i].is_open && m_arith_var->m_boundaries[i+1].is_open);
-                            anum w;
+                            scoped_anum w(m_am);
                             m_am.set(w, m_arith_var->m_boundaries[i].value);
                             vec.push_back(w);
                         }
                         else {
-                            anum w;
+                            scoped_anum w(m_am);
                             m_am.select(m_arith_var->m_boundaries[i].value, m_arith_var->m_boundaries[i+1].value, w);
                             vec.push_back(w);
                         }
@@ -700,7 +701,7 @@ namespace nlsat {
             SASSERT(vec.size() > 0);
             unsigned id = get_simplest_index(vec);
             SASSERT(id >= 0 && id < vec.size());
-            best_value = vec[id];
+            m_am.set(best_value, vec[id]);
             // best_value = vec[rand_int() % vec.size()];
             return;
         }
@@ -711,7 +712,7 @@ namespace nlsat {
             nra_arith_var * m_arith_var = m_arith_vars[v];
             int score = m_arith_var->m_start_score;
             int len = m_arith_var->m_boundaries.size();
-            anum_vector vec = anum_vector();
+            scoped_anum_vector vec(m_am);
             vector<int> scores = vector<int>();
 
             interval_set * s = nullptr;
@@ -727,7 +728,7 @@ namespace nlsat {
             // Return value before left boundary
             if (m_arith_var->m_boundaries[0].is_open) {
                 // x] case, can include x
-                anum w;
+                scoped_anum w(m_am);
                 m_am.set(w, m_arith_var->m_boundaries[0].value);
                 if (!contains_value(s, w) && score >= INT_MIN / 4) {
                     if (score > best_score) {
@@ -741,7 +742,7 @@ namespace nlsat {
             }
             else {
                 // x) case, cannot include x
-                anum w;
+                scoped_anum w(m_am);
                 m_am.int_lt(m_arith_var->m_boundaries[0].value, w);
                 if (!contains_value(s, w) && score >= INT_MIN / 4) {
                     if (score > best_score) {
@@ -760,7 +761,7 @@ namespace nlsat {
                 if (i == len - 1) {
                     if (m_arith_var->m_boundaries[len-1].is_open) {
                         // x] case, cannot include x
-                        anum w;
+                        scoped_anum w(m_am);
                         m_am.int_gt(m_arith_var->m_boundaries[len-1].value, w);
                         if (!contains_value(s, w) && score >= INT_MIN / 4) {
                             if (score > best_score) {
@@ -774,7 +775,7 @@ namespace nlsat {
                     }
                     else {
                         // x) case, can include x
-                        anum w;
+                        scoped_anum w(m_am);
                         m_am.set(w, m_arith_var->m_boundaries[len-1].value);
                         if (!contains_value(s, w) && score >= INT_MIN / 4) {
                             if (score > best_score) {
@@ -791,7 +792,7 @@ namespace nlsat {
                 else {
                     if (m_am.eq(m_arith_var->m_boundaries[i].value, m_arith_var->m_boundaries[i+1].value)) {
                         SASSERT(!m_arith_var->m_boundaries[i].is_open && m_arith_var->m_boundaries[i+1].is_open);
-                        anum w;
+                        scoped_anum w(m_am);
                         m_am.set(w, m_arith_var->m_boundaries[i].value);
                         if (!contains_value(s, w) && score >= INT_MIN / 4) {
                             if (score > best_score) {
@@ -804,7 +805,7 @@ namespace nlsat {
                         }
                     }
                     else {
-                        anum w;
+                        scoped_anum w(m_am);
                         m_am.select(m_arith_var->m_boundaries[i].value, m_arith_var->m_boundaries[i+1].value, w);
                         if (!contains_value(s, w) && score >= INT_MIN / 4) {
                             if (score > best_score) {
@@ -823,7 +824,7 @@ namespace nlsat {
             }
             unsigned id = get_simplest_index(vec);
             SASSERT(id >= 0 && id < vec.size());
-            best_value = vec[id];
+            m_am.set(best_value, vec[id]);
             best_score = scores[id];
             // int r = rand_int() % vec.size();
             // best_value = vec[r];
@@ -1424,14 +1425,14 @@ namespace nlsat {
                 m_vars_visited.reset();
 
                 vector<var> best_arith_index = vector<var>();
-                anum_vector arith_vals = anum_vector();
+                scoped_anum_vector arith_vals(m_am);
                 vector<int> best_scores = vector<int>();
                 for (literal_index l_idx : curr_clause->m_arith_literals) {
                     nra_literal const * curr_literal = m_nra_literals[l_idx];
                     for (var v : curr_literal->m_vars) {
                         if (!m_vars_visited.contains(v)) {
                             m_vars_visited.insert(v);
-                            anum best_value;
+                            scoped_anum best_value(m_am);
                             int best_score = INT_MIN;
                             if (get_best_arith_value_clause(v, best_value, c_idx, best_score)) {
                                 best_arith_index.push_back(v);
@@ -1461,7 +1462,7 @@ namespace nlsat {
                         SASSERT(arith_vals.size() > 0);
                         unsigned id = get_simplest_index(arith_vals);
                         avar = best_arith_index[id];
-                        best_value = arith_vals[id];
+                        m_am.set(best_value, arith_vals[id]);
                         best_score = best_scores[id];
                         // avar = best_arith_index[r - best_bool_index.size()];
                         // best_value = arith_vals[r - best_bool_index.size()];
@@ -1477,7 +1478,7 @@ namespace nlsat {
                 int curr_score;
                 int best_arith_score = INT_MIN;
                 vector<var> best_arith_index = vector<var>();
-                anum_vector best_values = anum_vector();
+                scoped_anum_vector best_values(m_am);
                 for (var v = 0; v < m_arith_vars.size(); v++) {
                     curr_score = get_best_arith_score(v);
                     if (curr_score > best_arith_score) {
@@ -1485,13 +1486,11 @@ namespace nlsat {
                     }
                 }
                 if (best_arith_score != INT_MIN) {
-                    best_arith_index.reset();
-                    best_values.reset();
                     for (var v = 0; v < m_arith_vars.size(); v++) {
                         curr_score = get_best_arith_score(v);
                         if (curr_score == best_arith_score) {
                             best_arith_index.push_back(v);
-                            anum w;
+                            scoped_anum w(m_am);
                             get_best_arith_value(v, curr_score, w);
                             best_values.push_back(w);
                         }
@@ -1524,7 +1523,7 @@ namespace nlsat {
                         SASSERT(id >= 0 && id < best_values.size());
                         avar = best_arith_index[id];
                         best_score = best_arith_score;
-                        best_value = best_values[id];
+                        m_am.set(best_value, best_values[id]);
                         // avar = best_arith_index[rand_int() % best_arith_index.size()];
                         // get_best_arith_value(avar, best_arith_score, best_value);
                         return 1;  // arith operation
@@ -1541,7 +1540,7 @@ namespace nlsat {
                             SASSERT(id >= 0 && id < best_values.size());
                             avar = best_arith_index[id];
                             best_score = best_arith_score;
-                            best_value = best_values[id];
+                            m_am.set(best_value, best_values[id]);
                             // avar = best_arith_index[r - best_bool_index.size()];
                             // best_score = best_arith_score;
                             // get_best_arith_value(avar, best_arith_score, best_value);
