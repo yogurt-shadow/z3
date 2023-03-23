@@ -38,7 +38,7 @@ namespace nlsat {
         anum                                                 m_zero, 
                                                              m_one, 
                                                              m_two, 
-                                                             m_10,
+                                                             m_10k,
                                                              m_min, 
                                                              m_max;
 
@@ -1228,9 +1228,9 @@ namespace nlsat {
             m_am.set(m_one, 1);
             m_am.set(m_two, 2);
             m_am.set(m_max, INT_MAX);
-            // m_min = 0.1
-            m_am.set(m_10, 10);
-            m_am.div(m_one, m_10, m_min);
+            // m_min = 0.0001
+            m_am.set(m_10k, 10000);
+            m_am.div(m_one, m_10k, m_min);
             LSTRACE(display_const_anum(tout););
         }
 
@@ -2739,7 +2739,7 @@ namespace nlsat {
                         SPLIT_LINE(std::cout);
                         SPLIT_LINE(tout);
                     );
-                    init_solution(false);
+                    init_solution(true);
                     no_improve_cnt = 0;
                     m_restart_count *= 2;
                     use_infeasible_st = !use_infeasible_st;
