@@ -38,9 +38,7 @@ namespace nlsat {
         anum                                                 m_zero, 
                                                              m_one, 
                                                              m_two, 
-                                                             m_10k,
-                                                             m_min, 
-                                                             m_max;
+                                                             m_min;
 
         /**
          * * Arith Var
@@ -691,9 +689,35 @@ namespace nlsat {
                             vec.push_back(w);
                         }
                         else {
-                            scoped_anum w(m_am);
-                            m_am.select(m_arith_var->m_boundaries[i].value, m_arith_var->m_boundaries[i+1].value, w);
-                            vec.push_back(w);
+                            scoped_anum w(m_am), w2(m_am);
+                            // if (m_am.is_rational(m_arith_var->m_boundaries[i].value) &&
+                            //     m_am.is_rational(m_arith_var->m_boundaries[i+1].value)) {
+                            //     // Add (a + b) / 2
+                            //     m_am.add(m_arith_var->m_boundaries[i].value, m_arith_var->m_boundaries[i+1].value, w2);
+                            //     m_am.div(w2, m_two, w);
+                            //     vec.push_back(w);
+
+                            //     // Add ratio of sum of numerator and denominator
+                            //     scoped_mpq n1(m_am.qm());
+                            //     scoped_mpq n2(m_am.qm());
+                            //     scoped_mpq n3(m_am.qm());
+                            //     scoped_mpq d1(m_am.qm());
+                            //     scoped_mpq d2(m_am.qm());
+                            //     scoped_mpq d3(m_am.qm());
+                            //     scoped_mpq res(m_am.qm());
+                            //     get_numerator(m_arith_var->m_boundaries[i].value, n1);
+                            //     get_numerator(m_arith_var->m_boundaries[i+1].value, n2);
+                            //     get_denominator(m_arith_var->m_boundaries[i].value, d1);
+                            //     get_denominator(m_arith_var->m_boundaries[i].value, d2);
+                            //     m_am.qm().add(n1, n2, n3);
+                            //     m_am.qm().add(d1, d2, d3);
+                            //     m_am.qm().div(n3, d3, res);
+                            //     m_am.set(w, res);
+                            //     vec.push_back(w);
+                            // } else {
+                                m_am.select(m_arith_var->m_boundaries[i].value, m_arith_var->m_boundaries[i+1].value, w);
+                                vec.push_back(w);
+                            // }
                         }
                     }
                 }
@@ -1227,10 +1251,12 @@ namespace nlsat {
             m_am.set(m_zero, 0);
             m_am.set(m_one, 1);
             m_am.set(m_two, 2);
-            m_am.set(m_max, INT_MAX);
-            // m_min = 0.0001
-            m_am.set(m_10k, 10000);
-            m_am.div(m_one, m_10k, m_min);
+            // We primarily use m_min as a threshold for comparing denominators.
+            // If two numbers have denominators smaller than that of m_min, they
+            // are not distinguished in the comparison.
+            scoped_anum threshold(m_am);
+            m_am.set(threshold, 10000);
+            m_am.div(m_one, threshold, m_min);
             LSTRACE(display_const_anum(tout););
         }
 
@@ -2786,7 +2812,6 @@ namespace nlsat {
             out << "show constant anum\n";
             m_am.display(out << "m_zero: ", m_zero) << std::endl;
             m_am.display(out << "m_one: ", m_one) << std::endl;
-            m_am.display(out << "m_max: ", m_max) << std::endl;
             m_am.display(out << "m_min: ", m_min) << std::endl;
             return out;
         }
