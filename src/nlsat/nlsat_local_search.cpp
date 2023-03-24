@@ -1255,7 +1255,7 @@ namespace nlsat {
             // If two numbers have denominators smaller than that of m_min, they
             // are not distinguished in the comparison.
             scoped_anum threshold(m_am);
-            m_am.set(threshold, 10000);
+            m_am.set(threshold, 10);
             m_am.div(m_one, threshold, m_min);
             LSTRACE(display_const_anum(tout););
         }
@@ -2765,7 +2765,7 @@ namespace nlsat {
                         SPLIT_LINE(std::cout);
                         SPLIT_LINE(tout);
                     );
-                    init_solution(true);
+                    init_solution(false);
                     no_improve_cnt = 0;
                     m_restart_count *= 2;
                     use_infeasible_st = !use_infeasible_st;

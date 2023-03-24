@@ -1813,7 +1813,7 @@ namespace nlsat {
 
             if(m_local_search){
                 // if(m_ls_simplify){
-                if(false){
+                if(true){
                     LSTRACE(
                         std::cout << "enable local search simplify\n";
                         tout << "before local search simplify\n";
