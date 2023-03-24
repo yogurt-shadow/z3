@@ -751,6 +751,24 @@ interval_set* interval_set_manager::mk_complement(interval_set const* s) {
     return mk_interval(m_allocator, result, false);
 }
 
+bool interval_set_manager::contains_value(interval_set const * s, anum const & val) const {
+    if(s == nullptr && s->m_num_intervals == 0) {
+        return false;
+    }
+    for(unsigned i = 0; i < s->m_num_intervals; i++) {
+        if(contains_value(s->m_intervals[i], val)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool interval_set_manager::contains_value(interval inter, anum const & val) const {
+    bool left = inter.m_lower_inf || (m_am.lt(inter.m_lower, val)) || (m_am.eq(inter.m_lower, val) && !inter.m_lower_open);
+    bool right = inter.m_upper_inf || (m_am.gt(inter.m_upper, val)) || (m_am.eq(inter.m_upper, val) && !inter.m_upper_open);
+    return left && right;
+}
+
 // s1 /\ s2 = !(!s1 \/ !s2)
 interval_set* interval_set_manager::mk_intersection(interval_set const* s1, interval_set const* s2) {
     TRACE("wzh", tout << "[intersection] show s1 and s2" << std::endl;

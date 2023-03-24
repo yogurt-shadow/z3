@@ -300,7 +300,7 @@ namespace nlsat {
         // the clause which the literal belongs to
         var_vector m_lit_cls;
         // boundaries of changes for the infeasible sets
-        vector<anum_boundary> m_boundaries;
+        vector<anum_boundary> m_boundaries, m_cached_boundaries;
         // starting score
         int m_start_score;
 
@@ -313,7 +313,7 @@ namespace nlsat {
         // clauses which contain this var
         var_vector m_clauses;
         // for each clause, the current infeasible set for that clause
-        interval_set_vector m_clause_intervals;
+        interval_set_vector m_clause_intervals, m_cached_clause_intervals;
         // st is initially full
         nra_arith_var(var idx, interval_set * st, interval_set * st2)
         : m_index(idx), m_last_move(0), m_tabu(0), m_score(0), m_feasible_st(st), m_infeasible_st(st2)

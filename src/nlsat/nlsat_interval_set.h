@@ -104,6 +104,8 @@ namespace nlsat {
         void peek_in_complement_threshold_integer(interval_set const * s, anum_vector & vec);
 
         void peek_in_complement_heuristic(interval_set const * s, anum_vector & vec);
+        bool contains_value(interval s, anum const & w) const;
+        bool contains_value(interval_set const * s, anum const & w) const;
         // hzw ls
         
         /**
