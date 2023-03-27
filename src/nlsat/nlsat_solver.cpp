@@ -237,13 +237,19 @@ namespace nlsat {
         unsigned               m_irrational_assignments; // number of irrational witnesses
 
         // wzh ls
-        unsigned m_ls_solved;
-        unsigned m_ls_pair_cm;
-        unsigned m_ls_step;
-        unsigned m_ls_stuck;
-        double m_ls_stuck_ratio;
-        unsigned m_cad_move, m_cad_succeed;
-        unsigned m_poly_bound;
+        unsigned               m_ls_solved;
+        unsigned               m_ls_pair_cm;
+        unsigned               m_ls_step;
+        unsigned               m_ls_stuck;
+        double                 m_ls_stuck_ratio;
+        unsigned               m_cad_move, m_cad_succeed;
+        unsigned               m_poly_bound;
+        // number of unit clauses with equal atom
+        unsigned               m_num_eq_clauses;
+        // number of clauses with equal atom
+        unsigned               m_num_clauses_with_eq;
+        // number of equal atoms
+        unsigned               m_num_eq_atoms;
         // hzw ls
 
         // basic information
@@ -1676,6 +1682,29 @@ namespace nlsat {
             return b ? l_true : l_false;
         }
 
+        void analyze_equal_problems() {
+            for(unsigned i = 0; i < m_clauses.size(); i++) {
+                clause const & cls = *m_clauses[i];
+                bool have_eq = false;
+                for(literal l: cls) {
+                    if(m_atoms[l.var()] == nullptr) {
+                        continue;
+                    }
+                    atom * a = m_atoms[l.var()];
+                    if(!l.sign() && a->get_kind() == atom::EQ) {
+                        m_num_eq_atoms++;
+                        have_eq = true;
+                    }
+                }
+                if(have_eq) {
+                    m_num_clauses_with_eq++;
+                    if(cls.size() == 1) {
+                        m_num_eq_clauses++;
+                    }
+                }
+            }
+        }
+
         // convert >=, <= to ==
         // del_clause(c, m_clauses);
         // !(235 skoC + 42 skoS > 0)
@@ -1812,14 +1841,15 @@ namespace nlsat {
             }
 
             if(m_local_search){
-                // if(m_ls_simplify){
-                if(false){
+                if(m_ls_simplify){
+                // if(false){
                     LSTRACE(
                         std::cout << "enable local search simplify\n";
                         tout << "before local search simplify\n";
                         display_clauses(tout);
                     );
                     simplify_equational_clauses();
+                    analyze_equal_problems();
                     if (!local_search_simplify()) {
                         return l_false;
                     }
@@ -2554,6 +2584,9 @@ namespace nlsat {
             st.update("nlsat local search cad move", m_cad_move);
             st.update("nlsat local search cad succeed", m_cad_succeed);
             st.update("nlsat local seaech poly bound", m_poly_bound);
+            st.update("nlsat equal clauses", m_num_eq_clauses);
+            st.update("nlsat clauses with equal", m_num_clauses_with_eq);
+            st.update("nlsat equal atoms", m_num_eq_atoms);
             // hzw ls
             // basic
             st.update("nlsat clauses number", m_num_clauses);
@@ -2578,6 +2611,9 @@ namespace nlsat {
             m_cad_move = 0;
             m_cad_succeed = 0;
             m_poly_bound = 0;
+            m_num_eq_clauses = 0;
+            m_num_clauses_with_eq = 0;
+            m_num_eq_atoms = 0;
             // hzw ls
             // basic
             m_num_clauses = 0;
