@@ -3,6 +3,12 @@
 
 /**
  * * local search for nlsat on nonlinear real arithmetic
+ * 
+ * @brief try several methods to solve MBO (just one clause case)
+ * @author wzh
+ * @todo
+ * 1. each var insert an operation, check whether the polynomial value decreases or increases (random or greedy)
+ * 
 */
 
 namespace nlsat {
