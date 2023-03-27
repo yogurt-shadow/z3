@@ -473,7 +473,7 @@ namespace nlsat {
         imp * m_imp;
     public:
         ls_helper(solver & s, anum_manager & am, pmanager & pm, polynomial::cache & cache, interval_set_manager & ism, evaluator & ev, 
-                         assignment & ass, svector<lbool> & bvalues, clause_vector const & cls, atom_vector const & ats, bool_var_vector const & pure_bool_vars, 
+                         assignment & ass, svector<lbool> & bvalues, clause_vector & cls, atom_vector const & ats, unsigned_vector const & equal_cls, bool_var_vector const & pure_bool_vars, 
                          bool_var_vector const & pure_bool_convert, 
                         unsigned seed, unsigned & step, unsigned & stuck, double & ratio, substitute_value_vector const & vec);
 

@@ -277,7 +277,7 @@ namespace nlsat {
             m_display_assumption(nullptr),
             m_explain(s, m_assignment, m_cache, m_atoms, m_var2eq, m_evaluator),
             // wzh ls
-            m_lsh(s, m_am, m_pm, m_cache, m_ism, m_evaluator, m_assignment, m_bvalues, m_clauses, m_atoms, m_pure_bool_vars, m_pure_bool_convert, m_random_seed, m_ls_step, m_ls_stuck, m_ls_stuck_ratio, m_sub_values),
+            m_lsh(s, m_am, m_pm, m_cache, m_ism, m_evaluator, m_assignment, m_bvalues, m_clauses, m_atoms, m_equal_clauses, m_pure_bool_vars, m_pure_bool_convert, m_random_seed, m_ls_step, m_ls_stuck, m_ls_stuck_ratio, m_sub_values),
             // hzw ls
             m_scope_lvl(0),
             m_lemma(s),
@@ -1769,7 +1769,6 @@ namespace nlsat {
             for(unsigned i = 0; i < m_le_cls.size(); i++){
                 del_clause(m_le_cls[i], m_clauses);
             }
-            collect_equal_clauses();
             LSTRACE(tout << "end of simplify clauses\n";
                 display_atoms(tout);
             );
@@ -1841,6 +1840,9 @@ namespace nlsat {
             }
 
             if(m_local_search){
+                simplify_equational_clauses();
+                collect_equal_clauses();
+                analyze_equal_problems();
                 if(m_ls_simplify){
                 // if(false){
                     LSTRACE(
@@ -1848,8 +1850,6 @@ namespace nlsat {
                         tout << "before local search simplify\n";
                         display_clauses(tout);
                     );
-                    simplify_equational_clauses();
-                    analyze_equal_problems();
                     if (!local_search_simplify()) {
                         return l_false;
                     }
