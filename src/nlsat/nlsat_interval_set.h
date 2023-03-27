@@ -92,6 +92,7 @@ namespace nlsat {
         interval_set * mk_intersection(interval_set const * s1, interval_set const * s2);
         interval_set * mk_full();
         bool contains_zero(interval_set const * s) const;
+        bool contains_zero(interval_set const * s, unsigned & index) const;
         bool interval_contains_zero(interval inter) const;
    
         bool peek_in_complement_zero(interval_set const * s, anum & w);
@@ -161,6 +162,8 @@ namespace nlsat {
            \pre !is_full(s)
         */
         void peek_in_complement(interval_set const * s, bool is_int, anum & w, bool randomize);
+        void peek_in_complement(interval_set const * s, bool is_int, anum & w, bool randomize, unsigned & index);
+        void peek_in_feasible_index(interval_set const* s, anum & w, unsigned index);
 
         void push_boundary(vector<anum_boundary> & boundaries, anum const & val, bool is_open, int inc_weight);
 

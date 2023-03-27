@@ -797,6 +797,19 @@ namespace nlsat {
         return false;
     }
 
+    bool interval_set_manager::contains_zero(interval_set const * s, unsigned & index) const {
+        if(s == nullptr) {
+            return false;
+        }
+        for (unsigned i = 0; i < s->m_num_intervals; i++) {
+            if (interval_contains_zero(s->m_intervals[i])) {
+                index = i;
+                return true;
+            }
+        }
+        return false;
+    }
+
     bool interval_set_manager::interval_contains_zero(interval inter) const {
         // [0, 
         if(!inter.m_lower_inf && m_am.is_zero(inter.m_lower) && !inter.m_lower_open){
@@ -1269,6 +1282,107 @@ namespace nlsat {
         SASSERT(s->m_intervals[irrational_i].m_upper_open && s->m_intervals[irrational_i+1].m_lower_open);
         m_am.set(w, s->m_intervals[irrational_i].m_upper);
     }
+
+    // 0i 0 1i 1 2i 2 3i
+    void interval_set_manager::peek_in_complement(interval_set const* s, bool is_int, anum& w, bool randomize, unsigned & index) {
+        SASSERT(!is_full(s));
+        if (s == nullptr) {
+            index = 0;
+            if (randomize) {
+                int num = m_rand() % 2 == 0 ? 1 : -1;
+#define MAX_RANDOM_DEN_K 4
+                int den_k = (m_rand() % MAX_RANDOM_DEN_K);
+                int den = is_int ? 1 : (1 << den_k);
+                scoped_mpq _w(m_am.qm());
+                m_am.qm().set(_w, num, den);
+                m_am.set(w, _w);
+                return;
+            } else {
+                m_am.set(w, 0);
+                return;
+            }
+        }
+
+        unsigned n = 0;
+
+        unsigned num = num_intervals(s);
+        if (!s->m_intervals[0].m_lower_inf) {
+            // lower is not -oo
+            n++;
+            m_am.int_lt(s->m_intervals[0].m_lower, w);
+            index = 0;
+            if (!randomize)
+                return;
+        }
+        if (!s->m_intervals[num - 1].m_upper_inf) {
+            // upper is not oo
+            n++;
+            if (n == 1 || m_rand() % n == 0) {
+                m_am.int_gt(s->m_intervals[num - 1].m_upper, w);
+                index = num;
+            }
+            if (!randomize)
+                return;
+        }
+
+        // Try to find a gap that is not an unit.
+        for (unsigned i = 1; i < num; i++) {
+            if (m_am.lt(s->m_intervals[i - 1].m_upper, s->m_intervals[i].m_lower)) {
+                n++;
+                if (n == 1 || m_rand() % n == 0) {
+                    m_am.select(s->m_intervals[i - 1].m_upper, s->m_intervals[i].m_lower, w);
+                    index = i;
+                }
+                if (!randomize)
+                    return;
+            }
+        }
+
+        if (n > 0)
+            return;
+
+        // Try to find a rational
+        unsigned irrational_i = UINT_MAX;
+        for (unsigned i = 1; i < num; i++) {
+            if (s->m_intervals[i - 1].m_upper_open && s->m_intervals[i].m_lower_open) {
+                SASSERT(m_am.eq(s->m_intervals[i - 1].m_upper, s->m_intervals[i].m_lower));  // otherwise we would have found it in the previous step
+                if (m_am.is_rational(s->m_intervals[i - 1].m_upper)) {
+                    index = i;
+                    m_am.set(w, s->m_intervals[i - 1].m_upper);
+                    return;
+                }
+                if (irrational_i == UINT_MAX)
+                    irrational_i = i - 1;
+            }
+        }
+        SASSERT(irrational_i != UINT_MAX);
+        // Last option: peek irrational witness :-(
+        SASSERT(s->m_intervals[irrational_i].m_upper_open && s->m_intervals[irrational_i + 1].m_lower_open);
+        m_am.set(w, s->m_intervals[irrational_i].m_upper);
+        index = irrational_i;
+    }
+
+    void interval_set_manager::peek_in_feasible_index(interval_set const* s, anum& w, unsigned index) {
+        if(s == nullptr) {
+            return;
+        }        
+        SASSERT(s->m_num_intervals > index);
+        interval curr = s->m_intervals[index];
+        if(curr.m_lower_inf && curr.m_upper_inf) {
+            m_am.set(w, 0);
+        } else if(curr.m_lower_inf && !curr.m_upper_inf) {
+            m_am.int_lt(curr.m_upper, w);
+        } else if(!curr.m_lower_inf && curr.m_upper_inf) {
+            m_am.int_gt(curr.m_lower, w);
+        } else {
+            if(m_am.eq(curr.m_lower, curr.m_upper)) {
+                m_am.set(w, curr.m_lower);
+            } else {
+                m_am.select(curr.m_lower, curr.m_upper, w);
+            }
+        }
+    }
+
 
     void interval_set_manager::push_boundary(vector<anum_boundary> & boundaries, anum const & val, bool is_open, int inc_score) {
         for (auto it = boundaries.begin(); it != boundaries.end(); it++) {

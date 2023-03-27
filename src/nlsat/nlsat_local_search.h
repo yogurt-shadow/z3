@@ -295,6 +295,10 @@ namespace nlsat {
         interval_set * m_feasible_st;
         interval_set * m_infeasible_st;
         interval_set * m_init_st;
+        // old values used in restart
+        anum_vector    m_old_values;
+        // old interval index used in restart
+        unsigned_vector m_old_intervals;
         // literals which contain this var
         var_vector m_literals;
         // the clause which the literal belongs to
@@ -324,7 +328,8 @@ namespace nlsat {
             m_start_score = 0;
             m_clauses.reset();
             m_clause_intervals.reset();
-            // m_poly_bound.reset();
+            m_old_values.reset();
+            m_old_intervals.reset();
         }
 
         void add_literal_clause(literal_index l, clause_index c){

@@ -181,7 +181,7 @@ namespace nlsat {
         // ^ stuck step / whole step
         double                     &                         m_stuck_ratio;
 
-        const substitute_value_vector & m_sub_value;
+        const substitute_value_vector &                      m_sub_value;
         
 
         imp(solver & s, anum_manager & am, pmanager & pm, polynomial::cache & cache, interval_set_manager & ism, evaluator & ev, 
@@ -366,23 +366,6 @@ namespace nlsat {
             LSTRACE(tout << "show arith var's feasible set:\n";
                 display_arith_intervals(tout);
             );
-        }
-
-        void analyze_problem() {
-            for (clause_index i = 0; i < m_nra_clauses.size(); i++) {
-                nra_clause const * cls = m_nra_clauses[i];
-                for (literal_index j = 0; j < cls->m_literals.size(); j++) {
-                    literal_index l_idx = cls->m_literals[j];
-                    nra_literal const * l = m_nra_literals[l_idx];
-                    if (l->is_arith()) {
-                        ineq_atom const * a = l->get_atom();
-                        // Display clauses containing equalities
-                        // if (a->is_eq()) {
-                        //     m_solver.display(std::cout, *cls->get_clause()); std::cout << std::endl;
-                        // }
-                    }
-                }
-            }
         }
 
         void init_arith_infeasible_set(){
@@ -959,61 +942,16 @@ namespace nlsat {
             return true;
         }
 
-        var find_unassigned_var(nra_clause const * cls) const {
-            SASSERT(cls->get_left_vars() == 1);
-            for(var v: cls->m_vars){
-                if(m_assignment.is_assigned(v)){
-                    continue;
-                }
-                return v;
-            }
-            return null_var;
-        }
-
-        var random_unassigned_var() {
-            var res = null_var;
-            unsigned curr = 1;
-            for(var v = 0; v < m_num_vars; v++){
-                if(m_assignment.is_assigned(v)){
-                    continue;
-                }
-                // 1/curr
-                if(rand_int() % curr == 0){
-                    res = v;
-                }
-                curr++;
-            }
-            return res;
-        }
-
-        bool is_assigned_literal(nra_literal const * l) const {
-            for(var v: l->m_vars){
-                if(!m_assignment.is_assigned(v)){
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        void update_unit_var_clauses(var x){
-            for(clause_index i = 0; i < m_num_clauses; i++){
-                nra_clause * cls = m_nra_clauses[i];
-                cls->dec_left_vars(x);
-                if(cls->get_left_vars() == 0 && m_unit_var_clauses.contains(i)){
-                    m_unit_var_clauses.erase(i);
-                }
-                else if(cls->get_left_vars() == 1){
-                    m_unit_var_clauses.insert_if_not_there(i);
-                }
-            }
-        }
-
         // first init: ICP
         bool construct_assignment(bool first_init){
             return first_init ? init_assignment() : restart_assignment();
         }
 
-        // ^ construct assignment for the first time
+        /**
+         * @brief
+         * 1. zero contained, set zero
+         * 2. use z3 default sampling
+        */
         bool init_assignment() {
             LSTRACE(tout << "start of init assignment\n";);
             m_assignment.reset();
@@ -1023,21 +961,28 @@ namespace nlsat {
             }
             // arith vars set zero or other
             for(var v = 0; v < m_num_vars; v++){
-                nra_arith_var const * curr_arith = m_arith_vars[v];
+                nra_arith_var * curr_arith = m_arith_vars[v];
                 // infeasible set full, ICP returns false
                 if(m_ism.is_full(curr_arith->m_infeasible_st)){
                     return false;
                 }
                 LSTRACE(tout << "var " << v << ", "; m_ism.display(tout, curr_arith->m_feasible_st); tout << std::endl;);
-                if(m_ism.contains_zero(curr_arith->m_feasible_st)){
+                unsigned interval_index;
+                anum curr_value;
+                if(m_ism.contains_zero(curr_arith->m_feasible_st, interval_index)){
                     LSTRACE(tout << "set zero\n";);
                     m_assignment.set(v, m_zero);
-                }
-                else {
+                    m_am.set(curr_value, m_zero);
+                    curr_arith->m_old_values.push_back(curr_value);
+                    curr_arith->m_old_intervals.push_back(interval_index);
+                } else {
                     LSTRACE(tout << "not zero\n";);
                     scoped_anum w(m_am);
-                    m_ism.peek_in_complement(curr_arith->m_infeasible_st, false, w, true);
+                    m_ism.peek_in_complement(curr_arith->m_infeasible_st, false, w, true, interval_index);
                     m_assignment.set(v, w);
+                    m_am.set(curr_value, w);
+                    curr_arith->m_old_values.push_back(curr_value);
+                    curr_arith->m_old_intervals.push_back(interval_index);
                 }
             }
             LSTRACE(tout << "end of init assignment\n";
@@ -1046,42 +991,74 @@ namespace nlsat {
             return true;
         }
 
-        // ^ construct assignment when restarting
+        /**
+         * @brief
+         * restart assignment:
+         * 1. if feasible intervals > 1, try another infeasible interval to calculate
+         * 2. otherwise +-1, avoid old values
+        */
         bool restart_assignment() {
-            if(m_unsat_clauses.empty()){
-                return true;
+            m_assignment.reset();
+            // bool var
+            for(bool_var b = 0; b < m_num_bool_vars; b++) {
+                m_bool_vars[b]->set_value(true);
             }
-            clause_index curr_index = m_unsat_clauses[rand_int() % m_unsat_clauses.size()];
-            nra_clause const * curr_clause = m_nra_clauses[curr_index];
-            SASSERT(curr_clause->size() > 0);
-            literal_index l_idx = curr_clause->m_literals[rand_int() % curr_clause->size()];
-            nra_literal const * curr_l = m_nra_literals[l_idx];
-            if(curr_l->is_bool()){
-                return true;
-            }
-            SASSERT(!curr_l->m_vars.empty());
-            for(var v: curr_l->m_vars){
-                if(m_var_value_fixed[v]){
-                    continue;
+            // arith var
+            for(var v = 0; v < m_num_vars; v++) {
+                nra_arith_var * curr_arith = m_arith_vars[v];
+                SASSERT(!m_ism.is_full(curr_arith->m_infeasible_st));
+                unsigned num = m_ism.num_intervals(curr_arith->m_feasible_st);
+                if(curr_arith->m_old_intervals.size() >= num) { // case 2
+                    bool get_assigned = false;
+                    anum curr_value;
+                    for(unsigned i = 0; i < curr_arith->m_old_values.size(); i++) {
+                        scoped_anum value1(m_am), value2(m_am);
+                        m_am.add(curr_arith->m_old_values[i], m_one, value1);
+                        m_am.sub(curr_arith->m_old_values[i], m_one, value2);
+                        if(contains_value(curr_arith->m_feasible_st, value1) && !contains_value(curr_arith->m_old_values, value1)) {
+                            m_assignment.set(v, value1);
+                            get_assigned = true;
+                            m_am.set(curr_value, value1);
+                            curr_arith->m_old_values.push_back(curr_value);
+                            break;
+                        }
+                        if (contains_value(curr_arith->m_feasible_st, value2) && !contains_value(curr_arith->m_old_values, value2)) {
+                            m_assignment.set(v, value2);
+                            get_assigned = true;
+                            m_am.set(curr_value, value2);
+                            curr_arith->m_old_values.push_back(curr_value);
+                            break;
+                        }
+                    }
+                    if(!get_assigned) { // random select an old value
+                        unsigned index = rand_int() % curr_arith->m_old_values.size();
+                        m_assignment.set(v, curr_arith->m_old_values[index]);
+                    }
+                } else { // case 1
+                    unsigned interval_index = get_except_index(num, curr_arith->m_old_intervals);
+                    anum curr_value;
+                    scoped_anum w(m_am);
+                    m_ism.peek_in_feasible_index(curr_arith->m_feasible_st, w, interval_index);
+                    m_am.set(curr_value, w);
+                    curr_arith->m_old_values.push_back(curr_value);
+                    curr_arith->m_old_intervals.push_back(interval_index);
                 }
-                nra_arith_var const * curr_arith = m_arith_vars[v];
-                scoped_anum w(m_am), old_value(m_am);
-                m_am.set(old_value, m_assignment.value(v));
-                interval_set_ref old_value_interval(m_ism);
-                // [old_value, old_value]
-                old_value_interval = m_ism.mk_point_interval(old_value);
-                interval_set_ref curr_st(m_ism);
-                curr_st = m_ism.mk_union(old_value_interval, curr_arith->m_infeasible_st);
-                // happens for ==
-                if(m_ism.is_full(curr_st)){
-                    m_var_value_fixed[v] = true;
-                    continue;
-                }
-                m_ism.peek_in_complement(curr_st, false, w, true);
-                m_assignment.set(v, w);
-                return true;
             }
-            return true;
+        }
+
+        unsigned get_except_index(unsigned num, unsigned_vector const & vec) {
+            bool_vector occupied;
+            occupied.resize(num, false);
+            for(auto ele: vec) {
+                occupied[ele] = true;
+            }
+            for(unsigned i = 0; i < num; i++) {
+                if(!occupied[i]) {
+                    return i;
+                }
+            }
+            UNREACHABLE();
+            return null_var;
         }
 
         void init_literals_delta(){
