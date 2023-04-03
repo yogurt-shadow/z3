@@ -1,0 +1,715 @@
+vec file size: 6778
+finish: file[0] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/problem/2/atan-problem-2-chunk-0017.smt2
+finish: file[1] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/Chua/2/IL/U/Chua-2-IL-U-chunk-0072.smt2
+finish: file[4] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/polypaver/bench-sqrt-3d/polypaver-bench-sqrt-3d-chunk-0419.smt2
+finish: file[10] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/polypaver/bench-sqrt-3d/polypaver-bench-sqrt-3d-chunk-0258.smt2
+finish: file[5] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/CMOS/CMOS-opamp-chunk-0067.smt2
+finish: file[7] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/cos/sin-cos-346-b-chunk-0414.smt2
+finish: file[17] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/CMOS/CMOS-opamp-chunk-0065.smt2
+finish: file[6] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/1mcosq/7/sqrt-1mcosq-7-chunk-0035.smt2
+finish: file[20] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/polypaver/bench-sqrt-3d/polypaver-bench-sqrt-3d-chunk-0233.smt2
+finish: file[16] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/CMOS/CMOS-opamp-chunk-0038.smt2
+finish: file[18] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/cos/sin-cos-346-b-chunk-0266.smt2
+finish: file[19] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/polypaver/bench-sqrt-3d/polypaver-bench-sqrt-3d-chunk-0446.smt2
+finish: file[22] = /home/wangzh/benchmark/QF_NRA2/hycomp/ball_count_2d_hill_simple.01.seq_lazy_global_2.smt2
+finish: file[27] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/344/4/sin-344-4-chunk-0031.smt2
+sh: line 1: 444247 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/SV-COMP/LarrazOliverasRodriguez-CarbonellRubio-2013FMCAD-Fig1_true-termination.c_Iteration4_Loop_3-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/LarrazOliverasRodriguez-CarbonellRubio-2013FMCAD-Fig1_true-termination.c_Iteration4_Loop_3-pieceTemplate.txt
+finish: file[25] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/Chua/1/IL/L/Chua-1-IL-L-chunk-0100.smt2
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/SV-COMP/LarrazOliverasRodriguez-CarbonellRubio-2013FMCAD-Fig1_true-termination.c_Iteration4_Loop_3-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/LarrazOliverasRodriguez-CarbonellRubio-2013FMCAD-Fig1_true-termination.c_Iteration4_Loop_3-pieceTemplate.txt
+finish: file[38] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/CMOS/CMOS-opamp-chunk-0194.smt2
+finish: file[35] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/exp/problem/10/3/exp-problem-10-3-chunk-0036.smt2
+finish: file[42] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/vega/3/atan-vega-3-chunk-0317.smt2
+finish: file[43] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/exp/problem/10/2/exp-problem-10-2-chunk-0015.smt2
+finish: file[36] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/polypaver/bench-sqrt-3d/polypaver-bench-sqrt-3d-chunk-0439.smt2
+finish: file[39] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/polypaver/sqrt-circles/2a/polypaver-sqrt-circles-2a-chunk-0014.smt2
+finish: file[44] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/polypaver/bench-sqrt-3d/polypaver-bench-sqrt-3d-chunk-0416.smt2
+finish: file[45] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/Chua/2/IL/L/Chua-2-IL-L-chunk-0018.smt2
+finish: file[51] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/vega/3/weak/atan-vega-3-weak-chunk-0259.smt2
+finish: file[40] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/problem/13/sqrt1/sqrt-problem-13-sqrt1-chunk-0075.smt2
+finish: file[55] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/problem/8/sin-problem-8-chunk-0050.smt2
+finish: file[57] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/exp/problem/10/2/exp-problem-10-2-chunk-0267.smt2
+finish: file[30] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/problem/7/weak2/sin-problem-7-weak2-chunk-0124.smt2
+finish: file[14] = /home/wangzh/benchmark/QF_NRA2/UltimateAutomizer/InVarSynth_ShortCircuit-SideEffect-FunctionCallExpression-Safe.c_Iteration1_0.smt2
+finish: file[58] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0507.smt2
+finish: file[46] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0066.smt2
+finish: file[52] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/exp/problem/10/2/exp-problem-10-2-chunk-0386.smt2
+finish: file[48] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/problem/13/sqrt1/sqrt-problem-13-sqrt1-chunk-0044.smt2
+finish: file[60] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/problem/sqrt-problem-Melquiond2-chunk-0046.smt2
+finish: file[61] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/polypaver/bench-sqrt-3d/polypaver-bench-sqrt-3d-chunk-0211.smt2
+finish: file[59] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/problem/10/sin-problem-10-2-chunk-0010.smt2
+sh: line 1: 444338 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/flipflop.t2.c_Iteration1_Lasso_2-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/flipflop.t2.c_Iteration1_Lasso_2-pieceTemplate.txt
+finish: file[63] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/vega/3/atan-vega-3-chunk-0553.smt2
+finish: file[66] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/Chua/1/VC1/L/Chua-1-VC1-L-chunk-0045.smt2
+finish: file[62] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0682.smt2
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/flipflop.t2.c_Iteration1_Lasso_2-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/flipflop.t2.c_Iteration1_Lasso_2-pieceTemplate.txt
+finish: file[72] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/vega/3/weak/atan-vega-3-weak-chunk-0123.smt2
+finish: file[64] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0674.smt2
+finish: file[69] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/exp/problem/10/2/exp-problem-10-2-chunk-0390.smt2
+finish: file[65] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/Chua/2/VC1/U/Chua-2-VC1-U-chunk-0090.smt2
+finish: file[67] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/cos/sin-cos-346-b-chunk-0444.smt2
+finish: file[74] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/vega/3/weak/atan-vega-3-weak-chunk-0584.smt2
+finish: file[68] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/1mcosq/7/sqrt-1mcosq-7-chunk-0215.smt2
+finish: file[71] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0565.smt2
+finish: file[73] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/polypaver/bench-exp-3d/polypaver-bench-exp-3d-chunk-0131.smt2
+finish: file[79] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/problem/2/sqrt/weak/atan-problem-2-sqrt-weak-chunk-0069.smt2
+finish: file[80] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/problem/2/atan-problem-2-chunk-0076.smt2
+finish: file[77] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/cos/sin-cos-346-b-chunk-0511.smt2
+finish: file[84] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/cos/sin-cos-346-b-chunk-0121.smt2
+finish: file[75] = /home/wangzh/benchmark/QF_NRA2/zankl/matrix-1-all-31.smt2
+finish: file[78] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/vega/3/atan-vega-3-chunk-0502.smt2
+finish: file[83] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/344/4/sin-344-4-chunk-0032.smt2
+finish: file[88] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/344/3/sin-344-3-chunk-0050.smt2
+finish: file[91] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/problem/7/sin-problem-7-chunk-0127.smt2
+finish: file[86] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0468.smt2
+finish: file[90] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/problem/2/weak2/atan-problem-2-weak2-chunk-0100.smt2
+finish: file[85] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/cos/sin-cos-346-b-chunk-0301.smt2
+finish: file[102] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/problem/7/sin-problem-7-chunk-0255.smt2
+finish: file[94] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0123.smt2
+finish: file[89] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/exp/problem/10/3/exp-problem-10-3-chunk-0189.smt2
+finish: file[95] = /home/wangzh/benchmark/QF_NRA2/20220314-Uncu/Rational_Function_Proof_Calls_With_Basic_Denominator_Simplifications/BDC_ProveIneq_JSC_SUMCracker_14c.smt2
+finish: file[82] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/problem/12vars3/sqrt-problem-12vars3-chunk-0055.smt2
+finish: file[97] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/exp/problem/10/3/weak/exp-problem-10-3-weak-chunk-0083.smt2
+finish: file[96] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/problem/2/sqrt/weak/atan-problem-2-sqrt-weak-chunk-0050.smt2
+finish: file[98] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/Chua/2/VC1/U/Chua-2-VC1-U-chunk-0022.smt2
+finish: file[106] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/exp/problem/10/2/exp-problem-10-2-chunk-0348.smt2
+finish: file[100] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/Chua/2/VC2/U/Chua-2-VC2-U-chunk-0064.smt2
+finish: file[113] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/344/3/sin-344-3-chunk-0046.smt2
+finish: file[107] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/CMOS/CMOS-opamp-chunk-0326.smt2
+finish: file[104] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0441.smt2
+finish: file[117] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/vega/3/atan-vega-3-chunk-0337.smt2
+finish: file[112] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/exp/problem/10/2/exp-problem-10-2-chunk-0228.smt2
+finish: file[99] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/vega/3/atan-vega-3-chunk-0630.smt2
+finish: file[118] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/vega/3/atan-vega-3-chunk-0581.smt2
+sh: line 1: 444331 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/curious4.t2.c_Iteration1_Lasso_3-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/curious4.t2.c_Iteration1_Lasso_3-pieceTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/curious4.t2.c_Iteration1_Lasso_3-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/curious4.t2.c_Iteration1_Lasso_3-pieceTemplate.txt
+sh: line 1: 444432 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/SV-COMP/LeeJonesBen-Amram-2001POPL-Ex4_true-termination.c_Iteration2_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/LeeJonesBen-Amram-2001POPL-Ex4_true-termination.c_Iteration2_Loop_4-pieceTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/SV-COMP/LeeJonesBen-Amram-2001POPL-Ex4_true-termination.c_Iteration2_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/LeeJonesBen-Amram-2001POPL-Ex4_true-termination.c_Iteration2_Loop_4-pieceTemplate.txt
+finish: file[119] = /home/wangzh/benchmark/QF_NRA2/20211101-Geogebra/IsoTriangle-Bottema5_3a.smt2
+sh: line 1: 444441 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/Ultimate/Mysore.bpl_Iteration1_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/Mysore.bpl_Iteration1_Loop_4-pieceTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/Ultimate/Mysore.bpl_Iteration1_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/Mysore.bpl_Iteration1_Loop_4-pieceTemplate.txt
+finish: file[3] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/SV-COMP/LarrazOliverasRodriguez-CarbonellRubio-2013FMCAD-Fig1_true-termination.c_Iteration4_Loop_3-pieceTemplate.smt2
+sh: line 1: 444438 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/collatz.t2.c_Iteration1_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/collatz.t2.c_Iteration1_Loop_4-pieceTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/collatz.t2.c_Iteration1_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/collatz.t2.c_Iteration1_Loop_4-pieceTemplate.txt
+sh: line 1: 444532 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/fun8.t2.c_Iteration2_Loop_3-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/fun8.t2.c_Iteration2_Loop_3-pieceTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/fun8.t2.c_Iteration2_Loop_3-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/fun8.t2.c_Iteration2_Loop_3-pieceTemplate.txt
+finish: file[56] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/flipflop.t2.c_Iteration1_Lasso_2-pieceTemplate.smt2
+finish: file[109] = /home/wangzh/benchmark/QF_NRA2/20200911-Pine/1599122165966134000.smt2
+sh: line 1: 444302 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/Ultimate/Lobnya-Boolean-Reordered.bpl_Iteration1_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/Lobnya-Boolean-Reordered.bpl_Iteration1_Loop_4-pieceTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/Ultimate/Lobnya-Boolean-Reordered.bpl_Iteration1_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/Lobnya-Boolean-Reordered.bpl_Iteration1_Loop_4-pieceTemplate.txt
+sh: line 1: 444252 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/sas2.t2.c_Iteration2_Lasso_3-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/sas2.t2.c_Iteration2_Lasso_3-pieceTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/sas2.t2.c_Iteration2_Lasso_3-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/sas2.t2.c_Iteration2_Lasso_3-pieceTemplate.txt
+finish: file[120] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/CMOS/CMOS-opamp-chunk-0198.smt2
+finish: file[121] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/exp/problem/10/2/exp-problem-10-2-chunk-0076.smt2
+finish: file[122] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/CMOS/CMOS-opamp-chunk-0122.smt2
+finish: file[47] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/curious4.t2.c_Iteration1_Lasso_3-pieceTemplate.smt2
+finish: file[124] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/vega/3/atan-vega-3-chunk-0019.smt2
+finish: file[92] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/SV-COMP/LeeJonesBen-Amram-2001POPL-Ex4_true-termination.c_Iteration2_Loop_4-pieceTemplate.smt2
+finish: file[103] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/Ultimate/Mysore.bpl_Iteration1_Loop_4-pieceTemplate.smt2
+finish: file[127] = /home/wangzh/benchmark/QF_NRA2/20211101-Geogebra/IsoRightTriangle-Bottema1_1b.smt2
+sh: line 1: 444273 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/sas2.t2.c_Iteration7_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/sas2.t2.c_Iteration7_Loop_4-pieceTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/sas2.t2.c_Iteration7_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/sas2.t2.c_Iteration7_Loop_4-pieceTemplate.txt
+finish: file[125] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/CMOS/CMOS-opamp-chunk-0293.smt2
+finish: file[132] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/Chua/2/IL/U/Chua-2-IL-U-chunk-0059.smt2
+finish: file[131] = /home/wangzh/benchmark/QF_NRA2/20180501-Economics-Mulligan/MulliganEconomicsModel0056e.smt2
+finish: file[93] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/collatz.t2.c_Iteration1_Loop_4-pieceTemplate.smt2
+finish: file[137] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/problem/10/sin-problem-10-2-chunk-0022.smt2
+finish: file[123] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/fun8.t2.c_Iteration2_Loop_3-pieceTemplate.smt2
+finish: file[139] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/Chua/2/VC1/U/Chua-2-VC1-U-chunk-0062.smt2
+finish: file[142] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/344/3/sin-344-3-chunk-0026.smt2
+finish: file[144] = /home/wangzh/benchmark/QF_NRA2/20211101-Geogebra/IsoRightTriangle-Bottema1_5b.smt2
+finish: file[145] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/exp/problem/10/2/exp-problem-10-2-chunk-0111.smt2
+finish: file[143] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/Nichols-Plot/Inverted-Pendulum/Nichols-Plot-Inverted-Pendulum-Fails-1-6-chunk-0241.smt2
+finish: file[32] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/Ultimate/Lobnya-Boolean-Reordered.bpl_Iteration1_Loop_4-pieceTemplate.smt2
+finish: file[148] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/problem/7/sin-problem-7-chunk-0178.smt2
+finish: file[151] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/vega/3/weak/atan-vega-3-weak-chunk-0368.smt2
+finish: file[154] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/vega/3/weak/atan-vega-3-weak-chunk-0320.smt2
+finish: file[153] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/problem/13/vars5/sqrt-problem-13-vars5-chunk-0024.smt2
+finish: file[152] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/vega/3/weak/atan-vega-3-weak-chunk-0180.smt2
+finish: file[155] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/vega/3/weak/atan-vega-3-weak-chunk-0376.smt2
+finish: file[130] = /home/wangzh/benchmark/QF_NRA2/zankl/matrix-2-all-9.smt2
+sh: line 1: 444857 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/polyrank4.t2.c_Iteration3_Loop_3-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/polyrank4.t2.c_Iteration3_Loop_3-pieceTemplate.txt
+finish: file[157] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/vega/3/atan-vega-3-chunk-0403.smt2
+finish: file[159] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/Chua/1/VC1/L/Chua-1-VC1-L-chunk-0057.smt2
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/polyrank4.t2.c_Iteration3_Loop_3-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/polyrank4.t2.c_Iteration3_Loop_3-pieceTemplate.txt
+finish: file[2] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/sas2.t2.c_Iteration2_Lasso_3-pieceTemplate.smt2
+finish: file[162] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/vega/3/atan-vega-3-chunk-0158.smt2
+finish: file[164] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/vega/3/atan-vega-3-chunk-0425.smt2
+finish: file[161] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/polypaver/sqrt43-int/3vars/polypaver-sqrt43-int-3vars-chunk-0081.smt2
+finish: file[166] = /home/wangzh/benchmark/QF_NRA2/20220314-Uncu/Rational_Function_Proof_Calls_With_Basic_Denominator_Simplifications/BDC_ProveIneq_ISSAC10_ex2c.smt2
+finish: file[168] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/polypaver/bench-sqrt-3d/polypaver-bench-sqrt-3d-chunk-0504.smt2
+finish: file[171] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/problem/2/sqrt/weak/atan-problem-2-sqrt-weak-chunk-0044.smt2
+finish: file[126] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/1mcosq/7/sqrt-1mcosq-7-chunk-0187.smt2
+finish: file[174] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/vega/3/atan-vega-3-chunk-0636.smt2
+finish: file[179] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/polypaver/bench-sqrt-3d/polypaver-bench-sqrt-3d-chunk-0296.smt2
+finish: file[177] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/Chua/2/IL/U/Chua-2-IL-U-chunk-0042.smt2
+finish: file[176] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/Chua/2/VC1/U/Chua-2-VC1-U-chunk-0102.smt2
+finish: file[180] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/vega/3/atan-vega-3-chunk-0415.smt2
+finish: file[181] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/problem/2/weak/atan-problem-2-weak-chunk-0083.smt2
+finish: file[183] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/vega/3/atan-vega-3-chunk-0130.smt2
+finish: file[187] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/polypaver/sqrt43-int/3vars/polypaver-sqrt43-int-3vars-chunk-0099.smt2
+finish: file[190] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/problem/7/sin-problem-7-chunk-0289.smt2
+finish: file[186] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/Chua/2/VC1/L/Chua-2-VC1-L-chunk-0089.smt2
+finish: file[194] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/vega/3/atan-vega-3-chunk-0045.smt2
+finish: file[188] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0200.smt2
+finish: file[195] = /home/wangzh/benchmark/QF_NRA2/20211101-Geogebra/IsoRightTriangle-Bottema1_23a.smt2
+finish: file[193] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/problem/7/sin-problem-7-chunk-0285.smt2
+finish: file[196] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/vega/3/atan-vega-3-chunk-0076.smt2
+finish: file[134] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/problem/7/weak2/sin-problem-7-weak2-chunk-0131.smt2
+sh: line 1: 444836 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/eric.t2.c_Iteration1_Lasso_2-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/eric.t2.c_Iteration1_Lasso_2-pieceTemplate.txt
+finish: file[15] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/sas2.t2.c_Iteration7_Loop_4-pieceTemplate.smt2
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/eric.t2.c_Iteration1_Lasso_2-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/eric.t2.c_Iteration1_Lasso_2-pieceTemplate.txt
+finish: file[146] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/1mcosq/7/sqrt-1mcosq-7-chunk-0206.smt2
+finish: file[198] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/polypaver/bench-sqrt-3d/polypaver-bench-sqrt-3d-chunk-0426.smt2
+finish: file[170] = /home/wangzh/benchmark/QF_NRA2/zankl/matrix-1-all-38.smt2
+sh: line 1: 444876 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/Ultimate/CookSeeZuleger-2013TACAS-Fig7a.bpl_Iteration1_Loop_3-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/CookSeeZuleger-2013TACAS-Fig7a.bpl_Iteration1_Loop_3-pieceTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/Ultimate/CookSeeZuleger-2013TACAS-Fig7a.bpl_Iteration1_Loop_3-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/CookSeeZuleger-2013TACAS-Fig7a.bpl_Iteration1_Loop_3-pieceTemplate.txt
+sh: line 1: 445030 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/spiral.t2.c_Iteration7_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/spiral.t2.c_Iteration7_Loop_4-pieceTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/spiral.t2.c_Iteration7_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/spiral.t2.c_Iteration7_Loop_4-pieceTemplate.txt
+finish: file[133] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/polyrank4.t2.c_Iteration3_Loop_3-pieceTemplate.smt2
+finish: file[216] = /home/wangzh/benchmark/QF_NRA2/20220314-Uncu/Rational_Function_Proof_Calls_With_Disjunctive_Denominator_Simplifications/DDC_ProveIneq_ISSAC10_ex4g.smt2
+sh: line 1: 445118 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/jacobi.c.i.jacobi.pl.t2.fixed.t2.c_Iteration4_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/jacobi.c.i.jacobi.pl.t2.fixed.t2.c_Iteration4_Loop_4-pieceTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/jacobi.c.i.jacobi.pl.t2.fixed.t2.c_Iteration4_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/jacobi.c.i.jacobi.pl.t2.fixed.t2.c_Iteration4_Loop_4-pieceTemplate.txt
+sh: line 1: 445196 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/Ultimate/MultiPhase1.bpl_Iteration1_Lasso_3-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/MultiPhase1.bpl_Iteration1_Lasso_3-pieceTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/Ultimate/MultiPhase1.bpl_Iteration1_Lasso_3-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/MultiPhase1.bpl_Iteration1_Lasso_3-pieceTemplate.txt
+finish: file[76] = /home/wangzh/benchmark/QF_NRA2/20200911-Pine/1599122165681283000.smt2
+sh: line 1: 445110 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/byron-2.t2.c_Iteration3_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/byron-2.t2.c_Iteration3_Loop_4-pieceTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/byron-2.t2.c_Iteration3_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/byron-2.t2.c_Iteration3_Loop_4-pieceTemplate.txt
+sh: line 1: 445045 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/collatz.t2.c_Iteration3_Lasso_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/collatz.t2.c_Iteration3_Lasso_4-pieceTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/collatz.t2.c_Iteration3_Lasso_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/collatz.t2.c_Iteration3_Lasso_4-pieceTemplate.txt
+finish: file[201] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/Chua/2/VC1/U/Chua-2-VC1-U-chunk-0053.smt2
+finish: file[235] = /home/wangzh/benchmark/QF_NRA2/hycomp/ball_count_1d_plain.01.seq_lazy_global_2.smt2
+finish: file[203] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0405.smt2
+finish: file[204] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/vega/3/atan-vega-3-chunk-0112.smt2
+sh: line 1: 445005 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/Ultimate/OpposedDisjuncts.bpl_Iteration1_Lasso_6-phaseTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/OpposedDisjuncts.bpl_Iteration1_Lasso_6-phaseTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/Ultimate/OpposedDisjuncts.bpl_Iteration1_Lasso_6-phaseTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/OpposedDisjuncts.bpl_Iteration1_Lasso_6-phaseTemplate.txt
+finish: file[115] = /home/wangzh/benchmark/QF_NRA2/20200911-Pine/1599121978149819000.smt2
+sh: line 1: 444316 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/1mcosq/7/sqrt-1mcosq-7-chunk-0194.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/sqrt-1mcosq-7-chunk-0194.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/1mcosq/7/sqrt-1mcosq-7-chunk-0194.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/sqrt-1mcosq-7-chunk-0194.txt
+finish: file[207] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/vega/3/atan-vega-3-chunk-0606.smt2
+finish: file[208] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/Chua/2/VC2/L/Chua-2-VC2-L-chunk-0037.smt2
+finish: file[129] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/eric.t2.c_Iteration1_Lasso_2-pieceTemplate.smt2
+sh: line 1: 445328 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/fun9.t2.c_Iteration4_Loop_3-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/fun9.t2.c_Iteration4_Loop_3-pieceTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/fun9.t2.c_Iteration4_Loop_3-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/fun9.t2.c_Iteration4_Loop_3-pieceTemplate.txt
+sh: line 1: 444276 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/firewire.t2.c_Iteration1_Lasso_4-lexTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/firewire.t2.c_Iteration1_Lasso_4-lexTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/firewire.t2.c_Iteration1_Lasso_4-lexTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/firewire.t2.c_Iteration1_Lasso_4-lexTemplate.txt
+finish: file[212] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/Chua/2/VC2/U/Chua-2-VC2-U-chunk-0098.smt2
+finish: file[213] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/polypaver/bench-sqrt-3d/polypaver-bench-sqrt-3d-chunk-0196.smt2
+sh: line 1: 445207 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/disj_nightmare.t2.c_Iteration1_Loop_2-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/disj_nightmare.t2.c_Iteration1_Loop_2-pieceTemplate.txt
+sh: line 1: 445349 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/pentagon.t2.c_Iteration11_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/pentagon.t2.c_Iteration11_Loop_4-pieceTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/disj_nightmare.t2.c_Iteration1_Loop_2-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/disj_nightmare.t2.c_Iteration1_Loop_2-pieceTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/pentagon.t2.c_Iteration11_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/pentagon.t2.c_Iteration11_Loop_4-pieceTemplate.txt
+finish: file[217] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/problem/8/weak/sin-problem-8-weak-chunk-0025.smt2
+finish: file[138] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/Ultimate/CookSeeZuleger-2013TACAS-Fig7a.bpl_Iteration1_Loop_3-pieceTemplate.smt2
+finish: file[165] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/spiral.t2.c_Iteration7_Loop_4-pieceTemplate.smt2
+finish: file[220] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/problem/2/weak2/atan-problem-2-weak2-chunk-0065.smt2
+finish: file[221] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/polypaver/bench-sqrt-3d/polypaver-bench-sqrt-3d-chunk-0226.smt2
+finish: file[219] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/vega/3/weak/atan-vega-3-weak-chunk-0617.smt2
+finish: file[222] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0060.smt2
+sh: line 1: 445329 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/firewire.t2.c_Iteration3_Loop_3-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/firewire.t2.c_Iteration3_Loop_3-pieceTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/firewire.t2.c_Iteration3_Loop_3-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/firewire.t2.c_Iteration3_Loop_3-pieceTemplate.txt
+finish: file[223] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/problem/7/sin-problem-7-chunk-0153.smt2
+sh: line 1: 444482 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/firewire.t2.c_Iteration1_Lasso_7-nestedTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/firewire.t2.c_Iteration1_Lasso_7-nestedTemplate.txt
+sh: line 1: 445370 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/polyrank4.t2.c_Iteration8_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/polyrank4.t2.c_Iteration8_Loop_4-pieceTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/polyrank4.t2.c_Iteration8_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/polyrank4.t2.c_Iteration8_Loop_4-pieceTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/firewire.t2.c_Iteration1_Lasso_7-nestedTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/firewire.t2.c_Iteration1_Lasso_7-nestedTemplate.txt
+finish: file[226] = /home/wangzh/benchmark/QF_NRA2/20220314-Uncu/Rational_Function_Proof_Calls_With_Disjunctive_Denominator_Simplifications/DDC_ProveIneq_ISSAC10_ex4b.smt2
+finish: file[192] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/jacobi.c.i.jacobi.pl.t2.fixed.t2.c_Iteration4_Loop_4-pieceTemplate.smt2
+finish: file[225] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0326.smt2
+finish: file[199] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/Ultimate/MultiPhase1.bpl_Iteration1_Lasso_3-pieceTemplate.smt2
+finish: file[191] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/byron-2.t2.c_Iteration3_Loop_4-pieceTemplate.smt2
+finish: file[169] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/collatz.t2.c_Iteration3_Lasso_4-pieceTemplate.smt2
+finish: file[232] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/polypaver/bench-sqrt-3d/polypaver-bench-sqrt-3d-chunk-0374.smt2
+finish: file[231] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/Chua/1/VC1/U/Chua-1-VC1-U-chunk-0056.smt2
+finish: file[233] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/polypaver/bench-sqrt-3d/polypaver-bench-sqrt-3d-chunk-0413.smt2
+finish: file[236] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/Chua/2/VC2/U/Chua-2-VC2-U-chunk-0094.smt2
+finish: file[234] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/Arthan/KM2/ArthanKM2-chunk-0003.smt2
+finish: file[240] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/344/3/sin-344-3-chunk-0047.smt2
+finish: file[239] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/exp/problem/10/2/exp-problem-10-2-chunk-0261.smt2
+sh: line 1: 445385 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/SV-COMP/LeeJonesBen-Amram-2001POPL-Ex4_true-termination.c_Iteration6_Loop_3-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/LeeJonesBen-Amram-2001POPL-Ex4_true-termination.c_Iteration6_Loop_3-pieceTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/SV-COMP/LeeJonesBen-Amram-2001POPL-Ex4_true-termination.c_Iteration6_Loop_3-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/LeeJonesBen-Amram-2001POPL-Ex4_true-termination.c_Iteration6_Loop_3-pieceTemplate.txt
+finish: file[245] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/CMOS/CMOS-opamp-chunk-0219.smt2
+finish: file[242] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/Chua/2/VC2/U/Chua-2-VC2-U-chunk-0118.smt2
+finish: file[163] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/Ultimate/OpposedDisjuncts.bpl_Iteration1_Lasso_6-phaseTemplate.smt2
+finish: file[244] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/cos/sin-cos-346-b-chunk-0053.smt2
+finish: file[262] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/polypaver/sqrt-circles/1a/polypaver-sqrt-circles-1a-chunk-0010.smt2
+finish: file[37] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/1mcosq/7/sqrt-1mcosq-7-chunk-0194.smt2
+finish: file[246] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/CMOS/CMOS-opamp-chunk-0294.smt2
+finish: file[247] = /home/wangzh/benchmark/QF_NRA2/20180501-Economics-Mulligan/MulliganEconomicsModel0026e.smt2
+finish: file[205] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/fun9.t2.c_Iteration4_Loop_3-pieceTemplate.smt2
+finish: file[21] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/firewire.t2.c_Iteration1_Lasso_4-lexTemplate.smt2
+finish: file[252] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/polypaver/bench-sqrt-3d/polypaver-bench-sqrt-3d-chunk-0420.smt2
+finish: file[251] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/problem/7/sin-problem-7-chunk-0135.smt2
+finish: file[211] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/pentagon.t2.c_Iteration11_Loop_4-pieceTemplate.smt2
+sh: line 1: 445403 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/pentagon.t2.c_Iteration14_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/pentagon.t2.c_Iteration14_Loop_4-pieceTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/pentagon.t2.c_Iteration14_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/pentagon.t2.c_Iteration14_Loop_4-pieceTemplate.txt
+finish: file[26] = /home/wangzh/benchmark/QF_NRA2/zankl/matrix-4-all-14.smt2
+finish: file[200] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/disj_nightmare.t2.c_Iteration1_Loop_2-pieceTemplate.smt2
+finish: file[256] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/asin/8/vars4/asin-8-vars4-chunk-0011.smt2
+sh: line 1: 445396 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/toeplz.c.i.toeplz.pl.t2.fixed.t2.c_Iteration7_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/toeplz.c.i.toeplz.pl.t2.fixed.t2.c_Iteration7_Loop_4-pieceTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/toeplz.c.i.toeplz.pl.t2.fixed.t2.c_Iteration7_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/toeplz.c.i.toeplz.pl.t2.fixed.t2.c_Iteration7_Loop_4-pieceTemplate.txt
+finish: file[206] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/firewire.t2.c_Iteration3_Loop_3-pieceTemplate.smt2
+sh: line 1: 445444 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/Ultimate/TwoPhase.bpl_Iteration1_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/TwoPhase.bpl_Iteration1_Loop_4-pieceTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/Ultimate/TwoPhase.bpl_Iteration1_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/TwoPhase.bpl_Iteration1_Loop_4-pieceTemplate.txt
+finish: file[218] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/polyrank4.t2.c_Iteration8_Loop_4-pieceTemplate.smt2
+finish: file[116] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/firewire.t2.c_Iteration1_Lasso_7-nestedTemplate.smt2
+sh: line 1: 445400 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/SV-COMP/LeeJonesBen-Amram-2001POPL-Ex1_true-termination.c_Iteration1_Loop_7-phaseTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/LeeJonesBen-Amram-2001POPL-Ex1_true-termination.c_Iteration1_Loop_7-phaseTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/SV-COMP/LeeJonesBen-Amram-2001POPL-Ex1_true-termination.c_Iteration1_Loop_7-phaseTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/LeeJonesBen-Amram-2001POPL-Ex1_true-termination.c_Iteration1_Loop_7-phaseTemplate.txt
+finish: file[258] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/Chua/2/IL/L/Chua-2-IL-L-chunk-0097.smt2
+finish: file[259] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/Lyapunov/Lyapunov1a-chunk-0020.smt2
+finish: file[261] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/cos/sin-cos-346-b-chunk-0421.smt2
+finish: file[224] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/SV-COMP/LeeJonesBen-Amram-2001POPL-Ex4_true-termination.c_Iteration6_Loop_3-pieceTemplate.smt2
+sh: line 1: 445424 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/Ultimate/NoriSharma-2013FSE-Fig7.bpl_Iteration1_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/NoriSharma-2013FSE-Fig7.bpl_Iteration1_Loop_4-pieceTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/Ultimate/NoriSharma-2013FSE-Fig7.bpl_Iteration1_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/NoriSharma-2013FSE-Fig7.bpl_Iteration1_Loop_4-pieceTemplate.txt
+finish: file[265] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/vega/3/atan-vega-3-chunk-0472.smt2
+finish: file[267] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/problem/7/weak2/sin-problem-7-weak2-chunk-0081.smt2
+finish: file[230] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/pentagon.t2.c_Iteration14_Loop_4-pieceTemplate.smt2
+finish: file[268] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/Chua/2/IL/L/Chua-2-IL-L-chunk-0089.smt2
+finish: file[270] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/exp/problem/10/2/exp-problem-10-2-chunk-0100.smt2
+finish: file[228] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/toeplz.c.i.toeplz.pl.t2.fixed.t2.c_Iteration7_Loop_4-pieceTemplate.smt2
+finish: file[269] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/cbrt/3/weak/cbrt-problem-3-weak-chunk-0106.smt2
+finish: file[243] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/Ultimate/TwoPhase.bpl_Iteration1_Loop_4-pieceTemplate.smt2
+sh: line 1: 445867 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/polyrank4.t2.c_Iteration3_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/polyrank4.t2.c_Iteration3_Loop_4-pieceTemplate.txt
+finish: file[274] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/polypaver/bench-sqrt-3d/polypaver-bench-sqrt-3d-chunk-0276.smt2
+finish: file[276] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/CMOS/CMOS-opamp-chunk-0199.smt2
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/polyrank4.t2.c_Iteration3_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/polyrank4.t2.c_Iteration3_Loop_4-pieceTemplate.txt
+finish: file[229] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/SV-COMP/LeeJonesBen-Amram-2001POPL-Ex1_true-termination.c_Iteration1_Loop_7-phaseTemplate.smt2
+finish: file[273] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0589.smt2
+finish: file[275] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/vega/3/weak/atan-vega-3-weak-chunk-0232.smt2
+finish: file[280] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/Chua/1/VC2/L/Chua-1-VC2-L-chunk-0063.smt2
+finish: file[277] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/1mcosq/7/sqrt-1mcosq-7-chunk-0232.smt2
+finish: file[281] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/polypaver/bench-sqrt-3d/polypaver-bench-sqrt-3d-chunk-0450.smt2
+finish: file[279] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0617.smt2
+finish: file[283] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/asin/8/vars4/asin-8-vars4-chunk-0035.smt2
+sh: line 1: 445964 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/Ultimate/FourPhase.bpl_Iteration1_Lasso_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/FourPhase.bpl_Iteration1_Lasso_4-pieceTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/Ultimate/FourPhase.bpl_Iteration1_Lasso_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/FourPhase.bpl_Iteration1_Lasso_4-pieceTemplate.txt
+finish: file[284] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/problem/7/weak/sin-problem-7-weak-chunk-0093.smt2
+finish: file[285] = /home/wangzh/benchmark/QF_NRA2/zankl/gen-08.smt2
+finish: file[286] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/cos/sin-cos-346-b-chunk-0139.smt2
+finish: file[290] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/polypaver/sqrt43-int/polypaver-sqrt43-int-chunk-0050.smt2
+finish: file[237] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/Ultimate/NoriSharma-2013FSE-Fig7.bpl_Iteration1_Loop_4-pieceTemplate.smt2
+finish: file[291] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/vega/3/weak/atan-vega-3-weak-chunk-0594.smt2
+finish: file[289] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/Chua/2/IL/U/Chua-2-IL-U-chunk-0121.smt2
+finish: file[292] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/vega/3/weak/atan-vega-3-weak-chunk-0589.smt2
+finish: file[297] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/polypaver/sqrt43-int/3vars/polypaver-sqrt43-int-3vars-chunk-0034.smt2
+finish: file[293] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/problem/8/sin-problem-8-chunk-0033.smt2
+finish: file[294] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/problem/7/sin-problem-7-chunk-0213.smt2
+finish: file[299] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/Chua/2/VC1/L/Chua-2-VC1-L-chunk-0102.smt2
+finish: file[296] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/Chua/2/VC2/U/Chua-2-VC2-U-chunk-0102.smt2
+finish: file[184] = /home/wangzh/benchmark/QF_NRA2/20161105-Sturm-MBO/mbo_E10E28.smt2
+finish: file[301] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/Chua/2/VC2/U/Chua-2-VC2-U-chunk-0087.smt2
+finish: file[303] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/cos/sin-cos-346-b-chunk-0443.smt2
+finish: file[305] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/Chua/1/IL/L/Chua-1-IL-L-chunk-0086.smt2
+finish: file[302] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/problem/7/sin-problem-7-chunk-0236.smt2
+sh: line 1: 445851 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/spiral.t2.c_Iteration1_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/spiral.t2.c_Iteration1_Loop_4-pieceTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/spiral.t2.c_Iteration1_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/spiral.t2.c_Iteration1_Loop_4-pieceTemplate.txt
+finish: file[304] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/Chua/1/IL/L/Chua-1-IL-L-chunk-0022.smt2
+finish: file[264] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/polyrank4.t2.c_Iteration3_Loop_4-pieceTemplate.smt2
+finish: file[306] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/polypaver/sqrt43-int/3vars/polypaver-sqrt43-int-3vars-chunk-0031.smt2
+finish: file[317] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/vega/3/atan-vega-3-chunk-0564.smt2
+finish: file[319] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/vega/3/atan-vega-3-chunk-0501.smt2
+finish: file[308] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/polypaver/bench-sqrt-3d/polypaver-bench-sqrt-3d-chunk-0339.smt2
+sh: line 1: 446079 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/polyrank4.t2.c_Iteration2_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/polyrank4.t2.c_Iteration2_Loop_4-pieceTemplate.txt
+sh: line 1: 445145 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/ex11.t2.c_Iteration1_Lasso_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/ex11.t2.c_Iteration1_Lasso_4-pieceTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/polyrank4.t2.c_Iteration2_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/polyrank4.t2.c_Iteration2_Loop_4-pieceTemplate.txt
+finish: file[309] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/Chua/2/IL/L/Chua-2-IL-L-chunk-0107.smt2
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/ex11.t2.c_Iteration1_Lasso_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/ex11.t2.c_Iteration1_Lasso_4-pieceTemplate.txt
+sh: line 1: 446144 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/polyrank5.t2.c_Iteration1_Loop_6-phaseTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/polyrank5.t2.c_Iteration1_Loop_6-phaseTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/polyrank5.t2.c_Iteration1_Loop_6-phaseTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/polyrank5.t2.c_Iteration1_Loop_6-phaseTemplate.txt
+finish: file[310] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/cbrt/3/cbrt-problem-3-chunk-0067.smt2
+finish: file[311] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/1mcosq/7/sqrt-1mcosq-7-chunk-0118.smt2
+finish: file[271] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/Ultimate/FourPhase.bpl_Iteration1_Lasso_4-pieceTemplate.smt2
+finish: file[312] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/polypaver/bench-sqrt-3d/polypaver-bench-sqrt-3d-chunk-0312.smt2
+finish: file[313] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/exp/problem/10/3/weak/exp-problem-10-3-weak-chunk-0106.smt2
+finish: file[314] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0729.smt2
+finish: file[300] = /home/wangzh/benchmark/QF_NRA2/20200911-Pine/1599122162374274000.smt2
+finish: file[315] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0038.smt2
+finish: file[263] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/spiral.t2.c_Iteration1_Loop_4-pieceTemplate.smt2
+finish: file[318] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/RL-high-pass-circuit/RL-high-pass-circuit-gain-chunk-0010.smt2
+sh: line 1: 445482 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/p-43.t2.c_Iteration4_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/p-43.t2.c_Iteration4_Loop_4-pieceTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/p-43.t2.c_Iteration4_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/p-43.t2.c_Iteration4_Loop_4-pieceTemplate.txt
+sh: line 1: 445437 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/p-43.t2.c_Iteration5_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/p-43.t2.c_Iteration5_Loop_4-pieceTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/p-43.t2.c_Iteration5_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/p-43.t2.c_Iteration5_Loop_4-pieceTemplate.txt
+finish: file[320] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/cbrt/3/cbrt-problem-3-chunk-0077.smt2
+finish: file[287] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/polyrank4.t2.c_Iteration2_Loop_4-pieceTemplate.smt2
+finish: file[347] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0524.smt2
+finish: file[323] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/problem/2/weakT/atan-problem-2-weakT-chunk-0008.smt2
+finish: file[197] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/ex11.t2.c_Iteration1_Lasso_4-pieceTemplate.smt2
+finish: file[295] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/polyrank5.t2.c_Iteration1_Loop_6-phaseTemplate.smt2
+finish: file[326] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/exp/problem/10/2/exp-problem-10-2-chunk-0271.smt2
+finish: file[327] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/Chua/1/VC2/L/Chua-1-VC2-L-chunk-0081.smt2
+finish: file[324] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/problem/2/weakT/atan-problem-2-weakT-chunk-0047.smt2
+finish: file[329] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/1mcosq/7/sqrt-1mcosq-7-chunk-0123.smt2
+finish: file[330] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/Chua/2/VC1/L/Chua-2-VC1-L-chunk-0119.smt2
+sh: line 1: 445467 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/SV-COMP/BradleyMannaSipma-2005CAV-Fig1_true-termination.c_Iteration1_Lasso_2-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/BradleyMannaSipma-2005CAV-Fig1_true-termination.c_Iteration1_Lasso_2-pieceTemplate.txt
+finish: file[332] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/Chua/2/IL/U/Chua-2-IL-U-chunk-0030.smt2
+finish: file[334] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/Chua/1/IL/U/Chua-1-IL-U-chunk-0024.smt2
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/SV-COMP/BradleyMannaSipma-2005CAV-Fig1_true-termination.c_Iteration1_Lasso_2-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/BradleyMannaSipma-2005CAV-Fig1_true-termination.c_Iteration1_Lasso_2-pieceTemplate.txt
+finish: file[331] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/Chua/1/VC2/L/Chua-1-VC2-L-chunk-0078.smt2
+finish: file[333] = /home/wangzh/benchmark/QF_NRA2/hycomp/ball_count_1d_plain.01.seq_lazy_lemmas_global_2.smt2
+finish: file[336] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/vega/3/atan-vega-3-chunk-0601.smt2
+finish: file[338] = /home/wangzh/benchmark/QF_NRA2/zankl/matrix-1-all-7.smt2
+finish: file[341] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/Chua/1/VC2/U/Chua-1-VC2-U-chunk-0138.smt2
+finish: file[343] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/Chua/1/VC1/U/Chua-1-VC1-U-chunk-0034.smt2
+finish: file[340] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/Chua/2/VC2/L/Chua-2-VC2-L-chunk-0069.smt2
+finish: file[342] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/circles/3/sqrt-circles-3-chunk-0008.smt2
+finish: file[344] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/problem/1/atan-problem-1-chunk-0088.smt2
+finish: file[346] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/polypaver/bench-sqrt-3d/polypaver-bench-sqrt-3d-chunk-0314.smt2
+finish: file[348] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/polypaver/bench-sqrt-3d/polypaver-bench-sqrt-3d-chunk-0443.smt2
+finish: file[241] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/p-43.t2.c_Iteration5_Loop_4-pieceTemplate.smt2
+finish: file[254] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/p-43.t2.c_Iteration4_Loop_4-pieceTemplate.smt2
+finish: file[350] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/problem/13/sqrt1/sqrt-problem-13-sqrt1-chunk-0051.smt2
+finish: file[351] = /home/wangzh/benchmark/QF_NRA2/zankl/gen-06.smt2
+sh: line 1: 446414 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/polyrank5.t2.c_Iteration1_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/polyrank5.t2.c_Iteration1_Loop_4-pieceTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/polyrank5.t2.c_Iteration1_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/polyrank5.t2.c_Iteration1_Loop_4-pieceTemplate.txt
+finish: file[357] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/problem/13/sqrt1/sqrt-problem-13-sqrt1-chunk-0027.smt2
+sh: line 1: 446468 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/Ultimate/Madrid.bpl_Iteration1_Lasso_3-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/Madrid.bpl_Iteration1_Lasso_3-pieceTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/Ultimate/Madrid.bpl_Iteration1_Lasso_3-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/Madrid.bpl_Iteration1_Lasso_3-pieceTemplate.txt
+finish: file[358] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/vega/3/atan-vega-3-chunk-0418.smt2
+finish: file[359] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/problem/7/sin-problem-7-chunk-0180.smt2
+finish: file[360] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/Chua/2/VC1/U/Chua-2-VC1-U-chunk-0072.smt2
+finish: file[250] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/SV-COMP/BradleyMannaSipma-2005CAV-Fig1_true-termination.c_Iteration1_Lasso_2-pieceTemplate.smt2
+finish: file[362] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/vega/3/atan-vega-3-chunk-0491.smt2
+sh: line 1: 446418 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/bf6.t2.c_Iteration1_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/bf6.t2.c_Iteration1_Loop_4-pieceTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/bf6.t2.c_Iteration1_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/bf6.t2.c_Iteration1_Loop_4-pieceTemplate.txt
+sh: line 1: 446479 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/jacobi.c.i.jacobi.pl.t2.fixed.t2.c_Iteration5_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/jacobi.c.i.jacobi.pl.t2.fixed.t2.c_Iteration5_Loop_4-pieceTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/jacobi.c.i.jacobi.pl.t2.fixed.t2.c_Iteration5_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/jacobi.c.i.jacobi.pl.t2.fixed.t2.c_Iteration5_Loop_4-pieceTemplate.txt
+finish: file[389] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/cos/sin-cos-346-b-chunk-0165.smt2
+finish: file[337] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/polyrank5.t2.c_Iteration1_Loop_4-pieceTemplate.smt2
+finish: file[370] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/Chua/2/IL/U/Chua-2-IL-U-chunk-0038.smt2
+finish: file[371] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/Nichols-Plot/Inverted-Pendulum/Nichols-Plot-Inverted-Pendulum-Fails-1-6-chunk-0238.smt2
+finish: file[369] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/problem/7/sin-problem-7-chunk-0306.smt2
+finish: file[363] = /home/wangzh/benchmark/QF_NRA2/hycomp/ball_count_2d_plain.01.seq_lazy_linear_enc_lemmas_global_4.smt2
+finish: file[352] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/Ultimate/Madrid.bpl_Iteration1_Lasso_3-pieceTemplate.smt2
+finish: file[375] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/circles/2/sqrt-circles-2-chunk-0007.smt2
+finish: file[374] = /home/wangzh/benchmark/QF_NRA2/20220314-Uncu/Rational_Function_Proof_Calls_With_Disjunctive_Denominator_Simplifications/DDC_ProveIneq_JSC_SUMCracker_14a.smt2
+finish: file[376] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/exp/problem/10/3/exp-problem-10-3-chunk-0024.smt2
+finish: file[373] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/cos/sin-cos-346-b-chunk-0517.smt2
+finish: file[372] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/cos/sin-cos-346-b-chunk-0073.smt2
+finish: file[378] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/Chua/1/IL/L/Chua-1-IL-L-chunk-0016.smt2
+finish: file[377] = /home/wangzh/benchmark/QF_NRA2/20180501-Economics-Mulligan/MulliganEconomicsModel0001a.smt2
+finish: file[339] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/bf6.t2.c_Iteration1_Loop_4-pieceTemplate.smt2
+finish: file[382] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/problem/2/weak/atan-problem-2-weak-chunk-0153.smt2
+finish: file[356] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/jacobi.c.i.jacobi.pl.t2.fixed.t2.c_Iteration5_Loop_4-pieceTemplate.smt2
+finish: file[383] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0199.smt2
+finish: file[388] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/Chua/2/IL/U/Chua-2-IL-U-chunk-0011.smt2
+finish: file[387] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/vega/3/atan-vega-3-chunk-0623.smt2
+finish: file[386] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/cbrt/3/weak/cbrt-problem-3-weak-chunk-0110.smt2
+finish: file[390] = /home/wangzh/benchmark/QF_NRA2/20180501-Economics-Mulligan/MulliganEconomicsModel0006e.smt2
+finish: file[392] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/exp/problem/10/2/exp-problem-10-2-chunk-0276.smt2
+finish: file[391] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/CMOS/CMOS-opamp-chunk-0042.smt2
+finish: file[393] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/vega/3/atan-vega-3-chunk-0555.smt2
+finish: file[395] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/exp/problem/10/2/exp-problem-10-2-chunk-0064.smt2
+finish: file[394] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0130.smt2
+finish: file[396] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/vega/3/atan-vega-3-chunk-0386.smt2
+finish: file[397] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/cos/sin-cos-346-b-chunk-0309.smt2
+finish: file[399] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/CMOS/CMOS-opamp-chunk-0100.smt2
+finish: file[385] = /home/wangzh/benchmark/QF_NRA2/20200911-Pine/1599122160759999000.smt2
+finish: file[401] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/cos/sin-cos-346-b-chunk-0551.smt2
+sh: line 1: 446631 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/eric2.t2.c_Iteration8_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/eric2.t2.c_Iteration8_Loop_4-pieceTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/eric2.t2.c_Iteration8_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/eric2.t2.c_Iteration8_Loop_4-pieceTemplate.txt
+finish: file[404] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/problem/13/vars5/sqrt-problem-13-vars5-chunk-0026.smt2
+sh: line 1: 446629 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/broydn.c.i.broydn.pl.t2.fixed.t2.c_Iteration1_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/broydn.c.i.broydn.pl.t2.fixed.t2.c_Iteration1_Loop_4-pieceTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/broydn.c.i.broydn.pl.t2.fixed.t2.c_Iteration1_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/broydn.c.i.broydn.pl.t2.fixed.t2.c_Iteration1_Loop_4-pieceTemplate.txt
+finish: file[405] = /home/wangzh/benchmark/QF_NRA2/20180501-Economics-Mulligan/MulliganEconomicsModel0080a.smt2
+sh: line 1: 446579 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/neg-smagilla-fail.t2.c_Iteration1_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/neg-smagilla-fail.t2.c_Iteration1_Loop_4-pieceTemplate.txt
+finish: file[406] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/vega/3/atan-vega-3-chunk-0509.smt2
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/neg-smagilla-fail.t2.c_Iteration1_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/neg-smagilla-fail.t2.c_Iteration1_Loop_4-pieceTemplate.txt
+finish: file[425] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/problem/2/weakT/atan-problem-2-weakT-chunk-0015.smt2
+finish: file[408] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/vega/3/weak/atan-vega-3-weak-chunk-0659.smt2
+finish: file[411] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/problem/2/sqrt/weak/atan-problem-2-sqrt-weak-chunk-0082.smt2
+finish: file[409] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/Chua/1/VC2/L/Chua-1-VC2-L-chunk-0067.smt2
+finish: file[412] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/CMOS/CMOS-opamp-chunk-0159.smt2
+finish: file[410] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/vega/3/weak/atan-vega-3-weak-chunk-0583.smt2
+finish: file[414] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/problem/13/sqrt1/sqrt-problem-13-sqrt1-chunk-0058.smt2
+finish: file[413] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/cos/sin-cos-346-b-chunk-0484.smt2
+finish: file[417] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/vega/3/atan-vega-3-chunk-0058.smt2
+finish: file[381] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/eric2.t2.c_Iteration8_Loop_4-pieceTemplate.smt2
+finish: file[379] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/broydn.c.i.broydn.pl.t2.fixed.t2.c_Iteration1_Loop_4-pieceTemplate.smt2
+finish: file[415] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0681.smt2
+finish: file[421] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/polypaver/bench-exp-3d/polypaver-bench-exp-3d-chunk-0122.smt2
+finish: file[368] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/neg-smagilla-fail.t2.c_Iteration1_Loop_4-pieceTemplate.smt2
+finish: file[423] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/cos/sin-cos-346-b-chunk-0639.smt2
+finish: file[422] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/exp/problem/10/2/exp-problem-10-2-chunk-0379.smt2
+finish: file[416] = /home/wangzh/benchmark/QF_NRA2/20220314-Uncu/Rational_Function_Proof_Calls_With_Disjunctive_Denominator_Simplifications/DDC_ProveIneq_JSC_SUMCracker_14d.smt2
+finish: file[424] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/Chua/1/VC2/U/Chua-1-VC2-U-chunk-0088.smt2
+finish: file[427] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/cos/sin-cos-346-b-chunk-0501.smt2
+finish: file[428] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/problem/7/sin-problem-7-chunk-0154.smt2
+finish: file[429] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0398.smt2
+finish: file[431] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/asin/8/vars4/asin-8-vars4-chunk-0034.smt2
+finish: file[432] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/problem/7/sin-problem-7-chunk-0258.smt2
+finish: file[430] = /home/wangzh/benchmark/QF_NRA2/kissing/kissing_4_7.smt2
+finish: file[436] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/asin/8/vars4/asin-8-vars4-chunk-0056.smt2
+sh: line 1: 446813 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/Ultimate/ChenFlurMukhopadhyay-2012SAS-Fig1.bpl_Iteration1_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/ChenFlurMukhopadhyay-2012SAS-Fig1.bpl_Iteration1_Loop_4-pieceTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/Ultimate/ChenFlurMukhopadhyay-2012SAS-Fig1.bpl_Iteration1_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/ChenFlurMukhopadhyay-2012SAS-Fig1.bpl_Iteration1_Loop_4-pieceTemplate.txt
+finish: file[433] = /home/wangzh/benchmark/QF_NRA2/hycomp/ball_count_2d_hill_simple.01.seq_lazy_global_4.smt2
+finish: file[441] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/problem/7/sin-problem-7-chunk-0100.smt2
+finish: file[438] = /home/wangzh/benchmark/QF_NRA2/kissing/kissing_4_2.smt2
+finish: file[418] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/Ultimate/ChenFlurMukhopadhyay-2012SAS-Fig1.bpl_Iteration1_Loop_4-pieceTemplate.smt2
+finish: file[442] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0109.smt2
+finish: file[447] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0676.smt2
+sh: line 1: 446723 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/graycode.t2.c_Iteration3_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/graycode.t2.c_Iteration3_Loop_4-pieceTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/graycode.t2.c_Iteration3_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/graycode.t2.c_Iteration3_Loop_4-pieceTemplate.txt
+finish: file[454] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0642.smt2
+finish: file[445] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/exp/problem/10/2/exp-problem-10-2-chunk-0163.smt2
+finish: file[449] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/CMOS/CMOS-opamp-chunk-0082.smt2
+sh: line 1: 446926 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/SV-COMP/LarrazOliverasRodriguez-CarbonellRubio-2013FMCAD-Fig1_true-termination.c_Iteration5_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/LarrazOliverasRodriguez-CarbonellRubio-2013FMCAD-Fig1_true-termination.c_Iteration5_Loop_4-pieceTemplate.txt
+finish: file[450] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/problem/8/weak/sin-problem-8-weak-chunk-0073.smt2
+finish: file[452] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/1mcosq/7/sqrt-1mcosq-7-chunk-0133.smt2
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/SV-COMP/LarrazOliverasRodriguez-CarbonellRubio-2013FMCAD-Fig1_true-termination.c_Iteration5_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/LarrazOliverasRodriguez-CarbonellRubio-2013FMCAD-Fig1_true-termination.c_Iteration5_Loop_4-pieceTemplate.txt
+finish: file[448] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/problem/7/weak/sin-problem-7-weak-chunk-0075.smt2
+finish: file[457] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/vega/3/atan-vega-3-chunk-0216.smt2
+finish: file[451] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/vega/3/weak/atan-vega-3-weak-chunk-0648.smt2
+finish: file[400] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/graycode.t2.c_Iteration3_Loop_4-pieceTemplate.smt2
+finish: file[462] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/polypaver/bench-sqrt-3d/polypaver-bench-sqrt-3d-chunk-0490.smt2
+finish: file[461] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/polypaver/bench-sqrt-3d/polypaver-bench-sqrt-3d-chunk-0429.smt2
+finish: file[419] = /home/wangzh/benchmark/QF_NRA2/20200911-Pine/1599122160577854000.smt2
+finish: file[437] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/SV-COMP/LarrazOliverasRodriguez-CarbonellRubio-2013FMCAD-Fig1_true-termination.c_Iteration5_Loop_4-pieceTemplate.smt2
+finish: file[463] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/exp/problem/10/3/exp-problem-10-3-chunk-0159.smt2
+sh: line 1: 446948 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/pentagon.t2.c_Iteration12_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/pentagon.t2.c_Iteration12_Loop_4-pieceTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/pentagon.t2.c_Iteration12_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/pentagon.t2.c_Iteration12_Loop_4-pieceTemplate.txt
+finish: file[465] = /home/wangzh/benchmark/QF_NRA2/20180501-Economics-Mulligan/MulliganEconomicsModel0009e.smt2
+finish: file[467] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/problem/7/sin-problem-7-chunk-0333.smt2
+finish: file[468] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/Chua/1/VC1/L/Chua-1-VC1-L-chunk-0134.smt2
+finish: file[469] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/Chua/2/VC1/U/Chua-2-VC1-U-chunk-0086.smt2
+finish: file[439] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/pentagon.t2.c_Iteration12_Loop_4-pieceTemplate.smt2
+finish: file[472] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/exp/problem/10/2/exp-problem-10-2-chunk-0087.smt2
+finish: file[473] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/CMOS/CMOS-opamp-chunk-0021.smt2
+finish: file[471] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/problem/2/weak2/atan-problem-2-weak2-chunk-0130.smt2
+finish: file[443] = /home/wangzh/benchmark/QF_NRA2/hycomp/ball_count_2d_plain.01.seq_lazy_lemmas_global_4.smt2
+finish: file[474] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/problem/10/sin-problem-10-2-chunk-0012.smt2
+finish: file[476] = /home/wangzh/benchmark/QF_NRA2/20180501-Economics-Mulligan/MulliganEconomicsModel0029e.smt2
+finish: file[477] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/problem/7/weak2/sin-problem-7-weak2-chunk-0056.smt2
+finish: file[478] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/polypaver/bench-sqrt-3d/polypaver-bench-sqrt-3d-chunk-0223.smt2
+finish: file[479] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/Chua/2/VC2/L/Chua-2-VC2-L-chunk-0018.smt2
+finish: file[475] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/Lyapunov/Lyapunov1a-chunk-0031.smt2
+sh: line 1: 447053 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/polyrank4.t2.c_Iteration7_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/polyrank4.t2.c_Iteration7_Loop_4-pieceTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/polyrank4.t2.c_Iteration7_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/polyrank4.t2.c_Iteration7_Loop_4-pieceTemplate.txt
+finish: file[480] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/polypaver/bench-exp-3d/polypaver-bench-exp-3d-chunk-0094.smt2
+finish: file[485] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0599.smt2
+sh: line 1: 445348 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/Ultimate/SyntaxSupportDivision1.bpl_Iteration1_Lasso_3-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/SyntaxSupportDivision1.bpl_Iteration1_Lasso_3-pieceTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/Ultimate/SyntaxSupportDivision1.bpl_Iteration1_Lasso_3-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/SyntaxSupportDivision1.bpl_Iteration1_Lasso_3-pieceTemplate.txt
+finish: file[484] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/problem/7/weak2/sin-problem-7-weak2-chunk-0057.smt2
+finish: file[105] = /home/wangzh/benchmark/QF_NRA2/hycomp/ball_count_2d_plain.01.seq_lazy_lemmas_global_14.smt2
+finish: file[464] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/polyrank4.t2.c_Iteration7_Loop_4-pieceTemplate.smt2
+finish: file[486] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/problem/sqrt-problem-Melquiond2-chunk-0063.smt2
+finish: file[488] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/circles/3/sqrt-circles-3-chunk-0014.smt2
+finish: file[487] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/problem/2/weak/atan-problem-2-weak-chunk-0071.smt2
+finish: file[210] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/Ultimate/SyntaxSupportDivision1.bpl_Iteration1_Lasso_3-pieceTemplate.smt2
+finish: file[491] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/problem/13/sqrt1/sqrt-problem-13-sqrt1-chunk-0039.smt2
+finish: file[495] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/vega/3/weak/atan-vega-3-weak-chunk-0558.smt2
+finish: file[492] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/vega/3/atan-vega-3-chunk-0460.smt2
+sh: line 1: 447137 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/matrixsqrt.t2.c_Iteration2_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/matrixsqrt.t2.c_Iteration2_Loop_4-pieceTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/matrixsqrt.t2.c_Iteration2_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/matrixsqrt.t2.c_Iteration2_Loop_4-pieceTemplate.txt
+finish: file[494] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/Nichols-Plot/Inverted-Pendulum/Nichols-Plot-Inverted-Pendulum-Fails-1-6-chunk-0208.smt2
+finish: file[496] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0219.smt2
+finish: file[481] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/matrixsqrt.t2.c_Iteration2_Loop_4-pieceTemplate.smt2
+sh: line 1: 447019 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/ex11.t2.c_Iteration1_Lasso_6-phaseTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/ex11.t2.c_Iteration1_Lasso_6-phaseTemplate.txt
+sh: line 1: 446818 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/sumit.t2.c_Iteration2_Loop_4-lexTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/sumit.t2.c_Iteration2_Loop_4-lexTemplate.txt
+sh: line 1: 447240 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/bitcount16.t2.c_Iteration1_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/bitcount16.t2.c_Iteration1_Loop_4-pieceTemplate.txt
+sh: line 1: 446510 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/Ultimate/Gulwani.bpl_Iteration1_Lasso_3-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/Gulwani.bpl_Iteration1_Lasso_3-pieceTemplate.txt
+sh: line 1: 444991 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/20180501-Economics-Mulligan/MulliganEconomicsModel1001c.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/MulliganEconomicsModel1001c.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/sumit.t2.c_Iteration2_Loop_4-lexTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/sumit.t2.c_Iteration2_Loop_4-lexTemplate.txt
+sh: line 1: 446961 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/sas2.t2.c_Iteration6_Lasso_7-phaseTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/sas2.t2.c_Iteration6_Lasso_7-phaseTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/ex11.t2.c_Iteration1_Lasso_6-phaseTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/ex11.t2.c_Iteration1_Lasso_6-phaseTemplate.txt
+sh: line 1: 446473 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/SV-COMP/BradleyMannaSipma-2005ICALP-Fig1_true-termination.c_Iteration1_Lasso_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/BradleyMannaSipma-2005ICALP-Fig1_true-termination.c_Iteration1_Lasso_4-pieceTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/Ultimate/Gulwani.bpl_Iteration1_Lasso_3-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/Gulwani.bpl_Iteration1_Lasso_3-pieceTemplate.txt
+finish: file[501] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/vega/3/atan-vega-3-chunk-0454.smt2
+finish: file[482] = /home/wangzh/benchmark/QF_NRA2/20200911-Pine/1599122165438996000.smt2
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/sas2.t2.c_Iteration6_Lasso_7-phaseTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/sas2.t2.c_Iteration6_Lasso_7-phaseTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/20180501-Economics-Mulligan/MulliganEconomicsModel1001c.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/MulliganEconomicsModel1001c.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/bitcount16.t2.c_Iteration1_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/bitcount16.t2.c_Iteration1_Loop_4-pieceTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/SV-COMP/BradleyMannaSipma-2005ICALP-Fig1_true-termination.c_Iteration1_Lasso_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/BradleyMannaSipma-2005ICALP-Fig1_true-termination.c_Iteration1_Lasso_4-pieceTemplate.txt
+finish: file[497] = /home/wangzh/benchmark/QF_NRA2/hycomp/ball_count_1d_plain.03.redlog_global_6.smt2
+finish: file[502] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/problem/2/weak2/atan-problem-2-weak2-chunk-0080.smt2
+finish: file[172] = /home/wangzh/benchmark/QF_NRA2/hycomp/ball_count_2d_plain.01.redlog_global_4.smt2
+sh: line 1: 447207 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/disj_nightmare.t2.c_Iteration1_Lasso_2-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/disj_nightmare.t2.c_Iteration1_Lasso_2-pieceTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/disj_nightmare.t2.c_Iteration1_Lasso_2-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/disj_nightmare.t2.c_Iteration1_Lasso_2-pieceTemplate.txt
+finish: file[460] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/ex11.t2.c_Iteration1_Lasso_6-phaseTemplate.smt2
+finish: file[506] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/Chua/1/VC2/U/Chua-1-VC2-U-chunk-0090.smt2
+finish: file[420] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/sumit.t2.c_Iteration2_Loop_4-lexTemplate.smt2
+finish: file[354] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/SV-COMP/BradleyMannaSipma-2005ICALP-Fig1_true-termination.c_Iteration1_Lasso_4-pieceTemplate.smt2
+finish: file[444] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/sas2.t2.c_Iteration6_Lasso_7-phaseTemplate.smt2
+finish: file[156] = /home/wangzh/benchmark/QF_NRA2/20180501-Economics-Mulligan/MulliganEconomicsModel1001c.smt2
+finish: file[509] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/vega/3/weak/atan-vega-3-weak-chunk-0545.smt2
+finish: file[510] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/cos/sin-cos-346-b-chunk-0347.smt2
+finish: file[361] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/Ultimate/Gulwani.bpl_Iteration1_Lasso_3-pieceTemplate.smt2
+finish: file[498] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/bitcount16.t2.c_Iteration1_Loop_4-pieceTemplate.smt2
+finish: file[504] = /home/wangzh/benchmark/QF_NRA2/zankl/matrix-1-all-13.smt2
+finish: file[490] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/disj_nightmare.t2.c_Iteration1_Lasso_2-pieceTemplate.smt2
+finish: file[511] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/CMOS/CMOS-opamp-chunk-0337.smt2
+finish: file[512] = /home/wangzh/benchmark/QF_NRA2/hycomp/ball_count_2d_plain.01.seq_lazy_linear_enc_lemmas_global_2.smt2
+finish: file[515] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0699.smt2
+finish: file[516] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/problem/2/atan-problem-2-chunk-0049.smt2
+finish: file[517] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/polypaver/bench-sqrt-3d/polypaver-bench-sqrt-3d-chunk-0274.smt2
+finish: file[519] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/vega/3/weak/atan-vega-3-weak-chunk-0389.smt2
+finish: file[522] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/problem/13/vars5/sqrt-problem-13-vars5-chunk-0015.smt2
+finish: file[523] = /home/wangzh/benchmark/QF_NRA2/20180501-Economics-Mulligan/MulliganEconomicsModel0063e.smt2
+finish: file[521] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/vega/3/atan-vega-3-chunk-0395.smt2
+finish: file[335] = /home/wangzh/benchmark/QF_NRA2/20161105-Sturm-MBO/mbo_E8E10.smt2
+finish: file[524] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/exp/problem/10/2/exp-problem-10-2-chunk-0316.smt2
+sh: line 1: 447350 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/a.10.c.t2.c_Iteration5_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/a.10.c.t2.c_Iteration5_Loop_4-pieceTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/a.10.c.t2.c_Iteration5_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/a.10.c.t2.c_Iteration5_Loop_4-pieceTemplate.txt
+finish: file[518] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/problem/7/weak/sin-problem-7-weak-chunk-0161.smt2
+finish: file[529] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/exp/problem/10/2/exp-problem-10-2-chunk-0028.smt2
+finish: file[530] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/1mcosq/7/sqrt-1mcosq-7-chunk-0222.smt2
+finish: file[531] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/CMOS/CMOS-opamp-chunk-0316.smt2
+finish: file[513] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/a.10.c.t2.c_Iteration5_Loop_4-pieceTemplate.smt2
+finish: file[532] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/problem/2/weak2/atan-problem-2-weak2-chunk-0108.smt2
+finish: file[534] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/Chua/1/VC1/L/Chua-1-VC1-L-chunk-0140.smt2
+finish: file[533] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/vega/3/atan-vega-3-chunk-0330.smt2
+finish: file[535] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/exp/problem/10/2/exp-problem-10-2-chunk-0123.smt2
+sh: line 1: 447391 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/toeplz.t2.c_Iteration3_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/toeplz.t2.c_Iteration3_Loop_4-pieceTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/toeplz.t2.c_Iteration3_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/toeplz.t2.c_Iteration3_Loop_4-pieceTemplate.txt
+sh: line 1: 447366 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/example.t2.c_Iteration1_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/example.t2.c_Iteration1_Loop_4-pieceTemplate.txt
+finish: file[528] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/polypaver/sqrt43-int/3vars/polypaver-sqrt43-int-3vars-chunk-0119.smt2
+finish: file[537] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/cos/sin-cos-346-b-chunk-0258.smt2
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/example.t2.c_Iteration1_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/example.t2.c_Iteration1_Loop_4-pieceTemplate.txt
+finish: file[536] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/exp/problem/10/2/exp-problem-10-2-chunk-0159.smt2
+finish: file[538] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/polypaver/bench-sqrt-3d/polypaver-bench-sqrt-3d-chunk-0415.smt2
+finish: file[540] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/cos/sin-cos-346-b-chunk-0235.smt2
+finish: file[520] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/example.t2.c_Iteration1_Loop_4-pieceTemplate.smt2
+finish: file[527] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/toeplz.t2.c_Iteration3_Loop_4-pieceTemplate.smt2
+finish: file[542] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/cos/sin-cos-346-b-chunk-0461.smt2
+finish: file[543] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/Chua/1/VC2/U/Chua-1-VC2-U-chunk-0154.smt2
+finish: file[544] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/cos/sin-cos-346-b-chunk-0039.smt2
+finish: file[547] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/vega/3/weak/atan-vega-3-weak-chunk-0326.smt2
+finish: file[548] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/1mcosq/7/sqrt-1mcosq-7-chunk-0019.smt2
+finish: file[541] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/1mcosq/7/sqrt-1mcosq-7-chunk-0147.smt2
+finish: file[554] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/problem/2/weakT/atan-problem-2-weakT-chunk-0043.smt2
+finish: file[556] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/vega/3/atan-vega-3-chunk-0213.smt2
+finish: file[557] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/CONVOI2/CONVOI2-chunk-0019.smt2
+finish: file[558] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/problem/2/atan-problem-2-chunk-0062.smt2
+finish: file[559] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/problem/7/sin-problem-7-chunk-0318.smt2
+finish: file[560] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/Lyapunov/Lyapunov1a-chunk-0035.smt2
+finish: file[561] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0224.smt2
+finish: file[567] = /home/wangzh/benchmark/QF_NRA2/20220314-Uncu/Rational_Function_Proof_Calls_With_Basic_Denominator_Simplifications/BDC_ProveIneq_ISSAC10_ex3a.smt2
+finish: file[566] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/problem/7/sin-problem-7-chunk-0140.smt2
+finish: file[568] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/cos/sin-cos-346-b-chunk-0328.smt2
+finish: file[569] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/vega/3/weak/atan-vega-3-weak-chunk-0330.smt2
+finish: file[570] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/Chua/1/VC2/L/Chua-1-VC2-L-chunk-0048.smt2
+finish: file[571] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/Nichols-Plot/Inverted-Pendulum/Nichols-Plot-Inverted-Pendulum-Fails-1-6-chunk-0175.smt2
+sh: line 1: 447585 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/eric2.t2.c_Iteration5_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/eric2.t2.c_Iteration5_Loop_4-pieceTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/eric2.t2.c_Iteration5_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/eric2.t2.c_Iteration5_Loop_4-pieceTemplate.txt
+sh: line 1: 447529 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/Ultimate/BradleyMannaSipma-2005ICALP-Fig1-deterministic.bpl_Iteration1_Lasso_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/BradleyMannaSipma-2005ICALP-Fig1-deterministic.bpl_Iteration1_Lasso_4-pieceTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/Ultimate/BradleyMannaSipma-2005ICALP-Fig1-deterministic.bpl_Iteration1_Lasso_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/BradleyMannaSipma-2005ICALP-Fig1-deterministic.bpl_Iteration1_Lasso_4-pieceTemplate.txt
+finish: file[562] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/eric2.t2.c_Iteration5_Loop_4-pieceTemplate.smt2
+finish: file[551] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/Ultimate/BradleyMannaSipma-2005ICALP-Fig1-deterministic.bpl_Iteration1_Lasso_4-pieceTemplate.smt2
+finish: file[572] = /home/wangzh/benchmark/QF_NRA2/20211101-Geogebra/IsoTriangle-Perimeter_InRadius.smt2
+finish: file[573] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/1mcosq/7/sqrt-1mcosq-7-chunk-0052.smt2
+sh: line 1: 447593 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/eric2.t2.c_Iteration7_Loop_3-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/eric2.t2.c_Iteration7_Loop_3-pieceTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/eric2.t2.c_Iteration7_Loop_3-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/eric2.t2.c_Iteration7_Loop_3-pieceTemplate.txt
+finish: file[576] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/vega/3/weak/atan-vega-3-weak-chunk-0137.smt2
+finish: file[563] = /home/wangzh/benchmark/QF_NRA2/20200911-Pine/1599122163378198000.smt2
+finish: file[565] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/eric2.t2.c_Iteration7_Loop_3-pieceTemplate.smt2
+sh: line 1: 447533 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/sas2.t2.c_Iteration1_Lasso_7-phaseTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/sas2.t2.c_Iteration1_Lasso_7-phaseTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/sas2.t2.c_Iteration1_Lasso_7-phaseTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/sas2.t2.c_Iteration1_Lasso_7-phaseTemplate.txt
+sh: line 1: 447638 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/ex14.t2.c_Iteration1_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/ex14.t2.c_Iteration1_Loop_4-pieceTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/ex14.t2.c_Iteration1_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/ex14.t2.c_Iteration1_Loop_4-pieceTemplate.txt
+sh: line 1: 447213 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/SV-COMP/CookSeeZuleger-2013TACAS-Fig7a_true-termination.c_Iteration1_Loop_7-phaseTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/CookSeeZuleger-2013TACAS-Fig7a_true-termination.c_Iteration1_Loop_7-phaseTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/SV-COMP/CookSeeZuleger-2013TACAS-Fig7a_true-termination.c_Iteration1_Loop_7-phaseTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/CookSeeZuleger-2013TACAS-Fig7a_true-termination.c_Iteration1_Loop_7-phaseTemplate.txt
+finish: file[552] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/sas2.t2.c_Iteration1_Lasso_7-phaseTemplate.smt2
+finish: file[578] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0253.smt2
+finish: file[493] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/SV-COMP/CookSeeZuleger-2013TACAS-Fig7a_true-termination.c_Iteration1_Loop_7-phaseTemplate.smt2
+finish: file[574] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/ex14.t2.c_Iteration1_Loop_4-pieceTemplate.smt2
+finish: file[580] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/exp/problem/10/3/exp-problem-10-3-chunk-0184.smt2
+finish: file[581] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0713.smt2
+finish: file[582] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/problem/7/sin-problem-7-chunk-0077.smt2
+finish: file[583] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/Chua/2/VC2/U/Chua-2-VC2-U-chunk-0073.smt2
+finish: file[584] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/vega/3/atan-vega-3-chunk-0521.smt2
+finish: file[585] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/exp/problem/10/2/exp-problem-10-2-chunk-0130.smt2
+finish: file[586] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/CMOS/CMOS-opamp-chunk-0187.smt2
+finish: file[587] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0490.smt2
+finish: file[588] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/cos/sin-cos-346-b-chunk-0047.smt2
+finish: file[589] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/problem/2/weak/atan-problem-2-weak-chunk-0204.smt2
+finish: file[591] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0547.smt2
+finish: file[594] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/problem/2/weak/atan-problem-2-weak-chunk-0175.smt2
+finish: file[322] = /home/wangzh/benchmark/QF_NRA2/zankl/matrix-5-all-5.smt2
+finish: file[595] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/cos/sin-cos-346-b-chunk-0280.smt2
+finish: file[526] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/exp/problem/10/3/weak/exp-problem-10-3-weak-chunk-0119.smt2
+finish: file[599] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/exp/problem/10/3/weak/exp-problem-10-3-weak-chunk-0110.smt2
+finish: file[600] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/Arthan/1C/Arthan1C-chunk-0002.smt2
+finish: file[602] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/problem/13/sqrt1/sqrt-problem-13-sqrt1-chunk-0011.smt2
+finish: file[597] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/problem/12vars3/sqrt-problem-12vars3-chunk-0097.smt2
+finish: file[603] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/problem/2/weak/atan-problem-2-weak-chunk-0205.smt2
+finish: file[604] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/problem/7/sin-problem-7-chunk-0330.smt2
+sh: line 1: 447784 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/efegp.t2.c_Iteration1_Lasso_4-lexTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/efegp.t2.c_Iteration1_Lasso_4-lexTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/efegp.t2.c_Iteration1_Lasso_4-lexTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/efegp.t2.c_Iteration1_Lasso_4-lexTemplate.txt
+finish: file[605] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/problem/1/atan-problem-1-chunk-0043.smt2
+finish: file[514] = /home/wangzh/benchmark/QF_NRA2/20161105-Sturm-MBO/mbo_E10E23.smt2
+finish: file[601] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/efegp.t2.c_Iteration1_Lasso_4-lexTemplate.smt2
+finish: file[606] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/Chua/2/VC1/U/Chua-2-VC1-U-chunk-0042.smt2
+finish: file[607] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/problem/7/sin-problem-7-chunk-0247.smt2
+finish: file[609] = /home/wangzh/benchmark/QF_NRA2/20211101-Geogebra/RegHexagon-Diagonal_Side.smt2
+finish: file[610] = /home/wangzh/benchmark/QF_NRA2/20220314-Uncu/Polynomial_Proof_Calls/ProveIneq_ISSAC10_ex2b.smt2
+sh: line 1: 447383 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/1mcosq/7/sqrt-1mcosq-7-chunk-0209.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/sqrt-1mcosq-7-chunk-0209.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/1mcosq/7/sqrt-1mcosq-7-chunk-0209.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/sqrt-1mcosq-7-chunk-0209.txt
+finish: file[54] = /home/wangzh/benchmark/QF_NRA2/hycomp/ball_count_1d_plain.02.seq_lazy_linear_enc_global_8.smt2
+finish: file[611] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/polypaver/bench-exp-3d/polypaver-bench-exp-3d-chunk-0028.smt2
+finish: file[612] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/exp/problem/10/3/weak/exp-problem-10-3-weak-chunk-0172.smt2
+finish: file[525] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/1mcosq/7/sqrt-1mcosq-7-chunk-0209.smt2
+finish: file[614] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/exp/problem/10/3/weak/exp-problem-10-3-weak-chunk-0116.smt2
+finish: file[613] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/asin/8/asin-8-chunk-0050.smt2
+finish: file[608] = /home/wangzh/benchmark/QF_NRA2/zankl/matrix-2-all-6.smt2
+finish: file[615] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/CMOS/CMOS-opamp-chunk-0115.smt2
+finish: file[616] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/CMOS/CMOS-opamp-chunk-0285.smt2
+finish: file[618] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/vega/3/atan-vega-3-chunk-0152.smt2
+finish: file[620] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/Chua/2/VC1/U/Chua-2-VC1-U-chunk-0089.smt2
+finish: file[621] = /home/wangzh/benchmark/QF_NRA2/hycomp/ball_count_2d_hill_simple.01.qfree_global_2.smt2
+finish: file[622] = /home/wangzh/benchmark/QF_NRA2/hycomp/ball_count_2d_hill_simple.01.seq_lazy_linear_enc_lemmas_global_2.smt2
+finish: file[623] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/problem/2/weak/atan-problem-2-weak-chunk-0064.smt2
+finish: file[625] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/1mcosq/7/sqrt-1mcosq-7-chunk-0154.smt2
+finish: file[627] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/polypaver/sqrt43-int/3vars/polypaver-sqrt43-int-3vars-chunk-0028.smt2
+sh: line 1: 447923 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/Ultimate/Braverman-2006CAV-Ex1-int.bpl_Iteration1_Loop_7-phaseTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/Braverman-2006CAV-Ex1-int.bpl_Iteration1_Loop_7-phaseTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/Ultimate/Braverman-2006CAV-Ex1-int.bpl_Iteration1_Loop_7-phaseTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/Braverman-2006CAV-Ex1-int.bpl_Iteration1_Loop_7-phaseTemplate.txt
+sh: line 1: 447905 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/SV-COMP/NoriSharma-2013FSE-Fig7_true-termination.c_Iteration1_Loop_6-phaseTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/NoriSharma-2013FSE-Fig7_true-termination.c_Iteration1_Loop_6-phaseTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/SV-COMP/NoriSharma-2013FSE-Fig7_true-termination.c_Iteration1_Loop_6-phaseTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/NoriSharma-2013FSE-Fig7_true-termination.c_Iteration1_Loop_6-phaseTemplate.txt
+finish: file[628] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/Ultimate/Braverman-2006CAV-Ex1-int.bpl_Iteration1_Loop_7-phaseTemplate.smt2
+finish: file[624] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/SV-COMP/NoriSharma-2013FSE-Fig7_true-termination.c_Iteration1_Loop_6-phaseTemplate.smt2
+finish: file[631] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/CMOS/CMOS-opamp-chunk-0178.smt2
+finish: file[632] = /home/wangzh/benchmark/QF_NRA2/20180501-Economics-Mulligan/MulliganEconomicsModel0013e.smt2
+finish: file[633] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/problem/1/weak/atan-problem-1-weak-chunk-0032.smt2
+sh: line 1: 447877 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/sas2.t2.c_Iteration6_Lasso_7-nestedTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/sas2.t2.c_Iteration6_Lasso_7-nestedTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/sas2.t2.c_Iteration6_Lasso_7-nestedTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/sas2.t2.c_Iteration6_Lasso_7-nestedTemplate.txt
+finish: file[619] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/sas2.t2.c_Iteration6_Lasso_7-nestedTemplate.smt2
+finish: file[31] = /home/wangzh/benchmark/QF_NRA2/2019-ezsmt/reverseFolding/01-reverse_folding-0-0.smt2
+finish: file[635] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0701.smt2
+finish: file[637] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/problem/7/sin-problem-7-chunk-0204.smt2
+sh: line 1: 447971 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/heidy7-simple.t2.c_Iteration2_Lasso_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/heidy7-simple.t2.c_Iteration2_Lasso_4-pieceTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/heidy7-simple.t2.c_Iteration2_Lasso_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/heidy7-simple.t2.c_Iteration2_Lasso_4-pieceTemplate.txt
+finish: file[636] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/heidy7-simple.t2.c_Iteration2_Lasso_4-pieceTemplate.smt2
+finish: file[539] = /home/wangzh/benchmark/QF_NRA2/hycomp/ball_count_2d_plain.02.qfree_global_12.smt2
+finish: file[639] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/polypaver/sqrt43-int/3vars/polypaver-sqrt43-int-3vars-chunk-0075.smt2
+finish: file[640] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/exp/problem/10/2/exp-problem-10-2-chunk-0173.smt2
+sh: line 1: 446302 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/SV-COMP/GulwaniJainKoskinen-2009PLDI-Fig1_true-termination.c_Iteration1_Lasso_7-nestedTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/GulwaniJainKoskinen-2009PLDI-Fig1_true-termination.c_Iteration1_Lasso_7-nestedTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/SV-COMP/GulwaniJainKoskinen-2009PLDI-Fig1_true-termination.c_Iteration1_Lasso_7-nestedTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/GulwaniJainKoskinen-2009PLDI-Fig1_true-termination.c_Iteration1_Lasso_7-nestedTemplate.txt
+finish: file[316] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/SV-COMP/GulwaniJainKoskinen-2009PLDI-Fig1_true-termination.c_Iteration1_Lasso_7-nestedTemplate.smt2
+sh: line 1: 447996 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/sudoku.t2.c_Iteration2_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/sudoku.t2.c_Iteration2_Loop_4-pieceTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/sudoku.t2.c_Iteration2_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/sudoku.t2.c_Iteration2_Loop_4-pieceTemplate.txt
+finish: file[643] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/vega/3/weak/atan-vega-3-weak-chunk-0543.smt2
+finish: file[641] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/sudoku.t2.c_Iteration2_Loop_4-pieceTemplate.smt2
+finish: file[644] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/problem/7/sin-problem-7-chunk-0113.smt2
+finish: file[645] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/problem/2/weak/atan-problem-2-weak-chunk-0128.smt2
+finish: file[646] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/vega/3/weak/atan-vega-3-weak-chunk-0018.smt2
+finish: file[110] = /home/wangzh/benchmark/QF_NRA2/zankl/matrix-5-all-8.smt2
+finish: file[648] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/vega/3/atan-vega-3-chunk-0592.smt2
+finish: file[649] = /home/wangzh/benchmark/QF_NRA2/hycomp/ball_count_2d_hill_simple.01.seq_lazy_linear_enc_global_12.smt2
+finish: file[650] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/vega/3/weak/atan-vega-3-weak-chunk-0598.smt2
+finish: file[651] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/cos/sin-cos-346-b-chunk-0208.smt2
+sh: line 1: 447916 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/SV-COMP/Ben-Amram-2010LMCS-Ex2.3_true-termination.c_Iteration1_Loop_7-phaseTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/Ben-Amram-2010LMCS-Ex2.3_true-termination.c_Iteration1_Loop_7-phaseTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/SV-COMP/Ben-Amram-2010LMCS-Ex2.3_true-termination.c_Iteration1_Loop_7-phaseTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/Ben-Amram-2010LMCS-Ex2.3_true-termination.c_Iteration1_Loop_7-phaseTemplate.txt
+finish: file[626] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/SV-COMP/Ben-Amram-2010LMCS-Ex2.3_true-termination.c_Iteration1_Loop_7-phaseTemplate.smt2
+finish: file[653] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/problem/1/atan-problem-1-chunk-0019.smt2
+finish: file[654] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/exp/problem/10/3/weak/exp-problem-10-3-weak-chunk-0035.smt2
+finish: file[656] = /home/wangzh/benchmark/QF_NRA2/20180501-Economics-Mulligan/MulliganEconomicsModel0064a.smt2
+finish: file[655] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sin/cos/sin-cos-346-b-chunk-0358.smt2
+finish: file[658] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/atan/problem/2/weak2/atan-problem-2-weak2-chunk-0138.smt2
+sh: line 1: 448092 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/polyrank3.t2.c_Iteration8_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/polyrank3.t2.c_Iteration8_Loop_4-pieceTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/polyrank3.t2.c_Iteration8_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/polyrank3.t2.c_Iteration8_Loop_4-pieceTemplate.txt
+finish: file[659] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/polyrank3.t2.c_Iteration8_Loop_4-pieceTemplate.smt2
+sh: line 1: 447275 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/1mcosq/7/sqrt-1mcosq-7-chunk-0169.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/sqrt-1mcosq-7-chunk-0169.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/1mcosq/7/sqrt-1mcosq-7-chunk-0169.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/sqrt-1mcosq-7-chunk-0169.txt
+finish: file[507] = /home/wangzh/benchmark/QF_NRA2/meti-tarski/sqrt/1mcosq/7/sqrt-1mcosq-7-chunk-0169.smt2
+sh: line 1: 448106 Segmentation fault      (core dumped) /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/polyrank4.t2.c_Iteration5_Loop_3-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/polyrank4.t2.c_Iteration5_Loop_3-pieceTemplate.txt
+system error: /home/wangzh/code/z3/build/z3 /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/polyrank4.t2.c_Iteration5_Loop_3-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/new_result/nra_ls/z3_no_op_v1/polyrank4.t2.c_Iteration5_Loop_3-pieceTemplate.txt
+finish: file[661] = /home/wangzh/benchmark/QF_NRA2/LassoRanker/CooperatingT2/polyrank4.t2.c_Iteration5_Loop_3-pieceTemplate.smt2
+finish: file[662] = /home/wangzh/benchmark/QF_NRA2/UltimateAutomizer/InVarSynth_InvariantSynthesis_Disjunctive02.bpl_Iteration1_0.smt2

@@ -412,7 +412,6 @@ namespace nlsat {
             // For each arith variable, compute the current infeasible set
             // for each clause and literal it appears in
             for (var v = 0; v < m_arith_vars.size(); v++){
-                // std::cout << "considering variable " << v << std::endl;
                 compute_arith_var_info(v);
                 compute_boundary(v);
             }
@@ -432,7 +431,6 @@ namespace nlsat {
                     if (!curr_literal->m_vars.contains(v)) {
                         continue;
                     }
-                    // std::cout << "clause " << c_idx << " literal " << l_idx << std::endl;
                     interval_set_ref curr_st(m_ism);
                     curr_st = m_evaluator.infeasible_intervals(curr_literal->get_atom(), curr_literal->sign(), nullptr, v);
                     result_st = m_ism.mk_intersection(result_st, curr_st);
@@ -942,6 +940,16 @@ namespace nlsat {
             return true;
         }
 
+        unsigned assigned_size() const {
+            unsigned res = 0;
+            for(var v = 0; v < m_num_vars; v++) {
+                if(m_assignment.is_assigned(v)) {
+                    res++;
+                }
+            }
+            return res;
+        }
+
         // first init: ICP
         bool construct_assignment(bool first_init){
             return first_init ? init_assignment() : restart_assignment();
@@ -962,6 +970,8 @@ namespace nlsat {
             // arith vars set zero or other
             for(var v = 0; v < m_num_vars; v++){
                 nra_arith_var * curr_arith = m_arith_vars[v];
+                curr_arith->m_old_values.reset();
+                curr_arith->m_old_intervals.reset();
                 // infeasible set full, ICP returns false
                 if(m_ism.is_full(curr_arith->m_infeasible_st)){
                     return false;
@@ -969,6 +979,8 @@ namespace nlsat {
                 LSTRACE(tout << "var " << v << ", "; m_ism.display(tout, curr_arith->m_feasible_st); tout << std::endl;);
                 unsigned interval_index;
                 anum curr_value;
+                // case 1.
+                // find zero in feasible set, then record value and interval index
                 if(m_ism.contains_zero(curr_arith->m_feasible_st, interval_index)){
                     LSTRACE(tout << "set zero\n";);
                     m_assignment.set(v, m_zero);
@@ -977,8 +989,10 @@ namespace nlsat {
                     curr_arith->m_old_intervals.push_back(interval_index);
                 } else {
                     LSTRACE(tout << "not zero\n";);
+                    unsigned num_intervals = m_ism.num_intervals(curr_arith->m_feasible_st);
+                    interval_index = rand_int() % num_intervals;
                     scoped_anum w(m_am);
-                    m_ism.peek_in_complement(curr_arith->m_infeasible_st, false, w, true, interval_index);
+                    m_ism.peek_in_feasible_index(curr_arith->m_feasible_st, w, interval_index);
                     m_assignment.set(v, w);
                     m_am.set(curr_value, w);
                     curr_arith->m_old_values.push_back(curr_value);
@@ -995,8 +1009,9 @@ namespace nlsat {
          * @brief
          * restart assignment:
          * 1. if feasible intervals > 1, try another infeasible interval to calculate
-         * 2. otherwise +-1, avoid old values
+         * 2. otherwise, random select one interval, try to avoid old values
         */
+       // TODO: FIX BUG HERE
         bool restart_assignment() {
             m_assignment.reset();
             // bool var
@@ -1005,47 +1020,38 @@ namespace nlsat {
             }
             // arith var
             for(var v = 0; v < m_num_vars; v++) {
-                nra_arith_var * curr_arith = m_arith_vars[v];
-                SASSERT(!m_ism.is_full(curr_arith->m_infeasible_st));
-                unsigned num = m_ism.num_intervals(curr_arith->m_feasible_st);
-                if(curr_arith->m_old_intervals.size() >= num) { // case 2
-                    bool get_assigned = false;
-                    anum curr_value;
-                    for(unsigned i = 0; i < curr_arith->m_old_values.size(); i++) {
-                        scoped_anum value1(m_am), value2(m_am);
-                        m_am.add(curr_arith->m_old_values[i], m_one, value1);
-                        m_am.sub(curr_arith->m_old_values[i], m_one, value2);
-                        if(contains_value(curr_arith->m_feasible_st, value1) && !contains_value(curr_arith->m_old_values, value1)) {
-                            m_assignment.set(v, value1);
-                            get_assigned = true;
-                            m_am.set(curr_value, value1);
-                            curr_arith->m_old_values.push_back(curr_value);
-                            break;
-                        }
-                        if (contains_value(curr_arith->m_feasible_st, value2) && !contains_value(curr_arith->m_old_values, value2)) {
-                            m_assignment.set(v, value2);
-                            get_assigned = true;
-                            m_am.set(curr_value, value2);
-                            curr_arith->m_old_values.push_back(curr_value);
-                            break;
-                        }
-                    }
-                    if(!get_assigned) { // random select an old value
-                        unsigned index = rand_int() % curr_arith->m_old_values.size();
-                        m_assignment.set(v, curr_arith->m_old_values[index]);
-                    }
-                } else { // case 1
-                    unsigned interval_index = get_except_index(num, curr_arith->m_old_intervals);
-                    anum curr_value;
+                nra_arith_var * m_arith_var = m_arith_vars[v];
+                SASSERT(!m_ism.is_full(m_arith_var->m_infeasible_st));
+                unsigned interval_index;
+                anum curr_value;
+                unsigned num = m_ism.num_intervals(m_arith_var->m_feasible_st);
+                if(m_arith_var->m_old_intervals.size() < num) {
+                    interval_index = get_except_index(num, m_arith_var->m_old_intervals);
                     scoped_anum w(m_am);
-                    m_ism.peek_in_feasible_index(curr_arith->m_feasible_st, w, interval_index);
+                    m_ism.peek_in_feasible_index(m_arith_var->m_feasible_st, w, interval_index);
                     m_am.set(curr_value, w);
-                    curr_arith->m_old_values.push_back(curr_value);
-                    curr_arith->m_old_intervals.push_back(interval_index);
+                } else {
+                    unsigned r = rand_int() % m_arith_var->m_old_intervals.size();
+                    interval_index = m_arith_var->m_old_intervals[r];
+                    scoped_anum w(m_am);
+                    m_am.set(w, m_arith_var->m_old_values[r]);
+                    if(m_ism.check_point_interval(m_arith_var->m_feasible_st, interval_index)) {
+                        m_am.set(curr_value, w);
+                    } else {
+                        m_ism.peek_in_feasible_index_except(m_arith_var->m_feasible_st, curr_value, interval_index, w);
+                    }
                 }
+                m_assignment.set(v, curr_value);
+                m_arith_var->m_old_intervals.push_back(interval_index);
+                m_arith_var->m_old_values.push_back(curr_value);
             }
+            return true;
         }
 
+        /**
+        * @brief
+        * return a number in [0, num) not appearing in vec
+        */
         unsigned get_except_index(unsigned num, unsigned_vector const & vec) {
             bool_vector occupied;
             occupied.resize(num, false);
