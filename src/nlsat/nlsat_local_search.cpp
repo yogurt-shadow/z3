@@ -1005,6 +1005,10 @@ namespace nlsat {
             return true;
         }
 
+        inline std::string bool2str(bool b) const {
+            return b ? "true" : "false";
+        }
+
         /**
          * @brief
          * restart assignment:
@@ -2578,33 +2582,6 @@ namespace nlsat {
             LSTRACE(tout << "end of add swap operation\n";);
         }
 
-
-        // TRACE
-        // std::ostream & check_solution_sat(std::ostream & out){
-        //     show_ls_assignment(out);
-        //     for(literal_index i = 0; i < m_nra_literals.size(); i++){
-        //         m_solver.display(out, m_nra_literals[i]->m_literal); out << std::endl;
-        //         nra_literal const * l = m_nra_literals[i];
-        //         if(l->is_bool()){
-        //             out << "bool value: " << (m_bool_vars[l->get_bool_index()]->get_value() ? "true" : "false") << std::endl;
-        //         }
-        //         else {
-        //             ineq_atom const * aa = l->get_atom();
-        //             SASSERT(aa->size() > 0);
-        //             scoped_anum curr(m_am);
-        //             m_am.set(curr, 1);
-        //             for(unsigned i = 0; i < aa->size(); i++){
-        //                 poly * p = aa->p(i);
-        //                 scoped_anum p_value(m_am);
-        //                 m_pm.eval(p, m_assignment, p_value);
-        //                 m_am.mul(curr, p_value, curr);
-        //             }
-        //             out << "value: "; m_am.display(out, curr); out << std::endl;
-        //         }
-        //     }
-        //     return out;
-        // }
-
         void propagate_sub_values(){
             for(auto ele: m_sub_value){
                 var v = ele.m_var;
@@ -2626,6 +2603,16 @@ namespace nlsat {
                 result += curr_clause->get_weight();
             }
             return result;
+        }
+
+        unsigned assigned_size() const {
+            unsigned res = 0;
+            for(var v = 0; v < m_num_vars; v++) {
+                if(m_assignment.is_assigned(v)) {
+                    res++;
+                }
+            }
+            return res;
         }
 
         /**
@@ -2658,17 +2645,6 @@ namespace nlsat {
                     tout << "no improve cnt: " << no_improve_cnt << std::endl;
                 );
                 is_random_walk = (rand_int() % 100 < 30);
-                // if (is_random_walk) {
-                //     if (no_improve_cnt_mode > 500) {
-                //         is_random_walk = false;  // change to greedy mode
-                //         no_improve_cnt_mode = 0;
-                //     } 
-                // } else {
-                //     if (no_improve_cnt_mode > 1000) {
-                //         is_random_walk = true;   // change to random walk mode
-                //         no_improve_cnt_mode = 0;
-                //     }
-                // }
                 // Succeed
                 if(m_unsat_clauses.empty()){
                     SPLIT_LINE(std::cout);
@@ -2679,6 +2655,8 @@ namespace nlsat {
                     SPLIT_LINE(std::cout);
                     
                     collect_bool_values();
+                    std::cout << "num arith: " << m_num_vars << std::endl;
+                    std::cout << "assignment size: " << assigned_size() << std::endl;
                     check_solution_sat();
                     propagate_sub_values();
                     return l_true;
