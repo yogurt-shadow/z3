@@ -617,6 +617,22 @@ namespace nlsat {
             return m_am.qm().lt(den1, den2);
         }
 
+        void get_abs(anum const & val, anum & res) {
+            if (m_am.lt(val, m_zero)) {
+                m_am.sub(m_zero, val, res);
+            } else {
+                m_am.set(res, val);
+            }
+        }
+
+        bool lt_abs(anum const & val1, anum const & val2) {
+            scoped_anum abs1(m_am);
+            scoped_anum abs2(m_am);
+            get_abs(val1, abs1);
+            get_abs(val2, abs2);
+            return m_am.lt(abs1, abs2);
+        }
+
         bool is_simpler(anum const & val1, anum const & val2) {
             // Return whether val2 is simpler than val1
             if (m_am.is_rational(val1) && !m_am.is_rational(val2)) {
@@ -626,7 +642,7 @@ namespace nlsat {
             } else if (!m_am.is_rational(val1) && !m_am.is_rational(val2)) {
                 return false;  // cannot compare
             } else if (lt_denominator(val1, m_min) && lt_denominator(val2, m_min)) {
-                return false;  // does not compare less than 10000
+                return lt_abs(val1, val2);  // compare abs when less than 10
             } else {
                 return lt_denominator(val2, val1);
             }
