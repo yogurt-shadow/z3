@@ -1305,6 +1305,10 @@ namespace nlsat {
         }
     }
 
+    bool interval_set_manager::contain_both_infinities(interval_set const * s) {
+        return s->m_intervals[0].m_lower_inf && s->m_intervals[s->m_num_intervals-1].m_upper_inf;
+    }
+
     std::ostream& interval_set_manager::display(std::ostream & out, interval_set const * s) const {
         if (s == nullptr) {
             out << "{}";

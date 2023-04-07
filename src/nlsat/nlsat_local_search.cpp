@@ -503,6 +503,14 @@ namespace nlsat {
                                         m_arith_var->m_start_score, INT_MAX / 2);
                 }
             }
+            // The heuristic for using infeasible_st: if the infeasible set
+            // restricts the variable to a finite boundary, then it is used.
+            // if (m_arith_var->m_infeasible_st != nullptr) {
+            //     if (m_ism.contain_both_infinities(m_arith_var->m_infeasible_st)) {
+            //         m_ism.add_boundaries(m_arith_var->m_infeasible_st, m_arith_var->m_boundaries,
+            //                              m_arith_var->m_start_score, INT_MAX / 2);
+            //     }
+            // }
 
             for (unsigned i = 0; i < m_arith_var->m_clauses.size(); i++) {
                 clause_index c_idx = m_arith_var->m_clauses[i];
@@ -652,7 +660,11 @@ namespace nlsat {
                 if (m_arith_var->m_boundaries[0].is_open) {
                     // x] case, can include x
                     scoped_anum w(m_am);
-                    m_am.set(w, m_arith_var->m_boundaries[0].value);
+                    if (m_am.is_int(m_arith_var->m_boundaries[0].value)) {
+                        m_am.set(w, m_arith_var->m_boundaries[0].value);
+                    } else {
+                        m_am.int_lt(m_arith_var->m_boundaries[0].value, w);
+                    }
                     vec.push_back(w);
                 }
                 else {
@@ -676,7 +688,11 @@ namespace nlsat {
                         else {
                             // x) case, can include x
                             scoped_anum w(m_am);
-                            m_am.set(w, m_arith_var->m_boundaries[len-1].value);
+                            if (m_am.is_int(m_arith_var->m_boundaries[len-1].value)) {
+                                m_am.set(w, m_arith_var->m_boundaries[len-1].value);
+                            } else {
+                                m_am.int_gt(m_arith_var->m_boundaries[len-1].value, w);
+                            }
                             vec.push_back(w);
                         }
                     }
@@ -753,7 +769,11 @@ namespace nlsat {
             if (m_arith_var->m_boundaries[0].is_open) {
                 // x] case, can include x
                 scoped_anum w(m_am);
-                m_am.set(w, m_arith_var->m_boundaries[0].value);
+                if (m_am.is_int(m_arith_var->m_boundaries[0].value)) {
+                    m_am.set(w, m_arith_var->m_boundaries[0].value);
+                } else {
+                    m_am.int_lt(m_arith_var->m_boundaries[0].value, w);
+                }
                 if (!contains_value(s, w) && score >= INT_MIN / 4) {
                     if (score > best_score) {
                         best_score = score;
@@ -800,7 +820,11 @@ namespace nlsat {
                     else {
                         // x) case, can include x
                         scoped_anum w(m_am);
-                        m_am.set(w, m_arith_var->m_boundaries[len-1].value);
+                        if (m_am.is_int(m_arith_var->m_boundaries[len-1].value)) {
+                            m_am.set(w, m_arith_var->m_boundaries[len-1].value);
+                        } else {
+                            m_am.int_gt(m_arith_var->m_boundaries[len-1].value, w);
+                        }
                         if (!contains_value(s, w) && score >= INT_MIN / 4) {
                             if (score > best_score) {
                                 best_score = score;

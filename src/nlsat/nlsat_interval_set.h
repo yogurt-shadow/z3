@@ -165,6 +165,8 @@ namespace nlsat {
         void push_boundary(vector<anum_boundary> & boundaries, anum const & val, bool is_open, int inc_weight);
 
         void add_boundaries(interval_set const * s, vector<anum_boundary> & boundaries, int & start_score, int weight);
+
+        bool contain_both_infinities(interval_set const * s);
     };
 
     typedef obj_ref<interval_set, interval_set_manager> interval_set_ref;
