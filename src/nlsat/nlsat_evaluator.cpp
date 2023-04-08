@@ -399,7 +399,7 @@ namespace nlsat {
             return neg ? !r : r;
         }
 
-        bool eval_ineq(ineq_atom * a, bool neg) {
+        bool eval_ineq(ineq_atom const * a, bool neg) {
             SASSERT(m_assignment.is_assigned(a->max_var()));
             // all variables of a were already assigned... 
             atom::kind k = a->get_kind();
@@ -507,6 +507,85 @@ namespace nlsat {
 
 
         interval_set_ref infeasible_intervals(ineq_atom const * a, bool neg, clause const* cls, var x){
+            literal jst(a->bvar(), neg);
+            atom::kind k = a->get_kind();
+            
+            scoped_anum dummy(m_am);
+
+            // Shortcut for linear cases
+            if (a->size() == 1 && a->is_odd(0)) {
+                poly* p0 = a->p(0);
+                if (1 == m_pm.degree(p0, x)) {
+                    polynomial_ref p(m_pm), q(m_pm);
+                    p = m_pm.coeff(p0, x, 1, q);
+
+                    scoped_anum pval(m_am);
+                    scoped_anum qval(m_am);
+                    m_pm.eval(p, m_assignment, pval);
+                    m_pm.eval(q, m_assignment, qval);
+                    // inequality is p * x + q <> 0, so the boundary is -q / p
+                    anum res;
+                    scoped_anum m_zero(m_am);
+                    m_am.set(m_zero, 0);
+
+                    interval_set_ref result2(m_ism);
+                    if (m_am.eq(pval, m_zero)) {
+                        // coefficient of x is zero, so the result for a does not depend on x
+                        if (eval_ineq(a, neg)) {
+                            result2 = m_ism.mk_empty();
+                        } else {
+                            result2 = m_ism.mk(true, true, dummy, true, true, dummy, jst, cls);
+                        }
+                    } else {
+                        m_am.div(qval, pval, res);
+                        m_am.sub(m_zero, res, res);
+
+                        bool sign = m_am.gt(pval, m_zero);
+
+                        if (k == atom::kind::GT && !neg && sign) {
+                            result2 = m_ism.mk(true, true, dummy, false, false, res, jst, cls);
+                        } else if (k == atom::kind::LT && neg && sign) {
+                            result2 = m_ism.mk(true, true, dummy, true, false, res, jst, cls);
+                        } else if (k == atom::kind::GT && neg && sign) {
+                            result2 = m_ism.mk(true, false, res, true, true, dummy, jst, cls);
+                        } else if (k == atom::kind::LT && !neg && sign) {
+                            result2 = m_ism.mk(false, false, res, true, true, dummy, jst, cls);
+                        } else if (k == atom::kind::GT && !neg && !sign) {
+                            result2 = m_ism.mk(false, false, res, true, true, dummy, jst, cls);
+                        } else if (k == atom::kind::LT && neg && !sign) {
+                            result2 = m_ism.mk(true, false, res, true, true, dummy, jst, cls);
+                        } else if (k == atom::kind::GT && neg && !sign) {
+                            result2 = m_ism.mk(true, true, dummy, true, false, res, jst, cls);
+                        } else if (k == atom::kind::LT && !neg && !sign) {
+                            result2 = m_ism.mk(true, true, dummy, false, false, res, jst, cls);
+                        } else if (k == atom::kind::EQ && !neg) {
+                            result2 = m_ism.mk(true, true, dummy, true, false, res, jst, cls);
+                            interval_set_ref set(m_ism);
+                            set = m_ism.mk(true, false, res, true, true, dummy, jst, cls);
+                            result2 = m_ism.mk_union(result2, set);
+                        } else {
+                            result2 = m_ism.mk(false, false, res, false, false, res, jst, cls);
+                        }
+                    }
+                    // if (!m_ism.eq(result, result2)) {
+                    //     std::cout << "infeasible_intervals" << std::endl;
+                    //     std::cout << "a: "; m_solver.display(std::cout, *a); std::cout << std::endl;
+                    //     std::cout << "k: " << k << std::endl;
+                    //     std::cout << "neg: " << neg << std::endl;
+                    //     std::cout << "x: " << x << std::endl;
+                    //     std::cout << "p0: "; m_pm.display(std::cout, p0); std::cout << std::endl;
+                    //     std::cout << "p: "; m_pm.display(std::cout, p); std::cout << std::endl;
+                    //     std::cout << "q: "; m_pm.display(std::cout, q); std::cout << std::endl;
+                    //     std::cout << "expected result: " << result << std::endl;
+                    //     std::cout << "pval: "; m_am.display(std::cout, pval); std::cout << std::endl;
+                    //     std::cout << "qval: "; m_am.display(std::cout, qval); std::cout << std::endl;
+                    //     std::cout << "got result: " << result2 << std::endl;
+                    //     exit(0);
+                    // }
+                    return result2;
+                }
+            }
+
             sign_table & table = m_sign_table_tmp;
             table.reset();
             TRACE("nsat_evaluator", m_solver.display(tout, *a) << "\n";);
@@ -523,10 +602,7 @@ namespace nlsat {
 
             interval_set_ref result(m_ism);
             interval_set_ref set(m_ism);
-            literal jst(a->bvar(), neg);
-            atom::kind k = a->get_kind();
             
-            anum dummy;
             bool prev_sat         = true;
             bool prev_inf         = true;
             bool prev_open        = true;
