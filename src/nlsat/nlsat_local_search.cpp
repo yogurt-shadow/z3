@@ -1575,7 +1575,6 @@ namespace nlsat {
                 else {
                     smooth_clause_weight();
                 }
-
                 no_operation_random_walk();
             }
 
