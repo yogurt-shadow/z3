@@ -642,7 +642,7 @@ namespace nlsat {
             } else if (!m_am.is_rational(val1) && !m_am.is_rational(val2)) {
                 return false;  // cannot compare
             } else if (lt_denominator(val1, m_min) && lt_denominator(val2, m_min)) {
-                return lt_abs(val1, val2);  // compare abs when less than 10
+                return false;  // does not compare denominator when less than 10
             } else {
                 return lt_denominator(val2, val1);
             }
@@ -1545,34 +1545,54 @@ namespace nlsat {
                 int best_arith_score = INT_MIN;
                 vector<var> best_arith_index = vector<var>();
                 scoped_anum_vector best_values(m_am);
-                for (var v = 0; v < m_arith_vars.size(); v++) {
-                    curr_score = get_best_arith_score(v);
-                    if (curr_score > best_arith_score) {
-                        best_arith_score = curr_score;
-                    }
-                }
-                if (best_arith_score != INT_MIN) {
-                    for (var v = 0; v < m_arith_vars.size(); v++) {
+
+                int best_bool_score = INT_MIN;
+                vector<bool_var> best_bool_index = vector<bool_var>();
+
+                m_vars_visited.reset();
+
+                for (int i = 0; i < m_unsat_clauses.size(); i++) {
+                    clause_index c_idx = m_unsat_clauses[i];
+                    nra_clause const * curr_clause = m_nra_clauses[c_idx];
+                    for (var v : curr_clause->m_vars) {
                         curr_score = get_best_arith_score(v);
-                        if (curr_score == best_arith_score) {
-                            best_arith_index.push_back(v);
-                            scoped_anum w(m_am);
-                            get_best_arith_value(v, curr_score, w);
-                            best_values.push_back(w);
+                        if (curr_score > best_arith_score) {
+                            best_arith_score = curr_score;
                         }
                     }
                 }
 
-                int best_bool_score = INT_MIN;
-                vector<bool_var> best_bool_index = vector<bool_var>();
-                for (bool_var b = 0; b < m_bool_vars.size(); b++) {
-                    curr_score = get_bool_critical_score(b);
-                    if (curr_score > best_bool_score) {
-                        best_bool_score = curr_score;
-                        best_bool_index.reset();
-                        best_bool_index.push_back(b);
-                    } else if (curr_score == best_bool_score) {
-                        best_bool_index.push_back(b);
+                for (int i = 0; i < m_unsat_clauses.size(); i++) {
+                    clause_index c_idx = m_unsat_clauses[i];
+                    nra_clause const * curr_clause = m_nra_clauses[c_idx];
+
+                    if (best_arith_score != INT_MIN) {
+                        for (var v : curr_clause->m_vars) {
+                            if (!m_vars_visited.contains(v)) {
+                                m_vars_visited.insert(v);
+                                curr_score = get_best_arith_score(v);
+                                if (curr_score == best_arith_score) {
+                                    best_arith_index.push_back(v);
+                                    scoped_anum w(m_am);
+                                    get_best_arith_value(v, curr_score, w);
+                                    best_values.push_back(w);
+                                }
+                            }
+                        }
+                    }
+
+                    for (literal_index l_idx : curr_clause->m_bool_literals) {
+                        nra_literal const * curr_literal = m_nra_literals[l_idx];
+                        SASSERT(curr_literal->is_bool());
+                        bool_var b = curr_literal->get_bool_index();
+                        curr_score = get_bool_critical_score(b);
+                        if (curr_score > best_bool_score) {
+                            best_bool_score = curr_score;
+                            best_bool_index.reset();
+                            best_bool_index.push_back(b);
+                        } else if (curr_score == best_bool_score) {
+                            best_bool_index.push_back(b);
+                        }
                     }
                 }
 
