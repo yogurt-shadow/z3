@@ -664,6 +664,30 @@ namespace nlsat {
             return best_indices[rand_int() % best_indices.size()];
         }
 
+        void int_lt(anum const & a, anum & b) {
+            m_am.int_lt(a, b);
+            if (!m_am.is_int(a)) {
+                m_am.add(b, m_one, b);
+            }
+            // std::cout << "int_lt: ";
+            // m_am.display(std::cout, a);
+            // std::cout << " ";
+            // m_am.display(std::cout, b);
+            // std::cout << std::endl;
+        }
+
+        void int_gt(anum const & a, anum & b) {
+            m_am.int_gt(a, b);
+            if (!m_am.is_int(a)) {
+                m_am.sub(b, m_one, b);
+            }
+            // std::cout << "int_gt: ";
+            // m_am.display(std::cout, a);
+            // std::cout << " ";
+            // m_am.display(std::cout, b);
+            // std::cout << std::endl;
+        }
+
         void get_best_arith_value(var v, int best_score, anum & best_value) {
             // Obtain the best value for variable v (where the best score is known)
             SASSERT(best_score != INT_MIN);
@@ -679,14 +703,14 @@ namespace nlsat {
                     if (m_am.is_int(m_arith_var->m_boundaries[0].value)) {
                         m_am.set(w, m_arith_var->m_boundaries[0].value);
                     } else {
-                        m_am.int_lt(m_arith_var->m_boundaries[0].value, w);
+                        int_lt(m_arith_var->m_boundaries[0].value, w);
                     }
                     vec.push_back(w);
                 }
                 else {
                     // x) case, cannot include x
                     scoped_anum w(m_am);
-                    m_am.int_lt(m_arith_var->m_boundaries[0].value, w);
+                    int_lt(m_arith_var->m_boundaries[0].value, w);
                     vec.push_back(w);
                 }
             }
@@ -698,7 +722,7 @@ namespace nlsat {
                         if (m_arith_var->m_boundaries[len-1].is_open) {
                             // x] case, cannot include x
                             scoped_anum w(m_am);
-                            m_am.int_gt(m_arith_var->m_boundaries[len-1].value, w);
+                            int_gt(m_arith_var->m_boundaries[len-1].value, w);
                             vec.push_back(w);
                         }
                         else {
@@ -707,7 +731,7 @@ namespace nlsat {
                             if (m_am.is_int(m_arith_var->m_boundaries[len-1].value)) {
                                 m_am.set(w, m_arith_var->m_boundaries[len-1].value);
                             } else {
-                                m_am.int_gt(m_arith_var->m_boundaries[len-1].value, w);
+                                int_gt(m_arith_var->m_boundaries[len-1].value, w);
                             }
                             vec.push_back(w);
                         }
@@ -788,7 +812,7 @@ namespace nlsat {
                 if (m_am.is_int(m_arith_var->m_boundaries[0].value)) {
                     m_am.set(w, m_arith_var->m_boundaries[0].value);
                 } else {
-                    m_am.int_lt(m_arith_var->m_boundaries[0].value, w);
+                    int_lt(m_arith_var->m_boundaries[0].value, w);
                 }
                 if (!contains_value(s, w) && score >= INT_MIN / 4) {
                     if (score > best_score) {
@@ -803,7 +827,7 @@ namespace nlsat {
             else {
                 // x) case, cannot include x
                 scoped_anum w(m_am);
-                m_am.int_lt(m_arith_var->m_boundaries[0].value, w);
+                int_lt(m_arith_var->m_boundaries[0].value, w);
                 if (!contains_value(s, w) && score >= INT_MIN / 4) {
                     if (score > best_score) {
                         best_score = score;
@@ -822,7 +846,7 @@ namespace nlsat {
                     if (m_arith_var->m_boundaries[len-1].is_open) {
                         // x] case, cannot include x
                         scoped_anum w(m_am);
-                        m_am.int_gt(m_arith_var->m_boundaries[len-1].value, w);
+                        int_gt(m_arith_var->m_boundaries[len-1].value, w);
                         if (!contains_value(s, w) && score >= INT_MIN / 4) {
                             if (score > best_score) {
                                 best_score = score;
@@ -839,7 +863,7 @@ namespace nlsat {
                         if (m_am.is_int(m_arith_var->m_boundaries[len-1].value)) {
                             m_am.set(w, m_arith_var->m_boundaries[len-1].value);
                         } else {
-                            m_am.int_gt(m_arith_var->m_boundaries[len-1].value, w);
+                            int_gt(m_arith_var->m_boundaries[len-1].value, w);
                         }
                         if (!contains_value(s, w) && score >= INT_MIN / 4) {
                             if (score > best_score) {
@@ -2519,14 +2543,14 @@ namespace nlsat {
             SASSERT(i >= 0 && i < 2 * vec.size() + 1);
             // (-oo, vec[0])
             if(idx == 0){
-                m_am.int_lt(vec[0], w);
+                int_lt(vec[0], w);
                 if(m_am.eq(vec[0], w)){
                     m_am.sub(w, m_one, w);
                 }
             }
             // (vec.back, +Oo)
             else if(idx == 2 * vec.size()){
-                m_am.int_gt(vec.back(), w);
+                int_gt(vec.back(), w);
                 if(m_am.eq(vec.back(), w)){
                     m_am.add(w, m_one, w);
                 }
