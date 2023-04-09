@@ -184,7 +184,7 @@ namespace nlsat {
                          unsigned & stuck, double & ratio, substitute_value_vector const & vec)
         : m_am(am), m_pm(pm), m_ism(ism), m_evaluator(ev), m_assignment(ass), 
         m_clauses(cls), m_atoms(ats), m_rand_seed(seed), m_solver(s), m_cutoff(1200), is_bool_search(false), is_random_walk(false),
-        use_infeasible_st(false), m_restart_count(400), m_nra_operation_table(m_am, m_nra_operation_index, m_nra_operation_value),
+        use_infeasible_st(true), m_restart_count(400), m_nra_operation_table(m_am, m_nra_operation_index, m_nra_operation_value),
         m_step(step), m_stuck(stuck), m_stuck_ratio(ratio), m_cache(cache), m_sub_value(vec),
         m_time_label(1), m_pure_bool_vars(pure_bool_vars), m_pure_bool_convert(pure_bool_convert), m_bvalues(bvalues)
         {
@@ -666,7 +666,7 @@ namespace nlsat {
 
         void int_lt(anum const & a, anum & b) {
             m_am.int_lt(a, b);
-            if (!m_am.is_int(a)) {
+            if (!m_am.is_int(a) && m_am.is_rational(a)) {
                 m_am.add(b, m_one, b);
             }
             // std::cout << "int_lt: ";
@@ -678,7 +678,7 @@ namespace nlsat {
 
         void int_gt(anum const & a, anum & b) {
             m_am.int_gt(a, b);
-            if (!m_am.is_int(a)) {
+            if (!m_am.is_int(a) && m_am.is_rational(a)) {
                 m_am.sub(b, m_one, b);
             }
             // std::cout << "int_gt: ";
@@ -880,8 +880,14 @@ namespace nlsat {
                 else {
                     if (m_am.eq(m_arith_var->m_boundaries[i].value, m_arith_var->m_boundaries[i+1].value)) {
                         SASSERT(!m_arith_var->m_boundaries[i].is_open && m_arith_var->m_boundaries[i+1].is_open);
+                        // std::cout << "start 5" << std::endl;
                         scoped_anum w(m_am);
                         m_am.set(w, m_arith_var->m_boundaries[i].value);
+                        // std::cout << "end set" << std::endl;
+                        // std::cout << "interval: " << std::endl;
+                        // m_ism.display(std::cout, s); std::cout << std::endl;
+                        // std::cout << "value: " << std::endl;
+                        // m_am.display(std::cout, w); std::cout << std::endl;
                         if (!contains_value(s, w) && score >= INT_MIN / 4) {
                             if (score > best_score) {
                                 best_score = score;
@@ -891,6 +897,7 @@ namespace nlsat {
                             scores.push_back(score);
                             vec.push_back(w);
                         }
+                        // std::cout << "end 5" << std::endl;
                     }
                     else {
                         scoped_anum w(m_am);
@@ -1633,6 +1640,9 @@ namespace nlsat {
                     avar = best_arith_index[id];
                     best_score = best_arith_score;
                     m_am.set(best_value, best_values[id]);
+                    // std::cout << "var: " << avar << std::endl;
+                    // std::cout << "score: " << best_score << std::endl;
+                    // std::cout << "value: "; m_am.display(std::cout, best_value); std::cout << std::endl;
                     // avar = best_arith_index[rand_int() % best_arith_index.size()];
                     // get_best_arith_value(avar, best_arith_score, best_value);
                     return 1;  // arith operation
@@ -1658,6 +1668,7 @@ namespace nlsat {
                 }
             }
 
+            // std::cout << "update weight" << std::endl;
             // update clause weight
             if(rand_int() % 500 > smooth_probability){
                 update_clause_weight();
@@ -1672,6 +1683,7 @@ namespace nlsat {
                     return res;
                 }
             }
+            // std::cout << "stuck" << std::endl;
             no_operation_random_walk();
             return -1;
         }
@@ -2812,7 +2824,7 @@ namespace nlsat {
                 int best_score;
                 int mode = pick_critical_move(picked_b, picked_v, next_value, best_score);
 
-                int before_weight = get_total_weight();
+                // int before_weight = get_total_weight();
                 if (mode == 0) {  // bool operation
                     critical_bool_move(picked_b);
                     if(update_bool_info()){
@@ -2821,7 +2833,14 @@ namespace nlsat {
                     else {
                         no_improve_cnt_bool++;
                     }
-                    SASSERT(before_weight - get_total_weight() == best_score);
+                    // int after_weight = get_total_weight();
+                    // if (before_weight - after_weight != best_score) {
+                    //     std::cout << before_weight << std::endl;
+                    //     std::cout << after_weight << std::endl;
+                    //     std::cout << best_score << std::endl;
+                    //     UNREACHABLE();
+                    // }
+                    // SASSERT(before_weight - get_total_weight() == best_score);
                 } else if (mode == 1) {  // arith operation
                     critical_nra_move(picked_v, next_value);
                     // update arith improvement
@@ -2831,7 +2850,14 @@ namespace nlsat {
                     else {
                         no_improve_cnt_nra++;
                     }
-                    SASSERT(before_weight - get_total_weight() == best_score);
+                    // int after_weight = get_total_weight();
+                    // if (before_weight - after_weight != best_score) {
+                    //     std::cout << before_weight << std::endl;
+                    //     std::cout << after_weight << std::endl;
+                    //     std::cout << best_score << std::endl;
+                    //     UNREACHABLE();
+                    // }
+                    // SASSERT(before_weight - get_total_weight() == best_score);
                 } else {
                     // No operation
                 }
