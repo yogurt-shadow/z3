@@ -1270,37 +1270,38 @@ namespace nlsat {
         m_am.set(w, s->m_intervals[irrational_i].m_upper);
     }
 
-    void interval_set_manager::push_boundary(vector<anum_boundary> & boundaries, anum const & val, bool is_open, int inc_score) {
+    void interval_set_manager::push_boundary(vector<anum_boundary> & boundaries, anum const & val, bool is_open, int inc_score, unsigned c_idx) {
         for (auto it = boundaries.begin(); it != boundaries.end(); it++) {
             if (it->is_open == is_open && m_am.eq(it->value, val)) {
                 it->score += inc_score;
+                it->m_clauses.push_back(c_idx);
                 return;
             }
         }
-        boundaries.push_back(anum_boundary(val, is_open, inc_score));
+        boundaries.push_back(anum_boundary(val, is_open, inc_score, c_idx));
     }
 
-    void interval_set_manager::add_boundaries(interval_set const * s, vector<anum_boundary> & boundaries, int & start_score, int weight) {
+    void interval_set_manager::add_boundaries(interval_set const * s, vector<anum_boundary> & boundaries, int & start_score, int weight, unsigned c_idx) {
         for (unsigned j = 0; j < s->m_num_intervals; j++) {
             if (s->m_intervals[j].m_lower_inf) {
                 // -oo is infeasible
                 start_score -= weight;
             } else if (s->m_intervals[j].m_lower_open) {
                 // (x, ...), change at x]
-                push_boundary(boundaries, s->m_intervals[j].m_lower, true, -weight);
+                push_boundary(boundaries, s->m_intervals[j].m_lower, true, -weight, c_idx);
             } else {
                 // [x, ...), change at x)
-                push_boundary(boundaries, s->m_intervals[j].m_lower, false, -weight);
+                push_boundary(boundaries, s->m_intervals[j].m_lower, false, -weight, c_idx);
             }
 
             if (s->m_intervals[j].m_upper_inf) {
                 // oo is infeasible
             } else if (s->m_intervals[j].m_upper_open) {
                 // (..., x), change at x)
-                push_boundary(boundaries, s->m_intervals[j].m_upper, false, weight);
+                push_boundary(boundaries, s->m_intervals[j].m_upper, false, weight, c_idx);
             } else {
                 // (..., x], change at x]
-                push_boundary(boundaries, s->m_intervals[j].m_upper, true, weight);
+                push_boundary(boundaries, s->m_intervals[j].m_upper, true, weight, c_idx);
             }
         }
     }

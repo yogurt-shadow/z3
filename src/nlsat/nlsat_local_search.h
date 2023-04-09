@@ -475,7 +475,7 @@ namespace nlsat {
         ls_helper(solver & s, anum_manager & am, pmanager & pm, polynomial::cache & cache, interval_set_manager & ism, evaluator & ev, 
                          assignment & ass, svector<lbool> & bvalues, clause_vector const & cls, atom_vector const & ats, bool_var_vector const & pure_bool_vars, 
                          bool_var_vector const & pure_bool_convert, 
-                        unsigned seed, unsigned & step, unsigned & stuck, double & ratio, substitute_value_vector const & vec);
+                        unsigned seed, unsigned & step, unsigned & stuck, double & ratio, substitute_value_vector const & vec, unsigned_vector const & eq_clauses);
 
         ~ls_helper();
 
@@ -484,17 +484,49 @@ namespace nlsat {
         void set_var_num(unsigned x);
     };
 
-    /**
-     * 2022/08/31
-     * literal activity for critical move
-     * add operation for top more literals
-     */
-    struct arith_literal_activity {
-        const nra_literal_vector & m_nra_literals;
-        arith_literal_activity(nra_literal_vector const & vec): m_nra_literals(vec) {}
+    // equation
+    enum slack_category {
+        var_slack,
+        poly_slack
+    };
 
-        bool operator()(literal_index v1, literal_index v2) const {
-            return m_nra_literals[v1]->get_activity() == m_nra_literals[v2]->get_activity() ? v1 < v2 : m_nra_literals[v1]->get_activity() > m_nra_literals[v2]->get_activity();
+    class slacked_clause {
+    private:
+        unsigned m_cls_id;
+        var m_slacked_var;
+        bool_var m_left_atom, m_right_atom, m_origin_atom;
+    public:
+        slacked_clause(unsigned id, var v, bool_var a): m_cls_id(id), m_slacked_var(v), m_origin_atom(a), m_left_atom(null_var), m_right_atom(null_var)
+        {
+            
+        }
+
+        slacked_clause(unsigned id, var v, bool_var a, bool_var a1, bool_var a2): m_cls_id(id), m_slacked_var(v), m_origin_atom(a), m_left_atom(a1), m_right_atom(a2)
+        {
+            
+        }
+
+        unsigned get_clause_index() const {
+            return m_cls_id;
+        }
+
+        var get_slacked_var() const {
+            return m_slacked_var;
+        }
+
+        bool_var get_origin_atom() const {
+            return m_origin_atom;
+        }
+
+        bool_var get_left_atom() const {
+            return m_left_atom;
+        }
+
+        bool_var get_right_atom() const {
+            return m_right_atom;
         }
     };
+
+    using slacked_clause_set = vector<slacked_clause *>;
+    // equation
 };
