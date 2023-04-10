@@ -134,6 +134,7 @@ namespace nlsat {
         unsigned                                             no_improve_cnt_nra;
         unsigned                                             no_improve_cnt;
         unsigned                                             no_improve_cnt_mode;
+        unsigned                                             m_restart_count;
         unsigned                                             m_best_found_cost_bool;
         unsigned                                             m_best_found_cost_nra;
 
@@ -146,7 +147,6 @@ namespace nlsat {
         bool                                                 is_bool_search;
         bool                                                 is_random_walk;
         bool                                                 use_infeasible_st;
-        unsigned                                             m_restart_count;
 
         /**
          * * Time
@@ -184,7 +184,7 @@ namespace nlsat {
                          unsigned & stuck, double & ratio, substitute_value_vector const & vec)
         : m_am(am), m_pm(pm), m_ism(ism), m_evaluator(ev), m_assignment(ass), 
         m_clauses(cls), m_atoms(ats), m_rand_seed(seed), m_solver(s), m_cutoff(1200), is_bool_search(false), is_random_walk(false),
-        use_infeasible_st(true), m_restart_count(400), m_nra_operation_table(m_am, m_nra_operation_index, m_nra_operation_value),
+        use_infeasible_st(true), m_restart_count(0), m_nra_operation_table(m_am, m_nra_operation_index, m_nra_operation_value),
         m_step(step), m_stuck(stuck), m_stuck_ratio(ratio), m_cache(cache), m_sub_value(vec),
         m_time_label(1), m_pure_bool_vars(pure_bool_vars), m_pure_bool_convert(pure_bool_convert), m_bvalues(bvalues)
         {
@@ -2128,7 +2128,7 @@ namespace nlsat {
             // std::cout << "var: " << v << std::endl;
             // std::cout << "value: "; m_am.display(std::cout, old_value);
             // std::cout << "->";
-            // m_am.display(std::cout, value); std::cout << std::endl;
+            // m_am.display_root(std::cout, value); std::cout << std::endl;
 
             critical_subscore_nra(v, value);
             // update arith score, except when the problem is already solved
@@ -2872,8 +2872,8 @@ namespace nlsat {
                     no_improve_cnt_mode++;
                 }
 
-                // Restart
-                if(no_improve_cnt > m_restart_count){
+                // Small restart
+                if (no_improve_cnt > 300){
                     LSTRACE(tout << "no improve count: " << no_improve_cnt << std::endl;
                         tout << "restart\n";
                         SPLIT_LINE(std::cout);
@@ -2884,8 +2884,14 @@ namespace nlsat {
                     );
                     init_solution(false);
                     no_improve_cnt = 0;
-                    // m_restart_count *= 2;
                     use_infeasible_st = !use_infeasible_st;
+                    m_restart_count += 1;
+
+                    // Big restart
+                    if (m_restart_count % 100 == 0) {
+                        init_solution(true);
+                        m_restart_count = 0;
+                    }
                 }
             }
             SPLIT_LINE(std::cout);
