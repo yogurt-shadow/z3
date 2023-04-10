@@ -635,13 +635,21 @@ namespace nlsat {
             return m_am.lt(abs1, abs2);
         }
 
+        bool is_rational(anum const & val) {
+            return m_am.degree(val) <= 1;
+        }
+
+        bool is_int(anum const & val) {
+            return is_rational(val) && m_am.is_int(val);
+        }
+
         bool is_simpler(anum const & val1, anum const & val2) {
             // Return whether val2 is simpler than val1
-            if (m_am.is_rational(val1) && !m_am.is_rational(val2)) {
+            if (is_rational(val1) && !is_rational(val2)) {
                 return false;
-            } else if (!m_am.is_rational(val1) && m_am.is_rational(val2)) {
+            } else if (!is_rational(val1) && is_rational(val2)) {
                 return true;
-            } else if (!m_am.is_rational(val1) && !m_am.is_rational(val2)) {
+            } else if (!is_rational(val1) && !is_rational(val2)) {
                 return false;  // cannot compare
             } else if (lt_denominator(val1, m_min) && lt_denominator(val2, m_min)) {
                 return false;  // does not compare denominator when less than 10
@@ -673,11 +681,6 @@ namespace nlsat {
             if (m_am.lt(m_one, diff)) {
                 m_am.add(b, m_one, b);
             }
-            // std::cout << "int_lt: ";
-            // m_am.display(std::cout, a);
-            // std::cout << " ";
-            // m_am.display(std::cout, b);
-            // std::cout << std::endl;
         }
 
         void int_gt(anum const & a, anum & b) {
@@ -687,11 +690,6 @@ namespace nlsat {
             if (m_am.lt(m_one, diff)) {
                 m_am.sub(b, m_one, b);
             }
-            // std::cout << "int_gt: ";
-            // m_am.display(std::cout, a);
-            // std::cout << " ";
-            // m_am.display(std::cout, b);
-            // std::cout << std::endl;
         }
 
         void get_best_arith_value(var v, int best_score, anum & best_value) {
@@ -706,7 +704,7 @@ namespace nlsat {
                 if (m_arith_var->m_boundaries[0].is_open) {
                     // x] case, can include x
                     scoped_anum w(m_am);
-                    if (m_am.is_int(m_arith_var->m_boundaries[0].value)) {
+                    if (is_int(m_arith_var->m_boundaries[0].value)) {
                         m_am.set(w, m_arith_var->m_boundaries[0].value);
                     } else {
                         int_lt(m_arith_var->m_boundaries[0].value, w);
@@ -734,7 +732,7 @@ namespace nlsat {
                         else {
                             // x) case, can include x
                             scoped_anum w(m_am);
-                            if (m_am.is_int(m_arith_var->m_boundaries[len-1].value)) {
+                            if (is_int(m_arith_var->m_boundaries[len-1].value)) {
                                 m_am.set(w, m_arith_var->m_boundaries[len-1].value);
                             } else {
                                 int_gt(m_arith_var->m_boundaries[len-1].value, w);
@@ -752,8 +750,8 @@ namespace nlsat {
                         }
                         else {
                             scoped_anum w(m_am), w2(m_am);
-                            // if (m_am.is_rational(m_arith_var->m_boundaries[i].value) &&
-                            //     m_am.is_rational(m_arith_var->m_boundaries[i+1].value)) {
+                            // if (is_rational(m_arith_var->m_boundaries[i].value) &&
+                            //     is_rational(m_arith_var->m_boundaries[i+1].value)) {
                             //     // Add (a + b) / 2
                             //     m_am.add(m_arith_var->m_boundaries[i].value, m_arith_var->m_boundaries[i+1].value, w2);
                             //     m_am.div(w2, m_two, w);
@@ -815,7 +813,7 @@ namespace nlsat {
             if (m_arith_var->m_boundaries[0].is_open) {
                 // x] case, can include x
                 scoped_anum w(m_am);
-                if (m_am.is_int(m_arith_var->m_boundaries[0].value)) {
+                if (is_int(m_arith_var->m_boundaries[0].value)) {
                     m_am.set(w, m_arith_var->m_boundaries[0].value);
                 } else {
                     int_lt(m_arith_var->m_boundaries[0].value, w);
@@ -866,7 +864,7 @@ namespace nlsat {
                     else {
                         // x) case, can include x
                         scoped_anum w(m_am);
-                        if (m_am.is_int(m_arith_var->m_boundaries[len-1].value)) {
+                        if (is_int(m_arith_var->m_boundaries[len-1].value)) {
                             m_am.set(w, m_arith_var->m_boundaries[len-1].value);
                         } else {
                             int_gt(m_arith_var->m_boundaries[len-1].value, w);
@@ -2830,7 +2828,7 @@ namespace nlsat {
                 int best_score;
                 int mode = pick_critical_move(picked_b, picked_v, next_value, best_score);
 
-                int before_weight = get_total_weight();
+                // int before_weight = get_total_weight();
                 if (mode == 0) {  // bool operation
                     critical_bool_move(picked_b);
                     if(update_bool_info()){
