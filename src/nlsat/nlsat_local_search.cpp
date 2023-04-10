@@ -431,11 +431,13 @@ namespace nlsat {
 
         void compute_arith_var_info(var v) {
             // Compute infeasible set information for variable
+            interval_set_ref result_st(m_ism);
+            interval_set_ref curr_st(m_ism);
+
             nra_arith_var * m_arith_var = m_arith_vars[v];
             for (unsigned i = 0; i < m_arith_var->m_clauses.size(); i++) {
                 clause_index c_idx = m_arith_var->m_clauses[i];
                 nra_clause const * curr_clause = m_nra_clauses[c_idx];
-                interval_set_ref result_st(m_ism);
                 result_st = m_ism.mk_full();
                 for (unsigned j = 0; j < curr_clause->m_arith_literals.size(); j++) {
                     literal_index l_idx = curr_clause->m_arith_literals[j];
@@ -444,7 +446,6 @@ namespace nlsat {
                         continue;
                     }
                     // std::cout << "clause " << c_idx << " literal " << l_idx << std::endl;
-                    interval_set_ref curr_st(m_ism);
                     curr_st = m_evaluator.infeasible_intervals(curr_literal->get_atom(), curr_literal->sign(), nullptr, v);
                     result_st = m_ism.mk_intersection(result_st, curr_st);
                 }
@@ -460,13 +461,15 @@ namespace nlsat {
 
         void compute_arith_var_clause_info(var v, clause_index c_idx) {
             // Compute infeasible set information for variable
+            interval_set_ref result_st(m_ism);
+            interval_set_ref curr_st(m_ism);
+
             nra_arith_var * m_arith_var = m_arith_vars[v];
             for (unsigned i = 0; i < m_arith_var->m_clauses.size(); i++) {
                 if (c_idx != m_arith_var->m_clauses[i]) {
                     continue;
                 }
                 nra_clause const * curr_clause = m_nra_clauses[c_idx];
-                interval_set_ref result_st(m_ism);
                 result_st = m_ism.mk_full();
                 for (unsigned j = 0; j < curr_clause->m_arith_literals.size(); j++) {
                     literal_index l_idx = curr_clause->m_arith_literals[j];
@@ -475,7 +478,6 @@ namespace nlsat {
                         continue;
                     }
                     // std::cout << "clause " << c_idx << " literal " << l_idx << std::endl;
-                    interval_set_ref curr_st(m_ism);
                     curr_st = m_evaluator.infeasible_intervals(curr_literal->get_atom(), curr_literal->sign(), nullptr, v);
                     result_st = m_ism.mk_intersection(result_st, curr_st);
                 }
@@ -666,7 +668,9 @@ namespace nlsat {
 
         void int_lt(anum const & a, anum & b) {
             m_am.int_lt(a, b);
-            if (!m_am.is_int(a) && m_am.is_rational(a)) {
+            scoped_anum diff(m_am);
+            m_am.sub(a, b, diff);
+            if (m_am.lt(m_one, diff)) {
                 m_am.add(b, m_one, b);
             }
             // std::cout << "int_lt: ";
@@ -678,7 +682,9 @@ namespace nlsat {
 
         void int_gt(anum const & a, anum & b) {
             m_am.int_gt(a, b);
-            if (!m_am.is_int(a) && m_am.is_rational(a)) {
+            scoped_anum diff(m_am);
+            m_am.sub(b, a, diff);
+            if (m_am.lt(m_one, diff)) {
                 m_am.sub(b, m_one, b);
             }
             // std::cout << "int_gt: ";
@@ -2824,7 +2830,7 @@ namespace nlsat {
                 int best_score;
                 int mode = pick_critical_move(picked_b, picked_v, next_value, best_score);
 
-                // int before_weight = get_total_weight();
+                int before_weight = get_total_weight();
                 if (mode == 0) {  // bool operation
                     critical_bool_move(picked_b);
                     if(update_bool_info()){
