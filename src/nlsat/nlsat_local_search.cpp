@@ -193,7 +193,7 @@ namespace nlsat {
                          unsigned & stuck, double & ratio, substitute_value_vector const & vec, unsigned_vector const & equal_clauses)
         : m_am(am), m_pm(pm), m_ism(ism), m_evaluator(ev), m_assignment(ass), 
         m_clauses(cls), m_atoms(ats), m_rand_seed(seed), m_solver(s), m_cutoff(1200), is_bool_search(false), is_random_walk(false),
-        use_infeasible_st(true), m_restart_count(100), m_nra_operation_table(m_am, m_nra_operation_index, m_nra_operation_value),
+        use_infeasible_st(true), m_restart_count(100000), m_nra_operation_table(m_am, m_nra_operation_index, m_nra_operation_value),
         m_step(step), m_stuck(stuck), m_stuck_ratio(ratio), m_cache(cache), m_sub_value(vec),
         m_time_label(1), m_pure_bool_vars(pure_bool_vars), m_pure_bool_convert(pure_bool_convert), m_bvalues(bvalues),
         use_equal_slack(true), m_equal_clauses(equal_clauses)
@@ -1109,17 +1109,27 @@ namespace nlsat {
                     return false;
                 }
                 LSTRACE(tout << "var " << v << ", "; m_ism.display(tout, curr_arith->m_feasible_st); tout << std::endl;);
+
+                int pos = rand_int() % 2047 - 1023;  // [-1023, 1023]
+                scoped_anum num(m_am), denom(m_am), w(m_am);
+                m_am.set(num, pos);
+                m_am.set(denom, 1024);
+                m_am.div(num, denom, w);
+                m_assignment.set(v, w);
+
                 // if(m_ism.contains_zero(curr_arith->m_feasible_st)){
                 //     LSTRACE(tout << "set zero\n";);
                 //     m_assignment.set(v, m_zero);
                 // }
                 // else {
-                    LSTRACE(tout << "not zero\n";);
-                    scoped_anum w(m_am);
-                    m_ism.peek_in_complement(curr_arith->m_infeasible_st, false, w, true);
-                    m_assignment.set(v, w);
+                    // LSTRACE(tout << "not zero\n";);
+                    // scoped_anum w(m_am);
+                    // m_ism.peek_in_complement(curr_arith->m_infeasible_st, false, w, true);
+                    // m_assignment.set(v, w);
                 // }
             }
+            // std::cout << "init assign" << std::endl;
+            // m_assignment.display(std::cout);
             LSTRACE(tout << "end of init assignment\n";
                 show_ls_assignment(tout);
             );
@@ -2492,63 +2502,73 @@ namespace nlsat {
                 else {
                     picked_v = non_zero_coeff_vars[rand_int() % non_zero_coeff_vars.size()];
                 }
-                // choose value for picked arith var
-                anum w;
-                nra_arith_var const * curr_arith = m_arith_vars[picked_v];
-                scoped_anum old_value(m_am);
-                m_am.set(old_value, m_assignment.value(picked_v));
-                interval_set_ref old_value_interval(m_ism);
-                // [old_value, old_value]
-                old_value_interval = m_ism.mk_point_interval(old_value);
-                if(m_var_value_fixed[picked_v]){
-                    m_ism.peek_in_complement(old_value_interval, false, w, true);
-                }
-                else {
-                    interval_set_ref curr_st(m_ism);
-                    curr_st = m_ism.mk_union(old_value_interval, curr_arith->m_infeasible_st);
-                    // happens for ==
-                    // in this case, we ignore infeasible set, and choose a value except old value
-                    if(m_ism.is_full(curr_st)){
-                        m_var_value_fixed[picked_v] = true;
-                        m_ism.peek_in_complement(old_value_interval, false, w, true);
-                    }
-                    // we sample values for the arith var, then check stuck situation
-                    else {
-                        anum_vector sample_values;
-                        // m_ism.peek_in_complement(curr_st, false, w, true);
-                        m_ism.peek_in_complement_heuristic(curr_st, sample_values);
-                        bool still_stuck = true;
-                        SASSERT(!sample_values.empty());
-                        for(auto ele: sample_values){
-                            m_assignment.set(picked_v, ele);
-                            if(!is_literal_stuck(lit)){
-                                m_am.set(w, ele);
-                                // restore assignment
-                                m_assignment.set(picked_v, old_value);
-                                still_stuck = false;
-                                break;
-                            }
-                            else {
-                                // restore assignment
-                                m_assignment.set(picked_v, old_value);
-                            }
-                        }
-                        // still stuck, we random select one value
-                        if(still_stuck){
-                            LSTRACE(tout << "still stuck\n";);
-                            // we use CAD
-                            // if(!cad_move(lit, picked_v, w)){
-                                LSTRACE(std::cout << "cad failed\n";);
-                                LSTRACE(tout << "cad failed, we random choose a value\n";);
-                                m_am.set(w, sample_values[rand_int() % sample_values.size()]);
-                            // }
-                            // else {
-                                LSTRACE(std::cout << "cad succeed\n";);
-                            // }
-                        }
-                    }
-                }
+
+                int pos = rand_int() % 2047 - 1023;  // [-1023, 1023]
+                scoped_anum num(m_am), denom(m_am), w(m_am);
+                m_am.set(num, pos);
+                m_am.set(denom, 1024);
+                m_am.div(num, denom, w);
+                m_assignment.set(picked_v, w);
                 critical_nra_move(picked_v, w);
+                return;
+
+                // // choose value for picked arith var
+                // anum w;
+                // nra_arith_var const * curr_arith = m_arith_vars[picked_v];
+                // scoped_anum old_value(m_am);
+                // m_am.set(old_value, m_assignment.value(picked_v));
+                // interval_set_ref old_value_interval(m_ism);
+                // // [old_value, old_value]
+                // old_value_interval = m_ism.mk_point_interval(old_value);
+                // if(m_var_value_fixed[picked_v]){
+                //     m_ism.peek_in_complement(old_value_interval, false, w, true);
+                // }
+                // else {
+                //     interval_set_ref curr_st(m_ism);
+                //     curr_st = m_ism.mk_union(old_value_interval, curr_arith->m_infeasible_st);
+                //     // happens for ==
+                //     // in this case, we ignore infeasible set, and choose a value except old value
+                //     if(m_ism.is_full(curr_st)){
+                //         m_var_value_fixed[picked_v] = true;
+                //         m_ism.peek_in_complement(old_value_interval, false, w, true);
+                //     }
+                //     // we sample values for the arith var, then check stuck situation
+                //     else {
+                //         anum_vector sample_values;
+                //         // m_ism.peek_in_complement(curr_st, false, w, true);
+                //         m_ism.peek_in_complement_heuristic(curr_st, sample_values);
+                //         bool still_stuck = true;
+                //         SASSERT(!sample_values.empty());
+                //         for(auto ele: sample_values){
+                //             m_assignment.set(picked_v, ele);
+                //             if(!is_literal_stuck(lit)){
+                //                 m_am.set(w, ele);
+                //                 // restore assignment
+                //                 m_assignment.set(picked_v, old_value);
+                //                 still_stuck = false;
+                //                 break;
+                //             }
+                //             else {
+                //                 // restore assignment
+                //                 m_assignment.set(picked_v, old_value);
+                //             }
+                //         }
+                //         // still stuck, we random select one value
+                //         if(still_stuck){
+                //             LSTRACE(tout << "still stuck\n";);
+                //             // we use CAD
+                //             // if(!cad_move(lit, picked_v, w)){
+                //                 LSTRACE(std::cout << "cad failed\n";);
+                //                 LSTRACE(tout << "cad failed, we random choose a value\n";);
+                //                 m_am.set(w, sample_values[rand_int() % sample_values.size()]);
+                //             // }
+                //             // else {
+                //                 LSTRACE(std::cout << "cad succeed\n";);
+                //             // }
+                //         }
+                //     }
+                // }
+                // critical_nra_move(picked_v, w);
             }
         }
 
@@ -2771,7 +2791,7 @@ namespace nlsat {
 
             if (curr_literal->is_slacked()) {
                 // already has slack
-                std::cout << "already slack" << std::endl;
+                // std::cout << "already slack" << std::endl;
             } else {
                 polynomial_ref p(m_pm);
                 p = get_atom_polys(curr_atom);
@@ -2808,11 +2828,11 @@ namespace nlsat {
         }
 
         bool restore_slacked_clauses() {
-            std::cout << "restore slacked clauses" << std::endl;
-            std::cout << "starting assignment" << std::endl;
-            m_assignment.display(std::cout);
+            // std::cout << "restore slacked clauses" << std::endl;
+            // std::cout << "starting assignment" << std::endl;
+            // m_assignment.display(std::cout);
             for (int i = 0; i < m_nra_literals.size(); i++) {
-                std::cout << "i = " << i << std::endl;
+                // std::cout << "i = " << i << std::endl;
                 nra_literal * curr_literal = m_nra_literals[i];
                 if (curr_literal->is_slacked()) {
                     for (var curr_var : curr_literal->m_vars) {
@@ -2836,23 +2856,23 @@ namespace nlsat {
                         point_infeasible_set = m_ism.mk_union(point_infeasible_set, left_bound);
                         point_infeasible_set = m_ism.mk_union(point_infeasible_set, right_bound);
 
-                        m_ism.display(std::cout, point_infeasible_set); std::cout << std::endl;
+                        // m_ism.display(std::cout, point_infeasible_set); std::cout << std::endl;
                         if (m_ism.is_full(point_infeasible_set)) {
                             continue;
                         }
                         scoped_anum w(m_am);
                         m_ism.peek_in_complement(point_infeasible_set, false, w, true);
                         m_assignment.set(curr_var, w);
-                        std::cout << "var: " << curr_var << std::endl;
-                        m_am.display(std::cout, old_value); std::cout << "->";
-                        m_am.display(std::cout, w); std::cout << std::endl;
+                        // std::cout << "var: " << curr_var << std::endl;
+                        // m_am.display(std::cout, old_value); std::cout << "->";
+                        // m_am.display(std::cout, w); std::cout << std::endl;
                         break;
                     }
                 }
             }
-            std::cout << "ending assignment" << std::endl;
-            m_assignment.display(std::cout);
-            std::cout << "end restore slacked clauses" << std::endl;
+            // std::cout << "ending assignment" << std::endl;
+            // m_assignment.display(std::cout);
+            // std::cout << "end restore slacked clauses" << std::endl;
             return check_clauses_sat();
         }
 
@@ -2878,9 +2898,9 @@ namespace nlsat {
             }
             m_outer_step = 1;
             for(m_step = 1; m_step < max_step; m_step++){
-                if (m_step % 100 == 0) {
-                    std::cout << "step: " << m_step << " #unsat clauses: " << m_unsat_clauses.size() << std::endl;
-                }
+                // if (m_step % 100 == 0) {
+                //     std::cout << "step: " << m_step << " #unsat clauses: " << m_unsat_clauses.size() << std::endl;
+                // }
                 m_stuck_ratio = 1.0 * m_stuck / m_step;
                 LSTRACE(tout << "step: " << m_step << std::endl;
                     tout << "no improve cnt: " << no_improve_cnt << std::endl;
@@ -2965,10 +2985,10 @@ namespace nlsat {
                     if(use_equal_slack && equation_index != null_var) {
                         // only slack when next_value is more complex than m_min
                         if (is_simpler(next_value, m_min)) {
-                            std::cout << "relax clause " << equation_index << std::endl;
-                            std::cout << "next value: "; m_am.display_root(std::cout, next_value); std::cout << std::endl;
+                            // std::cout << "relax clause " << equation_index << std::endl;
+                            // std::cout << "next value: "; m_am.display_root(std::cout, next_value); std::cout << std::endl;
                             slack_equational_clause_using_poly(equation_index, picked_v, next_value);
-                            std::cout << "new next value: "; m_am.display_root(std::cout, next_value); std::cout << std::endl;
+                            // std::cout << "new next value: "; m_am.display_root(std::cout, next_value); std::cout << std::endl;
                             update_clause_score(equation_index);
                         }
                     }
