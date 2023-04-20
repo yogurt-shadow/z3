@@ -98,6 +98,15 @@ namespace nlsat {
         bool m_is_sat;
         // count of critical nra move
         unsigned m_activity;
+
+        // Information about slack clauses
+        // The original condition is p = 0
+
+        bool m_slacked;     // whether the equation is slacked
+        var m_slacked_var;  // variable assignment that caused slack
+        ineq_atom const * m_left_atom;   // the atom !(p + slack < 0)
+        ineq_atom const * m_right_atom;  // the atom !(p - slack > 0)
+
     public:
         const literal m_literal;
         var_table m_vars;
@@ -105,7 +114,7 @@ namespace nlsat {
         // sat: 0
         nra_literal(unsigned idx, unsigned b_idx, const literal l, bool is_bool, var_table const & vars, atom const * at)
         : m_index(idx), m_bool_index(b_idx), m_literal(l), m_is_bool(is_bool), m_vars(vars), m_atom(to_ineq_atom(at)), m_is_sat(false), 
-        m_activity(0)
+        m_activity(0), m_slacked(false)
         {}
 
         bool is_bool() const {
@@ -163,6 +172,29 @@ namespace nlsat {
 
         bool operator==(nra_literal other) const {
             return this->m_literal.sign() == other.m_literal.sign() && this->m_literal.var() == other.m_literal.var();
+        }
+
+        void set_slack_atoms(var slacked_var, ineq_atom * const left_atom, ineq_atom * const right_atom) {
+            m_slacked = true;
+            m_slacked_var = slacked_var;
+            m_left_atom = left_atom;
+            m_right_atom = right_atom;
+        }
+
+        bool is_slacked() const {
+            return m_slacked;
+        }
+
+        var get_slacked_var() const {
+            return m_slacked_var;
+        }
+
+        const ineq_atom * get_left_atom() const {
+            return m_left_atom;
+        }
+
+        const ineq_atom * get_right_atom() const {
+            return m_right_atom;
         }
 
         ~nra_literal(){}
@@ -483,50 +515,4 @@ namespace nlsat {
 
         void set_var_num(unsigned x);
     };
-
-    // equation
-    enum slack_category {
-        var_slack,
-        poly_slack
-    };
-
-    class slacked_clause {
-    private:
-        unsigned m_cls_id;
-        var m_slacked_var;
-        bool_var m_left_atom, m_right_atom, m_origin_atom;
-    public:
-        slacked_clause(unsigned id, var v, bool_var a): m_cls_id(id), m_slacked_var(v), m_origin_atom(a), m_left_atom(null_var), m_right_atom(null_var)
-        {
-            
-        }
-
-        slacked_clause(unsigned id, var v, bool_var a, bool_var a1, bool_var a2): m_cls_id(id), m_slacked_var(v), m_origin_atom(a), m_left_atom(a1), m_right_atom(a2)
-        {
-            
-        }
-
-        unsigned get_clause_index() const {
-            return m_cls_id;
-        }
-
-        var get_slacked_var() const {
-            return m_slacked_var;
-        }
-
-        bool_var get_origin_atom() const {
-            return m_origin_atom;
-        }
-
-        bool_var get_left_atom() const {
-            return m_left_atom;
-        }
-
-        bool_var get_right_atom() const {
-            return m_right_atom;
-        }
-    };
-
-    using slacked_clause_set = vector<slacked_clause *>;
-    // equation
 };

@@ -178,17 +178,13 @@ namespace nlsat {
         const substitute_value_vector        &               m_sub_value;
 
         // Equations
-        const bool                                           use_equal_slack = true;
+        bool                                                 use_equal_slack;
+
         // unit equational clauses
         const unsigned_vector                &               m_equal_clauses;
-        // slack threshold, currently 0.1
+
+        // slack threshold, currently 0.0001
         anum                                                 m_slack_min;
-        // slack method
-        const slack_category                                 m_slack_category = poly_slack;
-        // set of slacked equational clauses
-        slacked_clause_set                                   m_slacked_clauses;
-        // slack clauses' index
-        var_table                                            m_slacked_clauses_table;
         
 
         imp(solver & s, anum_manager & am, pmanager & pm, polynomial::cache & cache, interval_set_manager & ism, evaluator & ev, 
@@ -199,7 +195,8 @@ namespace nlsat {
         m_clauses(cls), m_atoms(ats), m_rand_seed(seed), m_solver(s), m_cutoff(1200), is_bool_search(false), is_random_walk(false),
         use_infeasible_st(true), m_restart_count(100), m_nra_operation_table(m_am, m_nra_operation_index, m_nra_operation_value),
         m_step(step), m_stuck(stuck), m_stuck_ratio(ratio), m_cache(cache), m_sub_value(vec),
-        m_time_label(1), m_pure_bool_vars(pure_bool_vars), m_pure_bool_convert(pure_bool_convert), m_bvalues(bvalues), m_equal_clauses(equal_clauses)
+        m_time_label(1), m_pure_bool_vars(pure_bool_vars), m_pure_bool_convert(pure_bool_convert), m_bvalues(bvalues),
+        use_equal_slack(true), m_equal_clauses(equal_clauses)
         {
             set_const_anum();
             clear_statistics();
@@ -458,7 +455,12 @@ namespace nlsat {
                     }
                     // std::cout << "clause " << c_idx << " literal " << l_idx << std::endl;
                     interval_set_ref curr_st(m_ism);
-                    curr_st = m_evaluator.infeasible_intervals(curr_literal->get_atom(), curr_literal->sign(), nullptr, v);
+                    if (curr_literal->is_slacked()) {
+                        curr_st = m_evaluator.infeasible_intervals(curr_literal->get_left_atom(), !curr_literal->sign(), nullptr, v);
+                        curr_st = m_ism.mk_union(curr_st, m_evaluator.infeasible_intervals(curr_literal->get_right_atom(), !curr_literal->sign(), nullptr, v));
+                    } else {
+                        curr_st = m_evaluator.infeasible_intervals(curr_literal->get_atom(), curr_literal->sign(), nullptr, v);
+                    }
                     result_st = m_ism.mk_intersection(result_st, curr_st);
                 }
                 if (m_arith_var->m_clause_intervals[i] != nullptr) {
@@ -489,7 +491,12 @@ namespace nlsat {
                     }
                     // std::cout << "clause " << c_idx << " literal " << l_idx << std::endl;
                     interval_set_ref curr_st(m_ism);
-                    curr_st = m_evaluator.infeasible_intervals(curr_literal->get_atom(), curr_literal->sign(), nullptr, v);
+                    if (curr_literal->is_slacked()) {
+                        curr_st = m_evaluator.infeasible_intervals(curr_literal->get_left_atom(), !curr_literal->sign(), nullptr, v);
+                        curr_st = m_ism.mk_union(curr_st, m_evaluator.infeasible_intervals(curr_literal->get_right_atom(), !curr_literal->sign(), nullptr, v));
+                    } else {
+                        curr_st = m_evaluator.infeasible_intervals(curr_literal->get_atom(), curr_literal->sign(), nullptr, v);
+                    }
                     result_st = m_ism.mk_intersection(result_st, curr_st);
                 }
                 if (m_arith_var->m_clause_intervals[i] != nullptr) {
@@ -712,9 +719,9 @@ namespace nlsat {
                 if (m_arith_var->m_boundaries[0].is_open) {
                     // x] case, can include x
                     scoped_anum w(m_am);
-                    m_am.set(w, m_arith_var->m_boundaries[0].value);
+                    m_am.int_lt(m_arith_var->m_boundaries[0].value, w);
                     vec.push_back(w);
-                    eq_vec.push_back(exist_equal_clauses(m_arith_var->m_boundaries[0].m_clauses));
+                    eq_vec.push_back(null_var);
                 }
                 else {
                     // x) case, cannot include x
@@ -739,9 +746,9 @@ namespace nlsat {
                         else {
                             // x) case, can include x
                             scoped_anum w(m_am);
-                            m_am.set(w, m_arith_var->m_boundaries[len-1].value);
+                            m_am.int_gt(m_arith_var->m_boundaries[len-1].value, w);
                             vec.push_back(w);
-                            eq_vec.push_back(exist_equal_clauses(m_arith_var->m_boundaries[len-1].m_clauses));
+                            eq_vec.push_back(null_var);
                         }
                     }
                     // Return value in the middle
@@ -951,6 +958,17 @@ namespace nlsat {
             return score;
         }
 
+        void update_clause_score(clause_index c_idx) {
+            // Update score in response to relaxation of some literal in the clause
+            nra_clause const * curr_clause = m_nra_clauses[c_idx];
+            // Update for each variable in that clause
+            for (auto it = curr_clause->m_vars.begin(); it != curr_clause->m_vars.end(); it++) {
+                var v2 = *it;
+                compute_arith_var_clause_info(v2, c_idx);
+                compute_boundary(*it);
+            }
+        }
+
         void update_arith_score(var v, anum const & new_value) {
             // Update score in response to updating variable v to new value
             // We assume that satisfiability of clauses (and literals in it) has already
@@ -1091,16 +1109,16 @@ namespace nlsat {
                     return false;
                 }
                 LSTRACE(tout << "var " << v << ", "; m_ism.display(tout, curr_arith->m_feasible_st); tout << std::endl;);
-                if(m_ism.contains_zero(curr_arith->m_feasible_st)){
-                    LSTRACE(tout << "set zero\n";);
-                    m_assignment.set(v, m_zero);
-                }
-                else {
+                // if(m_ism.contains_zero(curr_arith->m_feasible_st)){
+                //     LSTRACE(tout << "set zero\n";);
+                //     m_assignment.set(v, m_zero);
+                // }
+                // else {
                     LSTRACE(tout << "not zero\n";);
                     scoped_anum w(m_am);
                     m_ism.peek_in_complement(curr_arith->m_infeasible_st, false, w, true);
                     m_assignment.set(v, w);
-                }
+                // }
             }
             LSTRACE(tout << "end of init assignment\n";
                 show_ls_assignment(tout);
@@ -1235,7 +1253,19 @@ namespace nlsat {
             else {
                 // we use evaluator's eval to check satisfiability of arith literals
                 // checking sign of multi-poly is faster then getting accurate value
-                l->set_sat_status(m_evaluator.eval((atom *) (l->get_atom()), l->sign()));
+                if (l->is_slacked()) {
+                    // std::cout << "eval is slacked" << std::endl;
+                    auto left_atom = (atom *) (l->get_left_atom());
+                    auto right_atom = (atom *) (l->get_right_atom());
+                    // m_solver.display(std::cout, *left_atom); std::cout << std::endl;
+                    // m_solver.display(std::cout, *right_atom); std::cout << std::endl;
+                    bool left_sat = m_evaluator.eval((atom *) (l->get_left_atom()), !l->sign());
+                    bool right_sat = m_evaluator.eval((atom *) (l->get_right_atom()), !l->sign());
+                    // std::cout << "left sat: " << left_sat << ", right sat: " << right_sat << std::endl;
+                    l->set_sat_status(left_sat && right_sat);
+                } else {
+                    l->set_sat_status(m_evaluator.eval((atom *) (l->get_atom()), l->sign()));
+                }
             }
             // LSTRACE(tout << "end of set literal anum\n";);
         }
@@ -1323,7 +1353,7 @@ namespace nlsat {
             // If two numbers have denominators smaller than that of m_min, they
             // are not distinguished in the comparison.
             scoped_anum threshold(m_am);
-            m_am.set(threshold, 10);
+            m_am.set(threshold, 10000);
             m_am.div(m_one, threshold, m_min);
             m_am.div(m_one, threshold, m_slack_min);
             LSTRACE(display_const_anum(tout););
@@ -1564,6 +1594,7 @@ namespace nlsat {
                         // best_value = arith_vals[r - best_bool_index.size()];
                         // best_score = best_scores[r - best_bool_index.size()];
                         if (!is_simpler(best_value, m_min)) {
+                            // std::cout << "selected random" << std::endl;
                             return 1;  // arith operation
                         }
                     }
@@ -1629,6 +1660,7 @@ namespace nlsat {
                         equation_index = equation_clause_indices[id];
                         // avar = best_arith_index[rand_int() % best_arith_index.size()];
                         // get_best_arith_value(avar, best_arith_score, best_value);
+                        // std::cout << "selected greedy 1" << std::endl;
                         return 1;  // arith operation
                     } else {
                         int total_size = best_bool_index.size() + best_arith_index.size();
@@ -1650,6 +1682,7 @@ namespace nlsat {
                             // avar = best_arith_index[r - best_bool_index.size()];
                             // best_score = best_arith_score;
                             // get_best_arith_value(avar, best_arith_score, best_value);
+                            // std::cout << "selected greedy 2" << std::endl;
                             return 1;  // arith operation
                         }
                     }
@@ -1663,6 +1696,7 @@ namespace nlsat {
                     smooth_clause_weight();
                 }
 
+                // std::cout << "no operations" << std::endl;
                 no_operation_random_walk();
             }
 
@@ -2683,11 +2717,13 @@ namespace nlsat {
         }
 
         int get_total_weight() {
+            // std::cout << "compute total weight" << std::endl;
             int result = 0;
             for (int i = 0; i < m_unsat_clauses.size(); i++) {
                 clause_index curr_index = m_unsat_clauses[i];
                 nra_clause const * curr_clause = m_nra_clauses[curr_index];
                 result += curr_clause->get_weight();
+                // std::cout << "unsat clause " << curr_index << " with weight " << curr_clause->get_weight() << std::endl;
             }
             return result;
         }
@@ -2704,7 +2740,7 @@ namespace nlsat {
         * @return ineq_atom with left: !(p + slack < 0), right: !(p - slack > 0)
         */
         bool_var make_slack_atom_left(poly const * p) {
-            poly * pp = m_pm.mul(rational(10), p);
+            poly * pp = m_pm.mul(rational(10000), p);
             poly * slack_poly = m_pm.mk_const(rational(1));
             poly * atom_poly = m_pm.add(pp, slack_poly);
             m_pm.inc_ref(atom_poly);
@@ -2713,22 +2749,12 @@ namespace nlsat {
         }
 
         bool_var make_slack_atom_right(poly const * p) {
-            poly * pp = m_pm.mul(rational(10), p);
+            poly * pp = m_pm.mul(rational(10000), p);
             poly * slack_poly = m_pm.mk_const(rational(1));
             poly * atom_poly = m_pm.sub(pp, slack_poly);
             m_pm.inc_ref(atom_poly);
             bool is_even = false;
             return m_solver.mk_ineq_atom(atom::kind::GT, 1, &atom_poly, &is_even);
-        }
-
-        slacked_clause * find_slack_clause_using_id(unsigned id) const {
-            for(auto ele: m_slacked_clauses) {
-                if(ele->get_clause_index() == id) {
-                    return ele;
-                }
-            }
-            UNREACHABLE();
-            return nullptr;
         }
 
         /**
@@ -2737,67 +2763,96 @@ namespace nlsat {
         * 2. poly slack: rewrite == into [-slack_min, slack_min]
         */
         void slack_equational_clause_using_poly(clause_index c_idx, var picked_v, anum & value) {
-            slacked_clause * m_slk_clause;
-            // std::cout << "here1\n";
-            if(m_slacked_clauses_table.contains(c_idx)) {
-                m_slk_clause = find_slack_clause_using_id(c_idx);
+            nra_clause * cls = m_nra_clauses[c_idx];
+
+            literal_index lit_index = cls->m_literals[0];
+            nra_literal * curr_literal = m_nra_literals[lit_index];
+            ineq_atom const * curr_atom = curr_literal->get_atom();
+
+            if (curr_literal->is_slacked()) {
+                // already has slack
+                std::cout << "already slack" << std::endl;
             } else {
-                // std::cout << m_clauses.size() << std::endl;
-                // std::cout << c_idx << std::endl;
-                m_slacked_clauses_table.insert(c_idx);
-                const clause & curr_clause = *(m_clauses[c_idx]);
-                // display_equal_clauses(std::cout);
-                // std::cout << "end of here\n";
-                // m_solver.display(std::cout, *(m_clauses[c_idx]));
-                literal curr_literal = curr_clause[0];
-                // std::cout << "here1.1\n";
-                bool_var curr_atom_idx = curr_literal.var();
-                // std::cout << "here1.123\n";
-                m_solver.inc_ref(curr_literal.var());
-                ineq_atom const * curr_atom = to_ineq_atom(m_atoms[curr_literal.var()]);
-                // std::cout << "here1.124\n";
-                // if(curr_atom == nullptr) {
-                //     std::cout << "nullptr\n";
-                // }
-                // m_solver.display(std::cout, *curr_atom);
                 polynomial_ref p(m_pm);
                 p = get_atom_polys(curr_atom);
-                // std::cout << "here1.25\n";
                 bool_var left_atom_idx = make_slack_atom_left(p), right_atom_idx = make_slack_atom_right(p);
                 m_solver.inc_ref(left_atom_idx);
                 m_solver.inc_ref(right_atom_idx);
-                m_slk_clause = new slacked_clause(c_idx, picked_v, curr_atom_idx, left_atom_idx, right_atom_idx);
-                m_slacked_clauses.push_back(m_slk_clause);
-                // std::cout << "here1.5\n";
+                ineq_atom * left_atom = (ineq_atom *) m_atoms[left_atom_idx];
+                ineq_atom * right_atom = (ineq_atom *) m_atoms[right_atom_idx];
+                curr_literal->set_slack_atoms(picked_v, left_atom, right_atom);
             }
             interval_set_ref left_set(m_ism), right_set(m_ism), approx_set(m_ism);
-            ineq_atom const * left_atom = to_ineq_atom(m_atoms[m_slk_clause->get_left_atom()]);
-            ineq_atom const * right_atom = to_ineq_atom(m_atoms[m_slk_clause->get_right_atom()]);
-            // std::cout << "here2\n";
+            interval_set_ref left_bound(m_ism), right_bound(m_ism);
+
+            scoped_anum left(m_am), right(m_am);
+            m_am.sub(value, m_slack_min, left);
+            m_am.add(value, m_slack_min, right);
+            scoped_anum dummy(m_am);
+
+            ineq_atom const * left_atom = curr_literal->get_left_atom();
+            ineq_atom const * right_atom = curr_literal->get_right_atom();
+
             left_set = m_evaluator.infeasible_intervals(left_atom, true, nullptr, picked_v);
             right_set = m_evaluator.infeasible_intervals(right_atom, true, nullptr, picked_v);
-            // std::cout << "here3\n";
+            literal jst(curr_atom->bvar(), neg);
+            left_bound = m_ism.mk(true, true, dummy, true, false, left, jst, cls->get_clause());
+            right_bound = m_ism.mk(true, false, right, true, true, dummy, jst, cls->get_clause());
+
             approx_set = m_ism.mk_union(left_set, right_set);
+            approx_set = m_ism.mk_union(approx_set, left_bound);
+            approx_set = m_ism.mk_union(approx_set, right_bound);
             // approx_set won't be empty, since we can obtain concrete value (value)
             SASSERT(!m_ism.is_full(approx_set));
             m_ism.peek_in_complement(approx_set, false, value, true);
-            // std::cout << "here4\n";
         }
 
         bool restore_slacked_clauses() {
-            for(auto ele: m_slacked_clauses) {
-                var curr_var = ele->get_slacked_var();
-                auto curr_atom = to_ineq_atom(m_atoms[ele->get_origin_atom()]);
-                SASSERT(curr_atom->get_kind() == atom::kind::EQ);
-                interval_set_ref point_infeasible_set(m_ism);
-                point_infeasible_set = m_evaluator.infeasible_intervals(curr_atom, false, nullptr, curr_var);
-                if(m_ism.is_empty(point_infeasible_set)) {
-                    return false;
+            std::cout << "restore slacked clauses" << std::endl;
+            std::cout << "starting assignment" << std::endl;
+            m_assignment.display(std::cout);
+            for (int i = 0; i < m_nra_literals.size(); i++) {
+                std::cout << "i = " << i << std::endl;
+                nra_literal * curr_literal = m_nra_literals[i];
+                if (curr_literal->is_slacked()) {
+                    for (var curr_var : curr_literal->m_vars) {
+                        ineq_atom const * curr_atom = curr_literal->get_atom();
+                        SASSERT(curr_atom->get_kind() == atom::kind::EQ);
+                        interval_set_ref point_infeasible_set(m_ism);
+                        point_infeasible_set = m_evaluator.infeasible_intervals(curr_atom, false, nullptr, curr_var);
+
+                        scoped_anum dummy(m_am);
+                        scoped_anum old_value(m_am);
+                        m_am.set(old_value, m_assignment.value(curr_var));
+                        scoped_anum left(m_am), right(m_am);
+                        m_am.sub(old_value, m_slack_min, left);
+                        m_am.add(old_value, m_slack_min, right);
+
+                        literal jst(curr_atom->bvar(), neg);
+                        interval_set_ref left_bound(m_ism), right_bound(m_ism);
+                        left_bound = m_ism.mk(true, true, dummy, true, false, left, jst, nullptr);
+                        right_bound = m_ism.mk(true, false, right, true, true, dummy, jst, nullptr);
+
+                        point_infeasible_set = m_ism.mk_union(point_infeasible_set, left_bound);
+                        point_infeasible_set = m_ism.mk_union(point_infeasible_set, right_bound);
+
+                        m_ism.display(std::cout, point_infeasible_set); std::cout << std::endl;
+                        if (m_ism.is_full(point_infeasible_set)) {
+                            continue;
+                        }
+                        scoped_anum w(m_am);
+                        m_ism.peek_in_complement(point_infeasible_set, false, w, true);
+                        m_assignment.set(curr_var, w);
+                        std::cout << "var: " << curr_var << std::endl;
+                        m_am.display(std::cout, old_value); std::cout << "->";
+                        m_am.display(std::cout, w); std::cout << std::endl;
+                        break;
+                    }
                 }
-                scoped_anum w(m_am);
-                m_ism.peek_in_complement(point_infeasible_set, false, w, true);
-                m_assignment.set(curr_var, w);
             }
+            std::cout << "ending assignment" << std::endl;
+            m_assignment.display(std::cout);
+            std::cout << "end restore slacked clauses" << std::endl;
             return check_clauses_sat();
         }
 
@@ -2823,9 +2878,9 @@ namespace nlsat {
             }
             m_outer_step = 1;
             for(m_step = 1; m_step < max_step; m_step++){
-                // if (m_step % 100 == 0) {
-                //     std::cout << "step: " << m_step << " #unsat clauses: " << m_unsat_clauses.size() << std::endl;
-                // }
+                if (m_step % 100 == 0) {
+                    std::cout << "step: " << m_step << " #unsat clauses: " << m_unsat_clauses.size() << std::endl;
+                }
                 m_stuck_ratio = 1.0 * m_stuck / m_step;
                 LSTRACE(tout << "step: " << m_step << std::endl;
                     tout << "no improve cnt: " << no_improve_cnt << std::endl;
@@ -2850,7 +2905,7 @@ namespace nlsat {
                         tout << "local search succeed\n";
                     );
                     SPLIT_LINE(std::cout);
-                    if(restore_slacked_clauses()) {
+                    if (restore_slacked_clauses()) {
                         collect_bool_values();
                         check_solution_sat();
                         propagate_sub_values();
@@ -2897,20 +2952,24 @@ namespace nlsat {
                     else {
                         no_improve_cnt_bool++;
                     }
-                    SASSERT(before_weight - get_total_weight() == best_score);
+                    int after_weight = get_total_weight();
+                    if (before_weight - after_weight != best_score) {
+                        std::cout << before_weight << std::endl;
+                        std::cout << after_weight << std::endl;
+                        std::cout << best_score << std::endl;
+                        UNREACHABLE();
+                    }
+                    // SASSERT(before_weight - get_total_weight() == best_score);
                 } else if (mode == 1) {  // arith operation
                     // slack equational clauses
                     if(use_equal_slack && equation_index != null_var) {
                         // only slack when next_value is more complex than m_min
-                        if(is_simpler(next_value, m_min)) {
-                            if(m_slack_category == poly_slack) {
-                                slack_equational_clause_using_poly(equation_index, picked_v, next_value);
-                            } else if(m_slack_category == var_slack) {
-                                // TODO: implementation
-                                UNREACHABLE();
-                            } else {
-                                UNREACHABLE();
-                            }
+                        if (is_simpler(next_value, m_min)) {
+                            std::cout << "relax clause " << equation_index << std::endl;
+                            std::cout << "next value: "; m_am.display_root(std::cout, next_value); std::cout << std::endl;
+                            slack_equational_clause_using_poly(equation_index, picked_v, next_value);
+                            std::cout << "new next value: "; m_am.display_root(std::cout, next_value); std::cout << std::endl;
+                            update_clause_score(equation_index);
                         }
                     }
                     critical_nra_move(picked_v, next_value);
@@ -2921,7 +2980,14 @@ namespace nlsat {
                     else {
                         no_improve_cnt_nra++;
                     }
-                    SASSERT(before_weight - get_total_weight() == best_score);
+                    int after_weight = get_total_weight();
+                    if (before_weight - after_weight != best_score) {
+                        std::cout << "before weight: " << before_weight << std::endl;
+                        std::cout << "after weight: " << after_weight << std::endl;
+                        std::cout << "best score: " << best_score << std::endl;
+                        UNREACHABLE();
+                    }
+                    // SASSERT(before_weight - get_total_weight() == best_score);
                 } else {
                     // No operation
                 }
@@ -2968,7 +3034,10 @@ namespace nlsat {
 
         bool check_clauses_sat() const {
             for(unsigned i = 0; i < m_nra_clauses.size(); i++) {
-                if(!is_clause_sat(m_nra_clauses[i])) {
+                nra_clause const * cls = m_nra_clauses[i];
+                if(!is_clause_sat(cls)) {
+                    std::cout << "unsat clause: ";
+                    m_solver.display(std::cout, *cls->get_clause()); std::cout << std::endl;
                     return false;
                 }
             }
