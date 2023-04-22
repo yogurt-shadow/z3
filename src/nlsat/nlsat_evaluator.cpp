@@ -469,6 +469,29 @@ namespace nlsat {
             }
         }
 
+        /* Local search version: x may not be the maximum variable of the entire
+         * polynomial. So the constant check must be changed.
+         */
+        void ls_add(poly * p, var x, sign_table & t) {
+            var_vector vars;
+            m_pm.vars(p, vars);
+            if(!vars.contains(x)){
+                t.add_const(eval_sign(p));
+            }
+            else {
+                // isolate roots of p
+                scoped_anum_vector & roots = m_add_roots_tmp;
+                svector<sign> & signs = m_add_signs_tmp;
+                roots.reset();
+                signs.reset();
+                TRACE("nlsat_evaluator", tout << "x: " << x << " max_var(p): " << m_pm.max_var(p) << "\n";);
+                // Note: I added undef_var_assignment in the following statement, to allow us to obtain the infeasible interval sets
+                // even when the maximal variable is assigned. I need this feature to minimize conflict cores.
+                m_am.isolate_roots(polynomial_ref(p, m_pm), undef_var_assignment(m_assignment, x), roots, signs);
+                t.add(roots, signs);
+            }
+        }
+
         // Evaluate the sign of p1^e1*...*pn^en (of atom a) in cell c of table t.
         sign sign_at(ineq_atom * a, sign_table const & t, unsigned c) const {
             auto sign = sign_pos;
@@ -512,7 +535,7 @@ namespace nlsat {
             TRACE("nsat_evaluator", m_solver.display(tout, *a) << "\n";);
             unsigned num_ps = a->size();
             for (unsigned i = 0; i < num_ps; i++) {
-                add(a->p(i), x, table);
+                ls_add(a->p(i), x, table);
                 TRACE("nlsat_evaluator_bug", tout << "table after:\n"; m_pm.display(tout, a->p(i)); tout << "\n"; table.display_raw(tout);); 
                 
             }

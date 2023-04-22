@@ -1306,6 +1306,22 @@ namespace nlsat {
         }
     }
 
+    bool interval_set_manager::has_infeasible_boundary(interval_set const * s, anum const & val) {
+        // Determine whether the interval set has a boundary equal to val, and where val
+        // is not within the set
+        for (unsigned j = 0; j < s->m_num_intervals; j++) {
+            if (!s->m_intervals[j].m_lower_inf && s->m_intervals[j].m_lower_open &&
+                    m_am.eq(s->m_intervals[j].m_lower, val)) {
+                return true;
+            }
+            if (!s->m_intervals[j].m_upper_inf && s->m_intervals[j].m_upper_open &&
+                    m_am.eq(s->m_intervals[j].m_upper, val)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     std::ostream& interval_set_manager::display(std::ostream & out, interval_set const * s) const {
         if (s == nullptr) {
             out << "{}";

@@ -110,12 +110,18 @@ namespace nlsat {
     public:
         const literal m_literal;
         var_table m_vars;
+
+        // List of clauses containing the literal
+        // var_vector m_clauses;
+
         // converted mult of polys (value of the atom)
         // sat: 0
         nra_literal(unsigned idx, unsigned b_idx, const literal l, bool is_bool, var_table const & vars, atom const * at)
         : m_index(idx), m_bool_index(b_idx), m_literal(l), m_is_bool(is_bool), m_vars(vars), m_atom(to_ineq_atom(at)), m_is_sat(false), 
         m_activity(0), m_slacked(false)
-        {}
+        {
+            // m_clauses.reset();
+        }
 
         bool is_bool() const {
             return m_is_bool;
