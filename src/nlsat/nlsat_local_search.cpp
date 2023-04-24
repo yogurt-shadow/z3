@@ -197,7 +197,7 @@ namespace nlsat {
                          unsigned & stuck, double & ratio, substitute_value_vector const & vec, unsigned_vector const & equal_clauses)
         : m_am(am), m_pm(pm), m_ism(ism), m_evaluator(ev), m_assignment(ass), 
         m_clauses(cls), m_atoms(ats), m_rand_seed(seed), m_solver(s), m_cutoff(1200), is_bool_search(false), is_random_walk(false),
-        use_infeasible_st(true), m_restart_count(100000), m_nra_operation_table(m_am, m_nra_operation_index, m_nra_operation_value),
+        use_infeasible_st(false), m_restart_count(100000), m_nra_operation_table(m_am, m_nra_operation_index, m_nra_operation_value),
         m_step(step), m_stuck(stuck), m_stuck_ratio(ratio), m_cache(cache), m_sub_value(vec),
         m_time_label(1), m_pure_bool_vars(pure_bool_vars), m_pure_bool_convert(pure_bool_convert), m_bvalues(bvalues),
         use_equal_slack(true), m_equal_clauses(equal_clauses)
@@ -549,7 +549,7 @@ namespace nlsat {
             if (use_infeasible_st) {
                 if (m_arith_var->m_infeasible_st != nullptr) {
                     m_ism.add_boundaries(m_arith_var->m_infeasible_st, m_arith_var->m_boundaries,
-                                        m_arith_var->m_start_score, INT_MAX / 2, UINT_MAX);
+                                         m_arith_var->m_start_score, INT_MAX / 2, UINT_MAX);
                 }
             }
 
@@ -3123,7 +3123,7 @@ namespace nlsat {
                     init_solution(false);
                     no_improve_cnt = 0;
                     m_restart_count *= 2;
-                    use_infeasible_st = !use_infeasible_st;
+                    // use_infeasible_st = !use_infeasible_st;
                 }
             }
             SPLIT_LINE(std::cout);
