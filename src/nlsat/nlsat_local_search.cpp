@@ -46,6 +46,7 @@ namespace nlsat {
         nra_arith_var_vector                                 m_arith_vars;
         // ^ arith vars that are visited
         var_table                                            m_vars_visited;
+        var_table                                            m_vars_visited2;
         // ^ literals that have been inserted from
         var_table                                            m_literal_added;
         
@@ -2200,7 +2201,7 @@ namespace nlsat {
 
             critical_subscore_nra(v, value);
             // update arith score, except when the problem is already solved
-            if (m_unsat_clauses.size() > 0) {
+            if (m_unsat_clauses.size() > 0 || use_equal_slack) {
                 update_arith_score(v, value);
             }
             nra_arith_var * v_var = m_arith_vars[v];
@@ -2920,53 +2921,36 @@ namespace nlsat {
             // m_ism.peek_in_complement(approx_set, false, value, true);
         }
 
-        bool restore_slacked_clauses() {
+        void restore_slacked_clauses() {
             // std::cout << "restore slacked clauses" << std::endl;
-            // std::cout << "starting assignment" << std::endl;
-            // m_assignment.display(std::cout);
+
+            use_equal_slack = false;
+
+            m_vars_visited2.reset();
+
             for (int i = 0; i < m_nra_literals.size(); i++) {
-                // std::cout << "i = " << i << std::endl;
                 nra_literal * curr_literal = m_nra_literals[i];
                 if (curr_literal->is_slacked()) {
-                    for (var curr_var : curr_literal->m_vars) {
-                        ineq_atom const * curr_atom = curr_literal->get_atom();
-                        SASSERT(curr_atom->get_kind() == atom::kind::EQ);
-                        interval_set_ref point_infeasible_set(m_ism);
-                        point_infeasible_set = m_evaluator.infeasible_intervals(curr_atom, false, nullptr, curr_var);
-
-                        scoped_anum dummy(m_am);
-                        scoped_anum old_value(m_am);
-                        m_am.set(old_value, m_assignment.value(curr_var));
-                        scoped_anum left(m_am), right(m_am);
-                        m_am.sub(old_value, m_slack_min, left);
-                        m_am.add(old_value, m_slack_min, right);
-
-                        literal jst(curr_atom->bvar(), neg);
-                        interval_set_ref left_bound(m_ism), right_bound(m_ism);
-                        left_bound = m_ism.mk(true, true, dummy, true, false, left, jst, nullptr);
-                        right_bound = m_ism.mk(true, false, right, true, true, dummy, jst, nullptr);
-
-                        point_infeasible_set = m_ism.mk_union(point_infeasible_set, left_bound);
-                        point_infeasible_set = m_ism.mk_union(point_infeasible_set, right_bound);
-
-                        // m_ism.display(std::cout, point_infeasible_set); std::cout << std::endl;
-                        if (m_ism.is_full(point_infeasible_set)) {
-                            continue;
+                    for (var v : curr_literal->m_vars) {
+                        if (!m_vars_visited2.contains(v)) {
+                            m_vars_visited2.insert(v);
                         }
-                        scoped_anum w(m_am);
-                        m_ism.peek_in_complement(point_infeasible_set, false, w, true);
-                        m_assignment.set(curr_var, w);
-                        // std::cout << "var: " << curr_var << std::endl;
-                        // m_am.display(std::cout, old_value); std::cout << "->";
-                        // m_am.display(std::cout, w); std::cout << std::endl;
-                        break;
                     }
+                    // std::cout << "unslack literal "; m_solver.display(std::cout, curr_literal->m_literal); std::cout << std::endl;
+                    curr_literal->unset_slack_atoms();
+
+                    scoped_anum old_value(m_am);
+                    m_am.set(old_value, m_assignment.value(curr_literal->get_slacked_var()));
+                    critical_nra_move(curr_literal->get_slacked_var(), old_value);
                 }
             }
-            // std::cout << "ending assignment" << std::endl;
-            // m_assignment.display(std::cout);
-            // std::cout << "end restore slacked clauses" << std::endl;
-            return check_clauses_sat();
+            // std::cout << "Recompute for all variables" << std::endl;
+            for (auto it = m_vars_visited2.begin(); it != m_vars_visited2.end(); it++) {
+                compute_arith_var_info(*it);
+                compute_boundary(*it);
+            }
+            // std::cout << "after restore slacked clauses" << std::endl;
+            // std::cout << "Numbber of unsat clauses: " << m_unsat_clauses.size() << std::endl;
         }
 
         /**
@@ -3010,23 +2994,26 @@ namespace nlsat {
                 //         no_improve_cnt_mode = 0;
                 //     }
                 // }
-                // Succeed
-                if(m_unsat_clauses.empty()){
+
+                // Finished stage with slack
+                if (m_unsat_clauses.empty() && use_equal_slack){
                     SPLIT_LINE(std::cout);
                     LSTRACE(
                         std::cout << "local search succeed\n";
                         tout << "local search succeed\n";
                     );
                     SPLIT_LINE(std::cout);
-                    if (restore_slacked_clauses()) {
-                        collect_bool_values();
-                        check_solution_sat();
-                        propagate_sub_values();
-                        return l_true;
-                    } else {
-                        return l_undef;
-                    }
+                    restore_slacked_clauses();
                 }
+
+                // Succeed
+                if (m_unsat_clauses.empty() && !use_equal_slack) {
+                    collect_bool_values();
+                    check_solution_sat();
+                    propagate_sub_values();
+                    return l_true;
+                }
+
                 // Fail
                 if(TimeElapsed() > m_cutoff && m_step % 100 == 0){
                     SPLIT_LINE(std::cout);

@@ -203,6 +203,12 @@ namespace nlsat {
             return m_right_atom;
         }
 
+        void unset_slack_atoms() {
+            m_slacked = false;
+            m_left_atom = nullptr;
+            m_right_atom = nullptr;
+        }
+
         ~nra_literal(){}
     };
 
