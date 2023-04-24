@@ -468,9 +468,9 @@ namespace nlsat {
                             curr_st = m_evaluator.infeasible_intervals(left_atom, !curr_literal->sign(), nullptr, v);
                             curr_st = m_ism.mk_union(curr_st, m_evaluator.infeasible_intervals(right_atom, !curr_literal->sign(), nullptr, v));
                         } else if (left_atom == nullptr) {
-                            curr_st = m_evaluator.infeasible_intervals(right_atom, !curr_literal->sign(), nullptr, v);
+                            curr_st = m_evaluator.infeasible_intervals(right_atom, curr_literal->sign(), nullptr, v);
                         } else if (right_atom == nullptr) {
-                            curr_st = m_evaluator.infeasible_intervals(left_atom, !curr_literal->sign(), nullptr, v);
+                            curr_st = m_evaluator.infeasible_intervals(left_atom, curr_literal->sign(), nullptr, v);
                         } else {
                             UNREACHABLE();
                         }
@@ -516,9 +516,9 @@ namespace nlsat {
                             curr_st = m_evaluator.infeasible_intervals(left_atom, !curr_literal->sign(), nullptr, v);
                             curr_st = m_ism.mk_union(curr_st, m_evaluator.infeasible_intervals(right_atom, !curr_literal->sign(), nullptr, v));
                         } else if (left_atom == nullptr) {
-                            curr_st = m_evaluator.infeasible_intervals(right_atom, !curr_literal->sign(), nullptr, v);
+                            curr_st = m_evaluator.infeasible_intervals(right_atom, curr_literal->sign(), nullptr, v);
                         } else if (right_atom == nullptr) {
-                            curr_st = m_evaluator.infeasible_intervals(left_atom, !curr_literal->sign(), nullptr, v);
+                            curr_st = m_evaluator.infeasible_intervals(left_atom, curr_literal->sign(), nullptr, v);
                         } else {
                             UNREACHABLE();
                         }
@@ -1313,10 +1313,28 @@ namespace nlsat {
                     ineq_atom * right_atom = (ineq_atom *) (l->get_right_atom());
                     // m_solver.display(std::cout, *left_atom); std::cout << std::endl;
                     // m_solver.display(std::cout, *right_atom); std::cout << std::endl;
-                    bool left_sat = (left_atom == nullptr || m_evaluator.eval(left_atom, !l->sign()));
-                    bool right_sat = (right_atom == nullptr || m_evaluator.eval(right_atom, !l->sign()));
-                    // std::cout << "left sat: " << left_sat << ", right sat: " << right_sat << std::endl;
-                    l->set_sat_status(left_sat && right_sat);
+                    if (left_atom != nullptr && right_atom != nullptr) {
+                        if (l->sign()) {
+                            UNREACHABLE();
+                        } 
+                        l->set_sat_status(m_evaluator.eval(left_atom, !l->sign()) &&
+                                          m_evaluator.eval(right_atom, !l->sign()));
+                    } else if (left_atom == nullptr) {
+                        if (!l->sign()) {
+                            UNREACHABLE();
+                        }
+                        l->set_sat_status(m_evaluator.eval(right_atom, l->sign()));
+                    } else if (right_atom == nullptr) {
+                        if (!l->sign()) {
+                            UNREACHABLE();
+                        }
+                        l->set_sat_status(m_evaluator.eval(left_atom, l->sign()));
+                    } else {
+                        UNREACHABLE();
+                    }
+                    // bool left_sat = (left_atom == nullptr || m_evaluator.eval(left_atom, !l->sign()));
+                    // bool right_sat = (right_atom == nullptr || m_evaluator.eval(right_atom, !l->sign()));
+                    // l->set_sat_status(left_sat && right_sat);
                 } else {
                     l->set_sat_status(m_evaluator.eval((atom *) (l->get_atom()), l->sign()));
                 }
@@ -2437,6 +2455,22 @@ namespace nlsat {
             }
         }
 
+        void reset_clause_weight(){
+            m_vars_visited.reset();
+            for (clause_index i = 0; i < m_num_clauses; i++){
+                nra_clause * curr_clause = m_nra_clauses[i];
+                curr_clause->set_weight(1);
+                for(var v : curr_clause->m_vars) {
+                    if (!m_vars_visited.contains(v)) {
+                        m_vars_visited.insert(v);
+                    }
+                }
+            }
+            for (auto it = m_vars_visited.begin(); it != m_vars_visited.end(); it++){
+                compute_boundary(*it);
+            }
+        }
+
         /**
          * Random Walk
          */
@@ -2923,9 +2957,6 @@ namespace nlsat {
 
         void restore_slacked_clauses() {
             // std::cout << "restore slacked clauses" << std::endl;
-
-            use_equal_slack = false;
-
             m_vars_visited2.reset();
 
             for (int i = 0; i < m_nra_literals.size(); i++) {
@@ -3003,6 +3034,7 @@ namespace nlsat {
                         tout << "local search succeed\n";
                     );
                     SPLIT_LINE(std::cout);
+                    use_equal_slack = false;
                     restore_slacked_clauses();
                 }
 

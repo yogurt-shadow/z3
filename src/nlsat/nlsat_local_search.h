@@ -307,6 +307,10 @@ namespace nlsat {
             m_weight--;
         }
 
+        void set_weight(unsigned weight) {
+            m_weight = weight;
+        }
+
         void set_critical_index(unsigned x){
             m_critical_index = x;
         }
