@@ -1790,14 +1790,15 @@ namespace nlsat {
                 }
                 else if (best_bool_score < best_arith_score) {
                     SASSERT(best_values.size() > 0);
-                    unsigned id = get_simplest_index(best_values);
+                    SASSERT(best_values.size() == equation_clause_indices.size());
+                    unsigned id = get_simplest_index_equations(best_values, equation_clause_indices);
                     SASSERT(id >= 0 && id < best_values.size());
                     avar = best_arith_index[id];
                     best_score = best_arith_score;
                     m_am.set(best_value, best_values[id]);
-                    // std::cout << "var: " << avar << std::endl;
-                    // std::cout << "score: " << best_score << std::endl;
-                    // std::cout << "value: "; m_am.display(std::cout, best_value); std::cout << std::endl;
+                    for (clause_index cls_idx : equation_clause_indices[id]) {
+                        equation_index.push_back(cls_idx);
+                    }
                     // avar = best_arith_index[rand_int() % best_arith_index.size()];
                     // get_best_arith_value(avar, best_arith_score, best_value);
                     return 1;  // arith operation
@@ -2581,78 +2582,88 @@ namespace nlsat {
                 else {
                     picked_v = non_zero_coeff_vars[rand_int() % non_zero_coeff_vars.size()];
                 }
-                // choose value for picked arith var
-                anum w;
-                nra_arith_var const * curr_arith = m_arith_vars[picked_v];
-                scoped_anum old_value(m_am);
-                m_am.set(old_value, m_assignment.value(picked_v));
-                interval_set_ref old_value_interval(m_ism);
-                // [old_value, old_value]
-                old_value_interval = m_ism.mk_point_interval(old_value);
-                if(m_var_value_fixed[picked_v]){
-                    m_ism.peek_in_complement(old_value_interval, false, w, true);
-                }
-                else {
-                    interval_set_ref curr_st(m_ism);
-                    curr_st = m_ism.mk_union(old_value_interval, curr_arith->m_infeasible_st);
-                    // happens for ==
-                    // in this case, we ignore infeasible set, and choose a value except old value
-                    if(m_ism.is_full(curr_st)){
-                        m_var_value_fixed[picked_v] = true;
-                        m_ism.peek_in_complement(old_value_interval, false, w, true);
-                    }
-                    // we sample values for the arith var, then check stuck situation
-                    else {
-                        anum_vector sample_values;
-                        random_move(old_value, curr_arith->m_infeasible_st, sample_values);
-                        // sample_values.push_back(m_one);
-                        // m_ism.peek_in_complement_heuristic(curr_st, sample_values);
-                        // std::cout << "curr_st: "; m_ism.display(std::cout, curr_st); std::cout << std::endl;
-                        // for (int i = 0; i < sample_values.size(); i++) {
-                        //     std::cout << "sample value "; m_am.display(std::cout, sample_values[i]); std::cout << std::endl;
-                        // }
-                        // anum w;
-                        // m_ism.peek_in_complement(curr_st, false, w, true);
-                        // sample_values.push_back(w);
-                        bool still_stuck = true;
-                        // SASSERT(!sample_values.empty());
-                        // for (auto ele: sample_values){
-                        //     m_assignment.set(picked_v, ele);
-                        //     if(!is_literal_stuck(lit)){
-                        //         m_am.set(w, ele);
-                        //         // restore assignment
-                        //         m_assignment.set(picked_v, old_value);
-                        //         still_stuck = false;
-                        //         break;
-                        //     }
-                        //     else {
-                        //         // restore assignment
-                        //         m_assignment.set(picked_v, old_value);
-                        //     }
-                        // }
 
-                        if (still_stuck) {
-                            anum best_dist, curr_dist;
-                            int best_index = 0;
-                            m_assignment.set(picked_v, sample_values[0]);
-                            dist_to(lit, best_dist);
-                            for (int i = 1; i < sample_values.size(); i++) {
-                                m_assignment.set(picked_v, sample_values[i]);
-                                dist_to(lit, curr_dist);
-                                if (m_am.lt(curr_dist, best_dist)) {
-                                    m_am.set(best_dist, curr_dist);
-                                    best_index = i;
-                                }
-                            }
-                            m_assignment.set(picked_v, old_value);
-                            m_am.set(w, sample_values[best_index]);
-                            // m_am.set(w, sample_values[rand_int() % sample_values.size()]);
-                        }
-                    }
-                }
-                // std::cout << "choose value "; m_am.display(std::cout, w); std::cout << std::endl;
+                int pos = rand_int() % 2047 - 1023;  // [-1023, 1023]
+                scoped_anum num(m_am), denom(m_am), w(m_am);
+                m_am.set(num, pos);
+                m_am.set(denom, 1024);
+                m_am.div(num, denom, w);
+                m_assignment.set(picked_v, w);
                 critical_nra_move(picked_v, w);
                 return;
+
+                // // choose value for picked arith var
+                // anum w;
+                // nra_arith_var const * curr_arith = m_arith_vars[picked_v];
+                // scoped_anum old_value(m_am);
+                // m_am.set(old_value, m_assignment.value(picked_v));
+                // interval_set_ref old_value_interval(m_ism);
+                // // [old_value, old_value]
+                // old_value_interval = m_ism.mk_point_interval(old_value);
+                // if(m_var_value_fixed[picked_v]){
+                //     m_ism.peek_in_complement(old_value_interval, false, w, true);
+                // }
+                // else {
+                //     interval_set_ref curr_st(m_ism);
+                //     curr_st = m_ism.mk_union(old_value_interval, curr_arith->m_infeasible_st);
+                //     // happens for ==
+                //     // in this case, we ignore infeasible set, and choose a value except old value
+                //     if(m_ism.is_full(curr_st)){
+                //         m_var_value_fixed[picked_v] = true;
+                //         m_ism.peek_in_complement(old_value_interval, false, w, true);
+                //     }
+                //     // we sample values for the arith var, then check stuck situation
+                //     else {
+                //         anum_vector sample_values;
+                //         random_move(old_value, curr_arith->m_infeasible_st, sample_values);
+                //         // sample_values.push_back(m_one);
+                //         // m_ism.peek_in_complement_heuristic(curr_st, sample_values);
+                //         // std::cout << "curr_st: "; m_ism.display(std::cout, curr_st); std::cout << std::endl;
+                //         // for (int i = 0; i < sample_values.size(); i++) {
+                //         //     std::cout << "sample value "; m_am.display(std::cout, sample_values[i]); std::cout << std::endl;
+                //         // }
+                //         // anum w;
+                //         // m_ism.peek_in_complement(curr_st, false, w, true);
+                //         // sample_values.push_back(w);
+                //         bool still_stuck = true;
+                //         // SASSERT(!sample_values.empty());
+                //         // for (auto ele: sample_values){
+                //         //     m_assignment.set(picked_v, ele);
+                //         //     if(!is_literal_stuck(lit)){
+                //         //         m_am.set(w, ele);
+                //         //         // restore assignment
+                //         //         m_assignment.set(picked_v, old_value);
+                //         //         still_stuck = false;
+                //         //         break;
+                //         //     }
+                //         //     else {
+                //         //         // restore assignment
+                //         //         m_assignment.set(picked_v, old_value);
+                //         //     }
+                //         // }
+
+                //         if (still_stuck) {
+                //             anum best_dist, curr_dist;
+                //             int best_index = 0;
+                //             m_assignment.set(picked_v, sample_values[0]);
+                //             dist_to(lit, best_dist);
+                //             for (int i = 1; i < sample_values.size(); i++) {
+                //                 m_assignment.set(picked_v, sample_values[i]);
+                //                 dist_to(lit, curr_dist);
+                //                 if (m_am.lt(curr_dist, best_dist)) {
+                //                     m_am.set(best_dist, curr_dist);
+                //                     best_index = i;
+                //                 }
+                //             }
+                //             m_assignment.set(picked_v, old_value);
+                //             m_am.set(w, sample_values[best_index]);
+                //             // m_am.set(w, sample_values[rand_int() % sample_values.size()]);
+                //         }
+                //     }
+                // }
+                // // std::cout << "choose value "; m_am.display(std::cout, w); std::cout << std::endl;
+                // critical_nra_move(picked_v, w);
+                // return;
 
                 // // choose value for picked arith var
                 // anum w;
@@ -2896,6 +2907,9 @@ namespace nlsat {
             // std::cout << "Number of clauses: " << c_idxs.size() << std::endl;
             for (unsigned i = 0; i < c_idxs.size(); i++) {
                 clause_index c_idx = c_idxs[i];
+                if (c_idx == UINT_MAX) {
+                    continue;
+                }
                 nra_clause * cls = m_nra_clauses[c_idx];
                 // std::cout << "Clause " << c_idx << ", number of literals: " << cls->m_literals.size() << std::endl;
                 bool relaxed = false;
