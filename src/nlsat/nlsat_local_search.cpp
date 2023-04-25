@@ -1405,27 +1405,6 @@ namespace nlsat {
             return null_var;
         }
 
-        void insert_in_complement(var v, interval_set const * s, literal_index l_idx){
-            SASSERT(!m_ism.is_full(s));
-            LSTRACE(
-                tout << "insertion var " << v << std::endl;
-                tout << "show set of insert: "; m_ism.display(tout, s); tout << std::endl;
-            );
-            anum_vector w_vec;
-            m_ism.peek_in_complement_heuristic(s, w_vec);
-            for(auto ele: w_vec){
-                if(m_assignment.is_assigned(v) && m_am.eq(ele, m_assignment.value(v))){
-                    continue;
-                }
-                if(m_nra_operation_table.contains(v, ele)){
-                    continue;
-                }
-                m_nra_operation_index.push_back(v);
-                m_nra_operation_value.push_back(ele);
-                m_nra_operation_literal_index.push_back(l_idx);
-            }
-        }
-
         unsigned rand_int(){
             return m_rand();
         }
@@ -1737,34 +1716,6 @@ namespace nlsat {
                 }
             }
             return best_arith_index;
-        }
-
-        void add_literal_arith_operation(nra_literal const * l){
-            LSTRACE(tout << "add operation for literal\n";
-                m_solver.display(tout, l->m_literal); tout << std::endl;
-            );
-            SASSERT(l->is_arith());
-            if(m_literal_added.contains(l->get_index())){
-                return;
-            }
-            m_literal_added.insert(l->get_index());
-            for(var v: l->m_vars){
-                nra_arith_var const * curr_arith = m_arith_vars[v];
-                if(m_step <= curr_arith->get_tabu()){
-                    continue;
-                }
-                interval_set_ref curr_st(m_ism);
-                curr_st = m_evaluator.infeasible_intervals(l->get_atom(), l->sign(), nullptr, v);
-                if(m_ism.is_full(curr_st)){
-                    continue;
-                }
-                interval_set_ref union_st(m_ism);
-                union_st = m_ism.mk_union(curr_st, curr_arith->m_infeasible_st);
-                if(m_ism.is_full(union_st)){
-                    continue;
-                }
-                insert_in_complement(v, union_st, l->get_index());
-            }
         }
 
         // pick var with coeff !=0, move to zero
@@ -2372,82 +2323,34 @@ namespace nlsat {
             }
         }
 
-        /**
-         * Random Walk
-         */
-        void random_walk(){
-            SASSERT(!m_unsat_clauses.empty());
-            LSTRACE(tout << "start of random walk\n";);
-            reset_arith_operation();
-            m_bool_operation_index.reset();
-            
-            // intsert operations
-            for(unsigned i = 0; i < 3 && m_bool_operation_index.size() + m_nra_operation_index.size() < 5; i++){
-                // ^ random choose a clause
-                clause_index c_idx = m_unsat_clauses[rand_int() % m_unsat_clauses.size()];
-                nra_clause const * curr_clause = m_nra_clauses[c_idx];
-                LSTRACE(tout << "consider clause "; m_solver.display(tout, *curr_clause->get_clause()); tout << std::endl;);
-                // LSTRACE(display_var_set(tout, curr_clause->m_arith_literals));
-                // loop arith literals
-                // ^ add arith literal operations in this clause
-                for(literal_index l_idx: curr_clause->m_arith_literals){
-                    nra_literal const * curr_literal = m_nra_literals[l_idx];
-                    add_literal_arith_operation(curr_literal);   
-                }
-                // ^ add bool literal operations in this clause
-                // loop bool literals
-                for(literal_index l_idx: curr_clause->m_bool_literals){
-                    nra_literal const * curr_literal = m_nra_literals[l_idx];
-                    SASSERT(curr_literal->is_bool());
-                    LSTRACE(tout << "consider literal "; m_solver.display(tout, curr_literal->m_literal); tout << std::endl;);
-                    bool_var b = curr_literal->get_bool_index();
-                    if(m_bool_is_chosen[b]){
-                        continue;
-                    }
-                    m_bool_operation_index.push_back(b);
-                    m_bool_is_chosen[b] = true;
-                }
+        void random_move(anum const & old_value, interval_set const * s, anum_vector & vec) {
+            // Starting from current value, randomly move to another value
+            vec.reset();
+            if (is_int(old_value)) {
+                anum low_int, upp_int;
+                m_am.add(old_value, m_min, upp_int);
+                m_am.sub(old_value, m_min, low_int);
+                vec.push_back(low_int);
+                vec.push_back(upp_int);
             }
-            // end of insert operations, choose best operation (arith and bool)
-            // restore chosen bool variables
-            reset_chosen_bool();
-            LSTRACE(tout << "[debug] nra size: " << m_nra_operation_index.size() << std::endl;
-                display_arith_operations(tout);
-            );
-            LSCTRACE(m_nra_operation_index.empty() && m_bool_operation_index.empty(), tout << "stuck in random walk operation\n";);
+            anum low_int2, upp_int2;
+            int_gt(old_value, upp_int2);
+            int_lt(old_value, low_int2);
+            vec.push_back(low_int2);
+            vec.push_back(upp_int2);
+        }
 
-            // make move
-            if(m_bool_operation_index.size() + m_nra_operation_index.size() == 0){
-                LSTRACE(tout << "empty operation, return\n";
-                    show_ls_assignment(tout);
-                );
-                m_stuck++;
-                m_stuck_ratio = 1.0 * m_stuck / m_step;
-                no_operation_random_walk();
-                return;
-            }
-            // arith move
-            if(m_bool_operation_index.empty() || (m_bool_operation_index.size() > 0 && m_nra_operation_index.size() > 0 && !is_bool_search)){
-                anum best_arith_value;
-                literal_index best_literal_index;
-                int best_arith_score = INT_MIN;
-                var best_arith_index = select_best_from_arith_operations(best_arith_score, best_arith_value, best_literal_index);
-                SASSERT(best_arith_index != null_var);
-                LSTRACE(tout << "critical nra move in random walk\n";
-                    tout << "best arith index: " << best_arith_index << std::endl;
-                );
-                critical_nra_move(best_arith_index, best_arith_value);
-            }
-            // bool move
-            else {
-                SASSERT(!m_bool_operation_index.empty());
-                // loop bool operation
-                int best_bool_score = INT_MIN;
-                bool_var best_bool_index = select_best_from_bool_operations(best_bool_score);
-                SASSERT(best_bool_index != null_var);
-                LSTRACE(tout << "critical bool move in random walk\n";);
-                critical_bool_move(best_bool_index);
-            }
+        void dist_to(nra_literal const * lit, anum & dist) {
+            ineq_atom const * a = lit->get_atom();
+            atom::kind k = a->get_kind();
+            bool neg = lit->sign();
+
+            polynomial_ref curr_p(m_pm);
+            curr_p = get_atom_polys(a);
+
+            scoped_anum val(m_am);
+            m_pm.eval(curr_p, m_assignment, val);
+            set_abs_anum(val, dist);
         }
 
         void no_operation_random_walk(){
@@ -2508,39 +2411,53 @@ namespace nlsat {
                     // we sample values for the arith var, then check stuck situation
                     else {
                         anum_vector sample_values;
+                        random_move(old_value, curr_arith->m_infeasible_st, sample_values);
+                        // sample_values.push_back(m_one);
+                        // m_ism.peek_in_complement_heuristic(curr_st, sample_values);
+                        // std::cout << "curr_st: "; m_ism.display(std::cout, curr_st); std::cout << std::endl;
+                        // for (int i = 0; i < sample_values.size(); i++) {
+                        //     std::cout << "sample value "; m_am.display(std::cout, sample_values[i]); std::cout << std::endl;
+                        // }
+                        // anum w;
                         // m_ism.peek_in_complement(curr_st, false, w, true);
-                        m_ism.peek_in_complement_heuristic(curr_st, sample_values);
+                        // sample_values.push_back(w);
                         bool still_stuck = true;
-                        SASSERT(!sample_values.empty());
-                        for(auto ele: sample_values){
-                            m_assignment.set(picked_v, ele);
-                            if(!is_literal_stuck(lit)){
-                                m_am.set(w, ele);
-                                // restore assignment
-                                m_assignment.set(picked_v, old_value);
-                                still_stuck = false;
-                                break;
+                        // SASSERT(!sample_values.empty());
+                        // for (auto ele: sample_values){
+                        //     m_assignment.set(picked_v, ele);
+                        //     if(!is_literal_stuck(lit)){
+                        //         m_am.set(w, ele);
+                        //         // restore assignment
+                        //         m_assignment.set(picked_v, old_value);
+                        //         still_stuck = false;
+                        //         break;
+                        //     }
+                        //     else {
+                        //         // restore assignment
+                        //         m_assignment.set(picked_v, old_value);
+                        //     }
+                        // }
+
+                        if (still_stuck) {
+                            anum best_dist, curr_dist;
+                            int best_index = 0;
+                            m_assignment.set(picked_v, sample_values[0]);
+                            dist_to(lit, best_dist);
+                            for (int i = 1; i < sample_values.size(); i++) {
+                                m_assignment.set(picked_v, sample_values[i]);
+                                dist_to(lit, curr_dist);
+                                if (m_am.lt(curr_dist, best_dist)) {
+                                    m_am.set(best_dist, curr_dist);
+                                    best_index = i;
+                                }
                             }
-                            else {
-                                // restore assignment
-                                m_assignment.set(picked_v, old_value);
-                            }
-                        }
-                        // still stuck, we random select one value
-                        if(still_stuck){
-                            LSTRACE(tout << "still stuck\n";);
-                            // we use CAD
-                            // if(!cad_move(lit, picked_v, w)){
-                                LSTRACE(std::cout << "cad failed\n";);
-                                LSTRACE(tout << "cad failed, we random choose a value\n";);
-                                m_am.set(w, sample_values[rand_int() % sample_values.size()]);
-                            // }
-                            // else {
-                                LSTRACE(std::cout << "cad succeed\n";);
-                            // }
+                            m_assignment.set(picked_v, old_value);
+                            m_am.set(w, sample_values[best_index]);
+                            // m_am.set(w, sample_values[rand_int() % sample_values.size()]);
                         }
                     }
                 }
+                // std::cout << "choose value "; m_am.display(std::cout, w); std::cout << std::endl;
                 critical_nra_move(picked_v, w);
             }
         }
@@ -2662,40 +2579,6 @@ namespace nlsat {
             LSTRACE(tout << "exit literal stuck\n";);
             return true;
         }
-
-        /**
-         * Swap Operation
-         */
-        void add_swap_operation(){
-            LSTRACE(tout << "start of add swap operation\n";);
-            SASSERT(!m_sat_clause_with_false_literals.empty());
-            if(m_sat_clause_with_false_literals.size() < 20){
-                for(unsigned i = 0; i < m_sat_clause_with_false_literals.size(); i++){
-                    nra_clause const * cls = m_nra_clauses[m_sat_clause_with_false_literals[i]];
-                    for(literal_index l_idx: cls->m_arith_literals){
-                        nra_literal const * lit = m_nra_literals[l_idx];
-                        // only consider false literal
-                        if(!lit->get_sat_status()){
-                            add_literal_arith_operation(lit);   
-                        }
-                    }
-                }
-            }
-            else {
-                for(unsigned i = 0; m_nra_operation_index.size() < 20 && i < 50; i++){
-                    clause_index c_idx = m_sat_clause_with_false_literals[rand_int() % m_sat_clause_with_false_literals.size()];
-                    nra_clause const * cls = m_nra_clauses[c_idx];
-                    for(literal_index l_idx: cls->m_arith_literals){
-                        nra_literal const * lit = m_nra_literals[l_idx];
-                        if(!lit->get_sat_status()){
-                            add_literal_arith_operation(lit);
-                        }
-                    }
-                }
-            }
-            LSTRACE(tout << "end of add swap operation\n";);
-        }
-
 
         // TRACE
         // std::ostream & check_solution_sat(std::ostream & out){
