@@ -237,18 +237,23 @@ namespace nlsat {
         unsigned               m_irrational_assignments; // number of irrational witnesses
 
         // wzh ls
-        unsigned m_ls_solved;
-        unsigned m_ls_pair_cm;
-        unsigned m_ls_step;
-        unsigned m_ls_stuck;
-        double m_ls_stuck_ratio;
-        unsigned m_cad_move, m_cad_succeed;
-        unsigned m_poly_bound;
+        unsigned               m_ls_solved;
+        unsigned               m_ls_pair_cm;
+        unsigned               m_ls_step;
+        unsigned               m_ls_stuck;
+        double                 m_ls_stuck_ratio;
+        unsigned               m_cad_move, m_cad_succeed;
+        unsigned               m_poly_bound;
         // hzw ls
 
         // basic information
-        unsigned m_num_clauses;
-        unsigned m_num_literals;
+        unsigned               m_num_clauses;
+        unsigned               m_num_literals;
+
+        // equation statistics
+        unsigned               m_num_eq_atoms;
+        unsigned               m_num_clauses_with_eq;
+        unsigned               m_num_eq_clauses;
 
         imp(solver& s, ctx& c):
             m_ctx(c),
@@ -271,7 +276,7 @@ namespace nlsat {
             m_display_assumption(nullptr),
             m_explain(s, m_assignment, m_cache, m_atoms, m_var2eq, m_evaluator),
             // wzh ls
-            m_lsh(s, m_am, m_pm, m_cache, m_ism, m_evaluator, m_assignment, m_bvalues, m_clauses, m_atoms, m_pure_bool_vars, m_pure_bool_convert, m_random_seed, m_ls_step, m_ls_stuck, m_ls_stuck_ratio, m_sub_values),
+            m_lsh(s, m_am, m_pm, m_cache, m_ism, m_evaluator, m_assignment, m_bvalues, m_clauses, m_atoms, m_pure_bool_vars, m_pure_bool_convert, m_random_seed, m_ls_step, m_ls_stuck, m_ls_stuck_ratio, m_sub_values, m_equal_clauses),
             // hzw ls
             m_scope_lvl(0),
             m_lemma(s),
@@ -1740,12 +1745,35 @@ namespace nlsat {
             for(unsigned i = 0; i < m_le_cls.size(); i++){
                 del_clause(m_le_cls[i], m_clauses);
             }
-            collect_equal_clauses();
             LSTRACE(tout << "end of simplify clauses\n";
                 display_atoms(tout);
             );
         }
 
+        void analyze_equal_problems() {
+            for(unsigned i = 0; i < m_clauses.size(); i++) {
+                clause const & cls = *m_clauses[i];
+                bool have_eq = false;
+                for(literal l: cls) {
+                    if(m_atoms[l.var()] == nullptr) {
+                        continue;
+                    }
+                    atom * a = m_atoms[l.var()];
+                    if(!l.sign() && a->get_kind() == atom::EQ) {
+                        m_num_eq_atoms++;
+                        have_eq = true;
+                    }
+                }
+                if(have_eq) {
+                    m_num_clauses_with_eq++;
+                    if(cls.size() == 1) {
+                        m_num_eq_clauses++;
+                    }
+                }
+            }
+        }
+
+        // unit equational clauses
         var_vector m_equal_clauses;
 
         void collect_equal_clauses(){
@@ -1790,6 +1818,16 @@ namespace nlsat {
             }
             return true;
         }
+
+        std::ostream & display_equal_clauses(std::ostream & out) const {
+            out << "display equal clauses\n";
+            out << "size: " << m_equal_clauses.size() << std::endl;
+            for(auto ele: m_equal_clauses) {
+                const clause & cls = *(m_clauses[ele]);
+                out << cls.size() << std::endl;
+            }
+            return out;
+        }
         // hzw ls
 
 
@@ -1812,23 +1850,28 @@ namespace nlsat {
             }
 
             if(m_local_search){
+                simplify_equational_clauses();
+                collect_equal_clauses();
+                analyze_equal_problems();
+                // display_equal_clauses(std::cout);
+
                 // if(m_ls_simplify){
-                if(true){
+                if(false) {
                     LSTRACE(
                         std::cout << "enable local search simplify\n";
                         tout << "before local search simplify\n";
                         display_clauses(tout);
                     );
-                    simplify_equational_clauses();
                     if (!local_search_simplify()) {
                         return l_false;
                     }
+                    // recollect equational clauses
+                    collect_equal_clauses();
                     LSTRACE(
                         tout << "after local search simplify\n";
                         display_clauses(tout);
                     );
-                }
-                else {
+                } else {
                     LSTRACE(std::cout << "disable local search simplify\n";);
                 }
                 init_pure_bool();
@@ -2561,6 +2604,12 @@ namespace nlsat {
             st.update("nlsat arith vars", num_vars());
             st.update("nlsat bool vars", m_num_pure_bools);
             // basic
+
+            // equation
+            st.update("nlsat equation atoms", m_num_eq_atoms);
+            st.update("nlsat equation unit clauses", m_num_eq_clauses);
+            st.update("nlsat clauses with equations", m_num_clauses_with_eq);
+            // equation
         }
 
         void reset_statistics() {
@@ -2584,6 +2633,12 @@ namespace nlsat {
             m_num_literals = 0;
             m_num_pure_bools = 0;
             // basic
+
+            // equation
+            m_num_eq_atoms = 0;
+            m_num_eq_clauses = 0;
+            m_num_clauses_with_eq = 0;
+            // equation
         }
 
         // -----------------------

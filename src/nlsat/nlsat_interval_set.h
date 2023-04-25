@@ -41,7 +41,13 @@ namespace nlsat {
         anum value;
         bool is_open;
         int score;
-        anum_boundary(anum const & _v, bool _is_open, int _score): value(_v), is_open(_is_open), score(_score) {}
+        // insertion from
+        unsigned_vector m_clauses;
+        anum_boundary(anum const & _v, bool _is_open, int _score, unsigned c_idx): value(_v), is_open(_is_open), score(_score) 
+        {
+            m_clauses.reset();
+            m_clauses.push_back(c_idx);
+        }
     };
 
     struct lt_anum_boundary {
@@ -162,11 +168,15 @@ namespace nlsat {
         */
         void peek_in_complement(interval_set const * s, bool is_int, anum & w, bool randomize);
 
-        void push_boundary(vector<anum_boundary> & boundaries, anum const & val, bool is_open, int inc_weight);
+        void push_boundary(vector<anum_boundary> & boundaries, anum const & val, bool is_open, int inc_weight, unsigned c_idx);
+
+        void add_boundaries(interval_set const * s, vector<anum_boundary> & boundaries, int & start_score, int weight, unsigned c_idx);
 
         void add_boundaries(interval_set const * s, vector<anum_boundary> & boundaries, int & start_score, int weight);
 
         bool contain_both_infinities(interval_set const * s);
+
+        bool has_infeasible_boundary(interval_set const * s, anum const & val);
     };
 
     typedef obj_ref<interval_set, interval_set_manager> interval_set_ref;

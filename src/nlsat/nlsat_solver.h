@@ -94,7 +94,6 @@ namespace nlsat {
            \pre sz > 0
         */
         bool_var mk_ineq_atom(atom::kind k, unsigned sz, poly * const * ps, bool const * is_even);
-
         /**
            \brief Create a literal for the p=0, p<0, p>0.
            Where p = ps[0]^e[0]*...*ps[sz-1]^e[sz-1]  for sz > 0

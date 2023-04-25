@@ -98,14 +98,24 @@ namespace nlsat {
         bool m_is_sat;
         // count of critical nra move
         unsigned m_activity;
+
+        // Information about slack clauses
+        // The original condition is p = 0
+
+        bool m_slacked;     // whether the equation is slacked
+        var m_slacked_var;  // variable assignment that caused slack
+        ineq_atom const * m_left_atom;   // the atom !(p + slack < 0)
+        ineq_atom const * m_right_atom;  // the atom !(p - slack > 0)
+
     public:
         const literal m_literal;
         var_table m_vars;
+
         // converted mult of polys (value of the atom)
         // sat: 0
         nra_literal(unsigned idx, unsigned b_idx, const literal l, bool is_bool, var_table const & vars, atom const * at)
         : m_index(idx), m_bool_index(b_idx), m_literal(l), m_is_bool(is_bool), m_vars(vars), m_atom(to_ineq_atom(at)), m_is_sat(false), 
-        m_activity(0)
+        m_activity(0), m_slacked(false)
         {}
 
         bool is_bool() const {
@@ -163,6 +173,35 @@ namespace nlsat {
 
         bool operator==(nra_literal other) const {
             return this->m_literal.sign() == other.m_literal.sign() && this->m_literal.var() == other.m_literal.var();
+        }
+
+        void set_slack_atoms(var slacked_var, ineq_atom * const left_atom, ineq_atom * const right_atom) {
+            m_slacked = true;
+            m_slacked_var = slacked_var;
+            m_left_atom = left_atom;
+            m_right_atom = right_atom;
+        }
+
+        bool is_slacked() const {
+            return m_slacked;
+        }
+
+        var get_slacked_var() const {
+            return m_slacked_var;
+        }
+
+        const ineq_atom * get_left_atom() const {
+            return m_left_atom;
+        }
+
+        const ineq_atom * get_right_atom() const {
+            return m_right_atom;
+        }
+
+        void unset_slack_atoms() {
+            m_slacked = false;
+            m_left_atom = nullptr;
+            m_right_atom = nullptr;
         }
 
         ~nra_literal(){}
@@ -261,6 +300,10 @@ namespace nlsat {
 
         void dec_weight(){
             m_weight--;
+        }
+
+        void set_weight(unsigned weight) {
+            m_weight = weight;
         }
 
         void set_critical_index(unsigned x){
@@ -475,26 +518,12 @@ namespace nlsat {
         ls_helper(solver & s, anum_manager & am, pmanager & pm, polynomial::cache & cache, interval_set_manager & ism, evaluator & ev, 
                          assignment & ass, svector<lbool> & bvalues, clause_vector const & cls, atom_vector const & ats, bool_var_vector const & pure_bool_vars, 
                          bool_var_vector const & pure_bool_convert, 
-                        unsigned seed, unsigned & step, unsigned & stuck, double & ratio, substitute_value_vector const & vec);
+                        unsigned seed, unsigned & step, unsigned & stuck, double & ratio, substitute_value_vector const & vec, unsigned_vector const & eq_clauses);
 
         ~ls_helper();
 
         lbool local_search();
 
         void set_var_num(unsigned x);
-    };
-
-    /**
-     * 2022/08/31
-     * literal activity for critical move
-     * add operation for top more literals
-     */
-    struct arith_literal_activity {
-        const nra_literal_vector & m_nra_literals;
-        arith_literal_activity(nra_literal_vector const & vec): m_nra_literals(vec) {}
-
-        bool operator()(literal_index v1, literal_index v2) const {
-            return m_nra_literals[v1]->get_activity() == m_nra_literals[v2]->get_activity() ? v1 < v2 : m_nra_literals[v1]->get_activity() > m_nra_literals[v2]->get_activity();
-        }
     };
 };
