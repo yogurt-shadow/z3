@@ -2975,6 +2975,8 @@ namespace nlsat {
                     use_equal_slack = false;
                     restore_slacked_clauses();
                     reset_clause_weight();
+                    m_best_found_restart = m_unsat_clauses.size();
+                    no_improve_cnt = 0;
                     // if (m_unsat_clauses.size() > 0) {
                     //     return l_undef;
                     // }
@@ -2997,10 +2999,10 @@ namespace nlsat {
                 }
                 // Main
                 LSTRACE(tout << "enter main procedure\n";);
-                is_random_walk = (rand_int() % 100 < 30);
-                // if (use_equal_slack) {
+                is_random_walk = false;
+                //     if (use_equal_slack) {
+                //     is_random_walk = (rand_int() % 100 < 30);
                 // } else {
-                //     is_random_walk = false;
                 // }
                 bool time_up_bool = no_improve_cnt_bool * m_num_unsat_literals > 5 * m_num_bool_unsat_literals;
                 bool time_up_nra = no_improve_cnt_nra * m_num_unsat_literals > 20 * (m_num_unsat_literals - m_num_bool_unsat_literals);
@@ -3054,6 +3056,18 @@ namespace nlsat {
                         scoped_anum old_value(m_am);
                         m_am.set(old_value, m_assignment.value(picked_v));
                         critical_nra_move(picked_v, old_value);
+
+                        // int curr_score = get_best_arith_score(picked_v);
+                        // scoped_anum w(m_am);
+                        // svector<clause_index> eq_idx;
+                        // get_best_arith_value(picked_v, curr_score, w, eq_idx);
+                        // if (is_simpler(w, m_slack_min) && eq_idx.size() > 0) {
+                        //     UNREACHABLE();
+                        // }
+
+                        // scoped_anum old_value(m_am);
+                        // m_am.set(old_value, m_assignment.value(picked_v));
+                        // critical_nra_move(picked_v, w);
                     } else {
                         critical_nra_move(picked_v, next_value);
                         // update arith improvement
@@ -3090,6 +3104,13 @@ namespace nlsat {
                     no_improve_cnt_mode++;
                 }
 
+                // Restart for recover stage
+                // if (!use_equal_slack && no_improve_cnt > 10) {
+                //     init_solution(true);
+                //     no_improve_cnt = 0;
+                //     use_equal_slack = true;
+                // }
+
                 // Small restart
                 if (no_improve_cnt > 300){
                     LSTRACE(tout << "no improve count: " << no_improve_cnt << std::endl;
@@ -3101,6 +3122,7 @@ namespace nlsat {
                         SPLIT_LINE(tout);
                     );
                     init_solution(false);
+                    use_equal_slack = true;
                     no_improve_cnt = 0;
                     use_infeasible_st = !use_infeasible_st;
                     m_restart_count += 1;
