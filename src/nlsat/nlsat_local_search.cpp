@@ -191,7 +191,7 @@ namespace nlsat {
         imp(solver & s, anum_manager & am, pmanager & pm, polynomial::cache & cache, interval_set_manager & ism, evaluator & ev, 
                          assignment & ass, svector<lbool> & bvalues, clause_vector const & cls, atom_vector const & ats, bool_var_vector const & pure_bool_vars, 
                          bool_var_vector const & pure_bool_convert, unsigned seed, unsigned & step, 
-                         unsigned & stuck, double & ratio, substitute_value_vector const & vec, unsigned_vector const & equal_clauses)
+                         unsigned & stuck, double & ratio, substitute_value_vector const & vec)
         : m_am(am), m_pm(pm), m_ism(ism), m_evaluator(ev), m_assignment(ass), m_threshold(10), m_slack_threshold(10000),
         m_clauses(cls), m_atoms(ats), m_rand_seed(seed), m_solver(s), m_cutoff(1200), is_bool_search(false), is_random_walk(false),
         use_infeasible_st(true), m_restart_count(0), m_nra_operation_table(m_am, m_nra_operation_index, m_nra_operation_value),
@@ -3386,9 +3386,9 @@ namespace nlsat {
     ls_helper::ls_helper(solver & s, anum_manager & am, pmanager & pm, polynomial::cache & cache, interval_set_manager & ism, evaluator & ev, 
                          assignment & ass, svector<lbool> & bvalues, clause_vector const & cls, atom_vector const & ats, bool_var_vector const & pure_bool_vars, 
                          bool_var_vector const & pure_bool_convert, 
-                        unsigned seed, unsigned & step, unsigned & stuck, double & ratio, substitute_value_vector const & vec, unsigned_vector const & eq_clauses
+                        unsigned seed, unsigned & step, unsigned & stuck, double & ratio, substitute_value_vector const & vec
                          ){
-        m_imp = alloc(imp, s, am, pm, cache, ism, ev, ass, bvalues, cls, ats, pure_bool_vars, pure_bool_convert, seed, step, stuck, ratio, vec, eq_clauses);
+        m_imp = alloc(imp, s, am, pm, cache, ism, ev, ass, bvalues, cls, ats, pure_bool_vars, pure_bool_convert, seed, step, stuck, ratio, vec);
     }
 
     ls_helper::~ls_helper(){

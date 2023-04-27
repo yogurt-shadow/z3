@@ -276,7 +276,7 @@ namespace nlsat {
             m_display_assumption(nullptr),
             m_explain(s, m_assignment, m_cache, m_atoms, m_var2eq, m_evaluator),
             // wzh ls
-            m_lsh(s, m_am, m_pm, m_cache, m_ism, m_evaluator, m_assignment, m_bvalues, m_clauses, m_atoms, m_pure_bool_vars, m_pure_bool_convert, m_random_seed, m_ls_step, m_ls_stuck, m_ls_stuck_ratio, m_sub_values, m_equal_clauses),
+            m_lsh(s, m_am, m_pm, m_cache, m_ism, m_evaluator, m_assignment, m_bvalues, m_clauses, m_atoms, m_pure_bool_vars, m_pure_bool_convert, m_random_seed, m_ls_step, m_ls_stuck, m_ls_stuck_ratio, m_sub_values),
             // hzw ls
             m_scope_lvl(0),
             m_lemma(s),
@@ -1850,23 +1850,25 @@ namespace nlsat {
             }
 
             if(m_local_search){
-                simplify_equational_clauses();
-                collect_equal_clauses();
-                analyze_equal_problems();
-                // display_equal_clauses(std::cout);
-
                 // if(m_ls_simplify){
-                if(false) {
+                if(true) {
+                    unsigned num = num_vars();
+                    var_info_collector collector(m_pm, m_atoms, num);
+                    collector.collect(m_clauses);
+                    collector.collect(m_learned);
+
                     LSTRACE(
                         std::cout << "enable local search simplify\n";
                         tout << "before local search simplify\n";
                         display_clauses(tout);
                     );
-                    if (!local_search_simplify()) {
-                        return l_false;
+                    // display_clauses(std::cout);
+                    simplify_equational_clauses();
+                    if (!local_search_simplify(collector)) {
+                        UNREACHABLE();
                     }
-                    // recollect equational clauses
-                    collect_equal_clauses();
+                    // std::cout << "after" << std::endl;
+                    // display_clauses(std::cout);
                     LSTRACE(
                         tout << "after local search simplify\n";
                         display_clauses(tout);
@@ -3086,7 +3088,7 @@ namespace nlsat {
 
         substitute_value_vector m_sub_values;
 
-        bool local_search_simplify() {
+        bool local_search_simplify(var_info_collector & collector) {
             m_sub_values.reset();
             polynomial_ref p(m_pm), q(m_pm);
             var v;
@@ -3096,7 +3098,7 @@ namespace nlsat {
             while (change) {
                 change = false;
                 for (clause* c : m_clauses) {
-                    if (solve_var(*c, v, p, q)) {
+                    if (local_search_solve_var(*c, v, p, q, collector)) {
                         LSTRACE(tout << "loop clause in local search simplify\n";
                             display(tout, *c); tout << std::endl;
                         );
@@ -3336,28 +3338,83 @@ namespace nlsat {
         */
         bool solve_var(clause& c, var& v, polynomial_ref& p, polynomial_ref& q) {
             poly* p0;
-            if (!is_unit_eq(c)) return false;
+            if (!is_unit_eq(c)) {
+                return false;
+            }
             ineq_atom & a = *to_ineq_atom(m_atoms[c[0].var()]);
-            if (!is_single_poly(a, p0)) return false;
-            var mx = max_var(p0);
-            if (mx >= m_is_int.size()) return false;
-            for (var x = 0; x <= mx; ++x) {
+            if (!is_single_poly(a, p0)) {
+                return false;
+            }
+            // var mx = max_var(p0);
+            // if (mx >= m_is_int.size()) return false;
+            var_vector vars;
+            m_pm.vars(p0, vars);
+            for (var x : vars) {
                 if (m_is_int[x]) continue;
                 if (1 == m_pm.degree(p0, x)) {                    
                     p = m_pm.coeff(p0, x, 1, q);
-                    if (!m_pm.is_const(p))
-                        break;
+                    if (!m_pm.is_const(p)) {
+                        continue;
+                    }
                     switch (m_pm.sign(p, m_var_signs)) {
-                    case l_true:
-                        v = x;
-                        return true;
-                    case l_false:
-                        v = x;
-                        p = -p;
-                        q = -q;
-                        return true;
-                    default:
-                        break;
+                        case l_true:
+                            v = x;
+                            return true;
+                        case l_false:
+                            v = x;
+                            p = -p;
+                            q = -q;
+                            return true;
+                        default:
+                            continue;
+                    }
+                }
+            }
+            return false;
+        }
+
+        bool local_search_solve_var(clause& c, var& v, polynomial_ref& p, polynomial_ref& q, var_info_collector & collector) {
+            poly* p0;
+            if (!is_unit_eq(c)) {
+                return false;
+            }
+            ineq_atom & a = *to_ineq_atom(m_atoms[c[0].var()]);
+            if (!is_single_poly(a, p0)) {
+                return false;
+            }
+            // var mx = max_var(p0);
+            // if (mx >= m_is_int.size()) return false;
+            var_vector vars;
+            m_pm.vars(p0, vars);
+            if (vars.size() > 3) {
+                return false;
+            }
+            for (var x : vars) {
+                if (m_is_int[x]) continue;
+                if (1 == m_pm.degree(p0, x)) {                    
+                    p = m_pm.coeff(p0, x, 1, q);
+                    if (!m_pm.is_const(p)) {
+                        continue;
+                    }
+                    if (m_pm.total_degree(q) > 1) {
+                        continue;
+                    }
+                    var_vector qvars;
+                    m_pm.vars(q, qvars);
+                    if (qvars.size() > 2) {
+                        continue;
+                    }
+                    switch (m_pm.sign(p, m_var_signs)) {
+                        case l_true:
+                            v = x;
+                            return true;
+                        case l_false:
+                            v = x;
+                            p = -p;
+                            q = -q;
+                            return true;
+                        default:
+                            continue;
                     }
                 }
             }
