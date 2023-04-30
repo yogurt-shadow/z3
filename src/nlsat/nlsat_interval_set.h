@@ -109,6 +109,7 @@ namespace nlsat {
         void peek_in_complement_threshold(interval_set const * s, anum_vector & vec);
         void peek_in_complement_threshold_integer(interval_set const * s, anum_vector & vec);
 
+        bool is_rational(anum const & val);
         void peek_in_complement_heuristic(interval_set const * s, anum_vector & vec);
         // hzw ls
         

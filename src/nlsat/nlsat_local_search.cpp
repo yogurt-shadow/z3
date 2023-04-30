@@ -2482,18 +2482,29 @@ namespace nlsat {
         void random_move(anum const & old_value, interval_set const * s, anum_vector & vec) {
             // Starting from current value, randomly move to another value
             vec.reset();
-            if (is_int(old_value)) {
-                anum low_int, upp_int;
-                m_am.add(old_value, m_min, upp_int);
-                m_am.sub(old_value, m_min, low_int);
-                vec.push_back(low_int);
-                vec.push_back(upp_int);
+
+            for (int i = 0; i < 10; i++) {
+                int pos = rand_int() % 2048;  // [0, 2048]
+                scoped_anum num(m_am), denom(m_am), w(m_am);
+                anum w2;
+                m_am.set(num, pos);
+                m_am.set(denom, 1024);
+                m_am.div(num, denom, w);
+                m_am.mul(w, old_value, w2);
+                vec.push_back(w2);
             }
-            anum low_int2, upp_int2;
-            int_gt(old_value, upp_int2);
-            int_lt(old_value, low_int2);
-            vec.push_back(low_int2);
-            vec.push_back(upp_int2);
+            // if (is_int(old_value)) {
+            //     anum low_int, upp_int;
+            //     m_am.add(old_value, m_min, upp_int);
+            //     m_am.sub(old_value, m_min, low_int);
+            //     vec.push_back(low_int);
+            //     vec.push_back(upp_int);
+            // }
+            // anum low_int2, upp_int2;
+            // int_gt(old_value, upp_int2);
+            // int_lt(old_value, low_int2);
+            // vec.push_back(low_int2);
+            // vec.push_back(upp_int2);
         }
 
         void dist_to(nra_literal const * lit, anum & dist) {

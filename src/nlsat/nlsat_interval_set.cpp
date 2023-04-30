@@ -1018,6 +1018,10 @@ namespace nlsat {
         }
     }
 
+    bool interval_set_manager::is_rational(anum const & val) {
+        return m_am.degree(val) <= 1;
+    }
+
     void interval_set_manager::peek_in_complement_threshold(interval_set const * s, anum_vector & vec){
         // TRACE("nlsat_ls", tout << "show set for threshold\n";
         //     display(tout, s); tout << std::endl;
@@ -1026,30 +1030,45 @@ namespace nlsat {
         if(s == nullptr || s->m_num_intervals == 0){
             return;
         }
-        anum lower_w, upper_w;
         // first interval's lower threshold
         if(!s->m_intervals[0].m_lower_inf){
+            anum lower_w, w1;
             // (
             if(s->m_intervals[0].m_lower_open){
-                m_am.set(lower_w, s->m_intervals[0].m_lower);
-                vec.push_back(lower_w);
+                if (is_rational(s->m_intervals[0].m_lower)) {
+                    m_am.set(lower_w, s->m_intervals[0].m_lower);
+                    vec.push_back(lower_w);
+                } else {
+                    m_am.sub(s->m_intervals[0].m_lower, m_min, w1);
+                    m_am.select(w1, s->m_intervals[0].m_lower, lower_w);
+                    vec.push_back(lower_w);
+                }
             }
             // [
             else {
-                m_am.sub(s->m_intervals[0].m_lower, m_min, lower_w);
+                m_am.sub(s->m_intervals[0].m_lower, m_min, w1);
+                m_am.select(w1, s->m_intervals[0].m_lower, lower_w);
                 vec.push_back(lower_w);
             }
         }
         // last interval's upper threshold
-        if(!s->m_intervals[s->m_num_intervals - 1].m_upper_inf){
+        if(!s->m_intervals[s->m_num_intervals-1].m_upper_inf){
+            anum upper_w, w1;
             // )
-            if(s->m_intervals[s->m_num_intervals - 1].m_upper_open){
-                m_am.set(upper_w, s->m_intervals[s->m_num_intervals - 1].m_upper);
-                vec.push_back(upper_w);
+            if(s->m_intervals[s->m_num_intervals-1].m_upper_open){
+                if (is_rational(s->m_intervals[s->m_num_intervals-1].m_upper)) {
+                    m_am.set(upper_w, s->m_intervals[s->m_num_intervals-1].m_upper);
+                    vec.push_back(upper_w);
+                } else {
+                    m_am.add(s->m_intervals[s->m_num_intervals-1].m_upper, m_min, w1);
+                    m_am.select(s->m_intervals[s->m_num_intervals-1].m_upper, w1, upper_w);
+                    vec.push_back(upper_w);
+                }
             }
             // ]
             else {
-                m_am.add(s->m_intervals[s->m_num_intervals - 1].m_upper, m_min, upper_w);
+                m_am.add(s->m_intervals[s->m_num_intervals-1].m_upper, m_min, w1);
+                m_am.select(s->m_intervals[s->m_num_intervals-1].m_upper, w1, upper_w);
                 vec.push_back(upper_w);
             }
         }
@@ -1057,7 +1076,7 @@ namespace nlsat {
         for(unsigned i = 0; i < s->m_num_intervals - 1; i++){
             interval lower = s->m_intervals[i], upper = s->m_intervals[i + 1];
             int com = m_am.compare(lower.m_upper, upper.m_lower);
-            if(com == 0){
+            if (com == 0){
                 if(lower.m_upper_open && upper.m_lower_open) {
                     anum w;
                     m_am.set(w, lower.m_upper);
@@ -1066,27 +1085,40 @@ namespace nlsat {
             }
             else {
                 SASSERT(com < 0);
-                anum w1, w2;
+                anum w2, w3;
                 // )
                 if(lower.m_upper_open){
-                    m_am.set(w1, lower.m_upper);
-                    vec.push_back(w1);
+                    if (is_rational(lower.m_upper)) {
+                        m_am.set(w2, lower.m_upper);
+                        vec.push_back(w2);
+                    } else {
+                        m_am.add(lower.m_upper, m_min, w3);
+                        m_am.select(lower.m_upper, w3, w2);
+                        vec.push_back(w2);
+                    }
                 }
                 else {
                     // w1 = lower_upper + min
-                    m_am.add(lower.m_upper, m_min, w1);
-                    if(m_am.lt(w1, upper.m_lower)){
-                        vec.push_back(w1);
+                    m_am.add(lower.m_upper, m_min, w3);
+                    m_am.select(lower.m_upper, w3, w2);
+                    if(m_am.lt(w2, upper.m_lower)){
+                        vec.push_back(w2);
                     }
                 }
                 // (
                 if(upper.m_lower_open){
-                    m_am.set(w2, upper.m_lower);
-                    vec.push_back(w2);
+                    if (is_rational(upper.m_lower)) {
+                        m_am.set(w2, upper.m_lower);
+                        vec.push_back(w2);
+                    } else {
+                        m_am.sub(upper.m_lower, m_min, w3);
+                        m_am.select(w3, upper.m_lower, w2);
+                        vec.push_back(w2);
+                    }
                 }
                 else {
-                    // w2 = upper_lower - min
-                    m_am.sub(upper.m_lower, m_min, w2);
+                    m_am.sub(upper.m_lower, m_min, w3);
+                    m_am.select(w3, upper.m_lower, w2);
                     if(m_am.gt(w2, lower.m_upper)){
                         vec.push_back(w2);
                     }
