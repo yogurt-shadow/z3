@@ -1862,12 +1862,13 @@ namespace nlsat {
                         tout << "before local search simplify\n";
                         display_clauses(tout);
                     );
+                    // std::cout << "before simplify" << std::endl;
                     // display_clauses(std::cout);
                     simplify_equational_clauses();
                     if (!local_search_simplify(collector)) {
                         UNREACHABLE();
                     }
-                    // std::cout << "after" << std::endl;
+                    // std::cout << "after simplify" << std::endl;
                     // display_clauses(std::cout);
                     LSTRACE(
                         tout << "after local search simplify\n";
