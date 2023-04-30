@@ -2211,7 +2211,7 @@ namespace nlsat {
             // std::cout << "var: " << v << " "; m_solver.display_var(std::cout, v); std::cout << std::endl;
             // std::cout << "value: "; m_am.display(std::cout, old_value);
             // std::cout << "->";
-            // m_am.display(std::cout, value); std::cout << std::endl;
+            // m_am.display_root(std::cout, value); std::cout << " "; m_am.display(std::cout, value); std::cout << std::endl;
 
             critical_subscore_nra(v, value);
             // update arith score, except when the problem is already solved
@@ -2455,11 +2455,7 @@ namespace nlsat {
             m_vars_visited.reset();
             for (clause_index i = 0; i < m_num_clauses; i++){
                 nra_clause * curr_clause = m_nra_clauses[i];
-                if (m_unsat_clauses.contains(i)) {
-                    curr_clause->set_weight(1);
-                } else {
-                    curr_clause->set_weight(10);
-                }
+                curr_clause->set_weight(1);
                 for(var v : curr_clause->m_vars) {
                     if (!m_vars_visited.contains(v)) {
                         m_vars_visited.insert(v);
@@ -2864,6 +2860,7 @@ namespace nlsat {
             // std::cout << "restore slacked clauses" << std::endl;
             // for (int i = 0; i < m_arith_vars.size(); i++) {
             //     std::cout << "var " << i << " "; m_solver.display(std::cout, i); std::cout << " ";
+            //     m_am.display(std::cout, m_assignment.value(i)); std::cout << " = ";
             //     m_am.display_root(std::cout, m_assignment.value(i)); std::cout << std::endl;
             // }
             m_vars_visited2.reset();
@@ -2920,6 +2917,7 @@ namespace nlsat {
                 // }
 
                 // if (!use_equal_slack) {
+                //     std::cout << "step: " << m_step << " #unsat clauses: " << m_unsat_clauses.size() << std::endl;
                 //     for (int i = 0; i < m_unsat_clauses.size(); i++) {
                 //         clause_index c_idx = m_unsat_clauses[i];
                 //         nra_clause const * curr_clause = m_nra_clauses[c_idx];
@@ -3050,7 +3048,7 @@ namespace nlsat {
                         // critical_nra_move(picked_v, w);
                     } else {
                         critical_nra_move(picked_v, next_value);
-                        if (is_simpler(next_value, m_slack_min2)) {
+                        if (use_equal_slack && is_simpler(next_value, m_slack_min2)) {
                             m_am.set(m_slack_min2, next_value);
                         }
                         // update arith improvement
