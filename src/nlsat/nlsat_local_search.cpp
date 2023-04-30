@@ -710,7 +710,7 @@ namespace nlsat {
                 return true;
             } else if (!is_rational(val1) && !is_rational(val2)) {
                 return false;  // cannot compare
-            } else if (lt_denominator(val1, m_min) && lt_denominator(val2, m_min)) {
+            } else if (lt_denominator(val1, m_slack_min2) && lt_denominator(val2, m_slack_min2)) {
                 return false;  // does not compare denominator when less than 10
             } else {
                 return lt_denominator(val2, val1);
@@ -851,9 +851,21 @@ namespace nlsat {
                             //     m_am.set(w, res);
                             //     vec.push_back(w);
                             // } else {
+                            // m_am.sub(m_arith_var->m_boundaries[i+1].value, m_arith_var->m_boundaries[i].value, w);
+                            // if (m_am.lt(w, m_slack_min)) {
                                 m_am.select(m_arith_var->m_boundaries[i].value, m_arith_var->m_boundaries[i+1].value, w);
                                 vec.push_back(w);
                                 m_equal_clause_lsts.push_back(m_empty_clause_lst);
+                            // } else {
+                            //     m_am.add(m_arith_var->m_boundaries[i].value, m_slack_min, w);
+                            //     m_am.select(m_arith_var->m_boundaries[i].value, w, w);
+                            //     vec.push_back(w);
+                            //     m_equal_clause_lsts.push_back(m_empty_clause_lst);
+                            //     m_am.sub(m_arith_var->m_boundaries[i+1].value, m_slack_min, w);
+                            //     m_am.select(w, m_arith_var->m_boundaries[i+1].value, w);
+                            //     vec.push_back(w);
+                            //     m_equal_clause_lsts.push_back(m_empty_clause_lst);
+                            // }
                             // }
                         }
                     }
