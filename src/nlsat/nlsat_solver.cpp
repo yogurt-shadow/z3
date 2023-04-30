@@ -1681,6 +1681,51 @@ namespace nlsat {
             return b ? l_true : l_false;
         }
 
+        void clear_unit_literal(literal unit_l) {
+            // std::cout << "Clearing literal " << unit_l << std::endl;
+            for (unsigned i = 0; i < m_clauses.size(); i++) {
+                clause & cls = *m_clauses[i];
+                literal * cls_data = (literal *) cls.data();
+                bool changed = false;
+                for (unsigned j = 0; j < cls.size(); j++) {
+                    literal l = cls[j];
+                    if (l.var() == unit_l.var() && l.sign() != unit_l.sign()) {
+                        for (unsigned k = j; k < cls.size()-1; k++) {
+                            cls_data[k] = cls_data[k+1];
+                        }
+                        cls.shrink(cls.size() - 1);
+                        changed = true;
+                        break;
+                    }
+                }
+                // if (changed) {
+                //     std::cout << "clause after "; display(std::cout, cls); std::cout << std::endl;
+                // }
+            }
+        }
+
+        void simplify_unit_clauses() {
+            bool changed = true;
+            while (changed) {
+                changed = false;
+                for (unsigned i = 0; i < m_clauses.size(); i++) {
+                    clause * cls = m_clauses[i];
+                    if (cls->size() == 1) {
+                        literal l = (*cls)[0];
+                        if (m_atoms[l.var()] == nullptr) {
+                            // Unit boolean
+                            changed = true;
+                            // std::cout << "unit "; m_solver.display(std::cout, *cls); std::cout << std::endl;
+                            // std::cout << l.var() << " " << l.sign() << std::endl;
+                            del_clause(cls, m_clauses);
+                            clear_unit_literal(l);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
         // convert >=, <= to ==
         // del_clause(c, m_clauses);
         // !(235 skoC + 42 skoS > 0)
@@ -1862,13 +1907,14 @@ namespace nlsat {
                         tout << "before local search simplify\n";
                         display_clauses(tout);
                     );
-                    // std::cout << "before simplify" << std::endl;
+                    // std::cout << "### before simplify ###" << std::endl;
                     // display_clauses(std::cout);
+                    simplify_unit_clauses();
                     simplify_equational_clauses();
                     if (!local_search_simplify(collector)) {
                         UNREACHABLE();
                     }
-                    // std::cout << "after simplify" << std::endl;
+                    // std::cout << std::endl << "### after simplify ###" << std::endl << std::endl;;
                     // display_clauses(std::cout);
                     LSTRACE(
                         tout << "after local search simplify\n";
