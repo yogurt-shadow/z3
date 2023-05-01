@@ -811,6 +811,15 @@ namespace nlsat {
         return left && right;
     }
 
+    bool interval_set_manager::contains_value(anum_vector const & vec, anum const & w){
+        for(auto ele: vec){
+            if(m_am.eq(ele, w)){
+                return true;
+            }
+        }
+        return false;
+    }
+
     void interval_set_manager::peek_in_complement_heuristic(interval_set const * s, anum_vector & vec){
         TRACE("nlsat_ls", tout << "show set of insertion:\n";
             display(tout, s);
@@ -864,13 +873,17 @@ namespace nlsat {
         anum_vector threshold_value;
         peek_in_complement_threshold(s, threshold_value);
         for(auto ele: threshold_value){
-            vec.push_back(ele);
+            if (!contains_value(vec, ele)) {
+                vec.push_back(ele);
+            }
         }
 
         anum_vector threshold_integer_value;
         peek_in_complement_threshold_integer(s, threshold_integer_value);
         for(auto ele: threshold_integer_value) {
-            vec.push_back(ele);
+            if (!contains_value(vec, ele)) {
+                vec.push_back(ele);
+            }
         }
         TRACE("nlsat_ls", tout << "show insertion sample values:\n";
             for(auto ele: vec) {
@@ -1094,7 +1107,9 @@ namespace nlsat {
                     } else {
                         m_am.add(lower.m_upper, m_min, w3);
                         m_am.select(lower.m_upper, w3, w2);
-                        vec.push_back(w2);
+                        if (m_am.lt(w2, upper.m_lower)) {
+                            vec.push_back(w2);
+                        }
                     }
                 }
                 else {
@@ -1105,22 +1120,25 @@ namespace nlsat {
                         vec.push_back(w2);
                     }
                 }
+                anum w4, w5;
                 // (
                 if(upper.m_lower_open){
                     if (is_rational(upper.m_lower)) {
-                        m_am.set(w2, upper.m_lower);
-                        vec.push_back(w2);
+                        m_am.set(w4, upper.m_lower);
+                        vec.push_back(w4);
                     } else {
-                        m_am.sub(upper.m_lower, m_min, w3);
-                        m_am.select(w3, upper.m_lower, w2);
-                        vec.push_back(w2);
+                        m_am.sub(upper.m_lower, m_min, w5);
+                        m_am.select(w5, upper.m_lower, w4);
+                        if (m_am.gt(w4, lower.m_upper)) {
+                            vec.push_back(w4);
+                        }
                     }
                 }
                 else {
-                    m_am.sub(upper.m_lower, m_min, w3);
-                    m_am.select(w3, upper.m_lower, w2);
-                    if(m_am.gt(w2, lower.m_upper)){
-                        vec.push_back(w2);
+                    m_am.sub(upper.m_lower, m_min, w5);
+                    m_am.select(w5, upper.m_lower, w4);
+                    if(m_am.gt(w4, lower.m_upper)){
+                        vec.push_back(w4);
                     }
                 }
             }
