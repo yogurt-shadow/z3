@@ -2589,7 +2589,16 @@ namespace nlsat {
                     else {
                         anum_vector sample_values;
                         // random_move(old_value, curr_arith->m_infeasible_st, sample_values);
-                        m_ism.peek_in_complement_heuristic(curr_st, sample_values);
+                        m_ism.peek_in_complement_heuristic(curr_arith->m_infeasible_st, sample_values);
+                        anum w1, w2;
+                        int_gt(old_value, w1);
+                        if (!contains_value(curr_arith->m_infeasible_st, w1) && !contains_value(sample_values, w1)) {
+                            sample_values.push_back(w1);
+                        }
+                        int_lt(old_value, w2);
+                        if (!contains_value(curr_arith->m_infeasible_st, w2) && !contains_value(sample_values, w2)) {
+                            sample_values.push_back(w2);
+                        }
                         // std::cout << "curr_st: "; m_ism.display(std::cout, curr_st); std::cout << std::endl;
                         // for (int i = 0; i < sample_values.size(); i++) {
                         //     std::cout << "sample value "; m_am.display(std::cout, sample_values[i]); std::cout << std::endl;
@@ -3116,7 +3125,7 @@ namespace nlsat {
                 // }
 
                 // Small restart
-                if (no_improve_cnt > 300){
+                if (no_improve_cnt > 100){
                     LSTRACE(tout << "no improve count: " << no_improve_cnt << std::endl;
                         tout << "restart\n";
                         SPLIT_LINE(std::cout);
