@@ -189,6 +189,8 @@ namespace nlsat {
         // Placeholder for empty clause vector
         svector<clause_index>                                m_empty_clause_lst;
 
+        const bool                                           m_use_incremental = true;
+
         imp(solver & s, anum_manager & am, pmanager & pm, polynomial::cache & cache, interval_set_manager & ism, evaluator & ev, 
                          assignment & ass, svector<lbool> & bvalues, clause_vector const & cls, atom_vector const & ats, bool_var_vector const & pure_bool_vars, 
                          bool_var_vector const & pure_bool_convert, unsigned seed, unsigned & step, 
@@ -435,10 +437,12 @@ namespace nlsat {
         void init_arith_var_info() {
             // For each arith variable, compute the current infeasible set
             // for each clause and literal it appears in
-            for (var v = 0; v < m_arith_vars.size(); v++){
-                // std::cout << "considering variable " << v << std::endl;
-                compute_arith_var_info(v);
-                compute_boundary(v);
+            if (m_use_incremental) {
+                for (var v = 0; v < m_arith_vars.size(); v++){
+                    // std::cout << "considering variable " << v << std::endl;
+                    compute_arith_var_info(v);
+                    compute_boundary(v);
+                }
             }
         }
 
@@ -619,6 +623,10 @@ namespace nlsat {
         }
 
         int get_best_arith_score(var v) {
+            if (!m_use_incremental) {
+                compute_arith_var_info(v);
+                compute_boundary(v);
+            }
             // Obtain the best score for variable v. Scores less than INT_MIN / 4
             // must be due to infeasible set of a variable, and hence discarded.
             nra_arith_var * m_arith_var = m_arith_vars[v];
@@ -887,6 +895,10 @@ namespace nlsat {
         }
 
         bool get_best_arith_value_clause(var v, anum & best_value, clause_index c_idx, int & best_score) {
+            if (!m_use_incremental) {
+                compute_arith_var_info(v);
+                compute_boundary(v);
+            }
             // Obtain the best value for variable v, subject to the condition that
             // it is outside the infeasible interval of clause c_idx.
             nra_arith_var * m_arith_var = m_arith_vars[v];
@@ -1726,8 +1738,15 @@ namespace nlsat {
 
             m_vars_visited.reset();
 
-            for (int i = 0; i < m_unsat_clauses.size(); i++) {
-                clause_index c_idx = m_unsat_clauses[i];
+            unsigned start = 0;
+            unsigned count = m_unsat_clauses.size();
+            if (!m_use_incremental && m_unsat_clauses.size() > 45) {
+                start = rand_int() % m_unsat_clauses.size();
+                count = 45;
+            }
+
+            for (int i = 0; i < count; i++) {
+                clause_index c_idx = m_unsat_clauses[(start + i) % m_unsat_clauses.size()];
                 nra_clause const * curr_clause = m_nra_clauses[c_idx];
                 for (var v : curr_clause->m_vars) {
                     curr_score = get_best_arith_score(v);
@@ -1737,8 +1756,8 @@ namespace nlsat {
                 }
             }
 
-            for (int i = 0; i < m_unsat_clauses.size(); i++) {
-                clause_index c_idx = m_unsat_clauses[i];
+            for (int i = 0; i < count; i++) {
+                clause_index c_idx = m_unsat_clauses[(start + i) % m_unsat_clauses.size()];
                 nra_clause const * curr_clause = m_nra_clauses[c_idx];
 
                 if (best_arith_score != INT_MIN) {
@@ -2087,7 +2106,9 @@ namespace nlsat {
             // flip the bool variable
             b_var->set_value(!b_var->get_value());
             // update bool score
-            update_bool_score(b);
+            if (m_use_incremental) {
+                update_bool_score(b);
+            }
             b_var->set_score(b_var->get_score() - origin_score);
             // update step
             b_var->set_last_move(m_outer_step);
@@ -2256,9 +2277,11 @@ namespace nlsat {
             // m_am.display_root(std::cout, value); std::cout << " "; m_am.display(std::cout, value); std::cout << std::endl;
 
             critical_subscore_nra(v, value);
-            // update arith score, except when the problem is already solved
-            if (m_unsat_clauses.size() > 0 || use_equal_slack) {
-                update_arith_score(v, value);
+            if (m_use_incremental) {
+                // update arith score, except when the problem is already solved
+                if (m_unsat_clauses.size() > 0 || use_equal_slack) {
+                    update_arith_score(v, value);
+                }
             }
             nra_arith_var * v_var = m_arith_vars[v];
             v_var->set_last_move(m_step);
@@ -2458,8 +2481,10 @@ namespace nlsat {
                 }
             }
             m_total_clause_weight += m_unsat_clauses.size();
-            for (auto it = m_vars_visited.begin(); it != m_vars_visited.end(); it++){
-                compute_boundary(*it);
+            if (m_use_incremental) {
+                for (auto it = m_vars_visited.begin(); it != m_vars_visited.end(); it++){
+                    compute_boundary(*it);
+                }
             }
             LSTRACE(display_clause_weight(tout););
         }
@@ -2488,8 +2513,10 @@ namespace nlsat {
                     }
                 }
             }
-            for (auto it = m_vars_visited.begin(); it != m_vars_visited.end(); it++){
-                compute_boundary(*it);
+            if (m_use_incremental) {
+                for (auto it = m_vars_visited.begin(); it != m_vars_visited.end(); it++){
+                    compute_boundary(*it);
+                }
             }
         }
 
@@ -2504,8 +2531,10 @@ namespace nlsat {
                     }
                 }
             }
-            for (auto it = m_vars_visited.begin(); it != m_vars_visited.end(); it++){
-                compute_boundary(*it);
+            if (m_use_incremental) {
+                for (auto it = m_vars_visited.begin(); it != m_vars_visited.end(); it++){
+                    compute_boundary(*it);
+                }
             }
         }
 
@@ -2903,9 +2932,11 @@ namespace nlsat {
                 }
             }
             // std::cout << "Recompute for all variables" << std::endl;
-            for (auto it = m_vars_visited2.begin(); it != m_vars_visited2.end(); it++) {
-                compute_arith_var_info(*it);
-                compute_boundary(*it);
+            if (m_use_incremental) {
+                for (auto it = m_vars_visited2.begin(); it != m_vars_visited2.end(); it++) {
+                    compute_arith_var_info(*it);
+                    compute_boundary(*it);
+                }
             }
             // std::cout << "after restore slacked clauses" << std::endl;
             // std::cout << "Number of unsat clauses: " << m_unsat_clauses.size() << std::endl;
