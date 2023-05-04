@@ -357,6 +357,8 @@ namespace nlsat {
         var_vector m_clauses;
         // for each clause, the current infeasible set for that clause
         interval_set_vector m_clause_intervals;
+        // flag for whether the infeasible set should be recomputed
+        vector<bool> m_clause_intervals_flag;
         // st is initially full
         nra_arith_var(var idx, interval_set * st, interval_set * st2)
         : m_index(idx), m_last_move(0), m_tabu(0), m_score(0), m_feasible_st(st), m_infeasible_st(st2)
@@ -367,6 +369,7 @@ namespace nlsat {
             m_start_score = 0;
             m_clauses.reset();
             m_clause_intervals.reset();
+            m_clause_intervals_flag.reset();
             // m_poly_bound.reset();
         }
 
@@ -384,6 +387,7 @@ namespace nlsat {
         void add_clause(clause_index c){
             m_clauses.push_back(c);
             m_clause_intervals.push_back(nullptr);
+            m_clause_intervals_flag.push_back(false);
         }
 
         int get_score() const {

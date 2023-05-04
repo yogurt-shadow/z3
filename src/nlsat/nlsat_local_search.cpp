@@ -487,7 +487,7 @@ namespace nlsat {
             }
         }
 
-        void compute_arith_var_clause_info(var v, clause_index c_idx) {
+        void compute_arith_var_clause_info(var v, clause_index c_idx, bool set_flag) {
             // Compute infeasible set information for variable
             interval_set_ref result_st(m_ism);
             interval_set_ref curr_st(m_ism);
@@ -495,6 +495,10 @@ namespace nlsat {
             nra_arith_var * m_arith_var = m_arith_vars[v];
             for (unsigned i = 0; i < m_arith_var->m_clauses.size(); i++) {
                 if (c_idx != m_arith_var->m_clauses[i]) {
+                    continue;
+                }
+                if (set_flag) {
+                    m_arith_var->m_clause_intervals_flag[i] = true;
                     continue;
                 }
                 nra_clause const * curr_clause = m_nra_clauses[c_idx];
@@ -1044,6 +1048,17 @@ namespace nlsat {
             return score;
         }
 
+        bool is_var_all_sat(var v) {
+            nra_arith_var * m_arith_var = m_arith_vars[v];
+            for (clause_index c_idx : m_arith_var->m_clauses) {
+                nra_clause const * curr_clause = m_nra_clauses[c_idx];
+                if (!curr_clause->get_sat_status()) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
         void update_arith_score(var v, anum const & new_value) {
             // Update score in response to updating variable v to new value
             // We assume that satisfiability of clauses (and literals in it) has already
@@ -1055,7 +1070,8 @@ namespace nlsat {
                 // Update for each variable in that clause
                 for (auto it = curr_clause->m_vars.begin(); it != curr_clause->m_vars.end(); it++) {
                     var v2 = *it;
-                    compute_arith_var_clause_info(v2, c_idx);
+                    bool is_all_sat = is_var_all_sat(v2);
+                    compute_arith_var_clause_info(v2, c_idx, is_all_sat);
                 }
                 for(var v : curr_clause->m_vars) {
                     if (!m_vars_visited.contains(v)) {
@@ -1064,6 +1080,16 @@ namespace nlsat {
                 }
             }
             for (auto it = m_vars_visited.begin(); it != m_vars_visited.end(); it++){
+                var v2 = *it;
+                if (!is_var_all_sat(v2)) {
+                    nra_arith_var * m_arith_var2 = m_arith_vars[v2];
+                    for (unsigned j = 0; j < m_arith_var2->m_clauses.size(); j++) {
+                        if (m_arith_var2->m_clause_intervals_flag[j]) {
+                            compute_arith_var_clause_info(v2, m_arith_var2->m_clauses[j], false);
+                            m_arith_var2->m_clause_intervals_flag[j] = false;
+                        }
+                    }
+                }
                 compute_boundary(*it);
             }
         }
@@ -1077,7 +1103,8 @@ namespace nlsat {
                 // Update for each variable in that clause
                 for (auto it = curr_clause->m_vars.begin(); it != curr_clause->m_vars.end(); it++) {
                     var v2 = *it;
-                    compute_arith_var_clause_info(v2, c_idx);
+                    bool is_all_sat = is_var_all_sat(v2);
+                    compute_arith_var_clause_info(v2, c_idx, is_all_sat);
                 }
                 for(var v : curr_clause->m_vars) {
                     if (!m_vars_visited.contains(v)) {
@@ -1086,6 +1113,16 @@ namespace nlsat {
                 }
             }
             for (auto it = m_vars_visited.begin(); it != m_vars_visited.end(); it++){
+                var v2 = *it;
+                if (!is_var_all_sat(v2)) {
+                    nra_arith_var * m_arith_var2 = m_arith_vars[v2];
+                    for (unsigned j = 0; j < m_arith_var2->m_clauses.size(); j++) {
+                        if (m_arith_var2->m_clause_intervals_flag[j]) {
+                            compute_arith_var_clause_info(v2, m_arith_var2->m_clauses[j], false);
+                            m_arith_var2->m_clause_intervals_flag[j] = false;
+                        }
+                    }
+                }
                 compute_boundary(*it);
             }
         }
@@ -2948,29 +2985,10 @@ namespace nlsat {
                 //     std::cout << "step: " << m_step << " #unsat clauses: " << m_unsat_clauses.size() << std::endl;
                 // }
 
-                // if (!use_equal_slack) {
-                //     std::cout << "step: " << m_step << " #unsat clauses: " << m_unsat_clauses.size() << std::endl;
-                //     for (int i = 0; i < m_unsat_clauses.size(); i++) {
-                //         clause_index c_idx = m_unsat_clauses[i];
-                //         nra_clause const * curr_clause = m_nra_clauses[c_idx];
-                //         m_solver.display(std::cout, *curr_clause->get_clause()); std::cout << std::endl;
-                //     }
-                // }
                 m_stuck_ratio = 1.0 * m_stuck / m_step;
                 LSTRACE(tout << "step: " << m_step << std::endl;
                     tout << "no improve cnt: " << no_improve_cnt << std::endl;
                 );
-                // if (is_random_walk) {
-                //     if (no_improve_cnt_mode > 500) {
-                //         is_random_walk = false;  // change to greedy mode
-                //         no_improve_cnt_mode = 0;
-                //     } 
-                // } else {
-                //     if (no_improve_cnt_mode > 1000) {
-                //         is_random_walk = true;   // change to random walk mode
-                //         no_improve_cnt_mode = 0;
-                //     }
-                // }
 
                 // Finished stage with slack
                 if (m_unsat_clauses.empty() && use_equal_slack){
@@ -2986,9 +3004,6 @@ namespace nlsat {
                     m_best_found_restart = m_unsat_clauses.size();
                     no_improve_cnt = 0;
                     m_am.set(m_slack_min2, m_slack_min);
-                    // if (m_unsat_clauses.size() > 0) {
-                    //     return l_undef;
-                    // }
                 }
 
                 // Succeed
@@ -3032,7 +3047,7 @@ namespace nlsat {
                 svector<clause_index> equation_index;
                 int mode = pick_critical_move(picked_b, picked_v, next_value, best_score, equation_index);
 
-                // int before_weight = get_total_weight();
+                int before_weight = get_total_weight();
                 if (mode == 0) {  // bool operation
                     SASSERT(equation_index.size() == 0);
                     critical_bool_move(picked_b);
@@ -3042,13 +3057,13 @@ namespace nlsat {
                     else {
                         no_improve_cnt_bool++;
                     }
-                    // int after_weight = get_total_weight();
-                    // if (before_weight - after_weight != best_score) {
-                    //     std::cout << before_weight << std::endl;
-                    //     std::cout << after_weight << std::endl;
-                    //     std::cout << best_score << std::endl;
-                    //     UNREACHABLE();
-                    // }
+                    int after_weight = get_total_weight();
+                    if (before_weight - after_weight != best_score) {
+                        std::cout << before_weight << std::endl;
+                        std::cout << after_weight << std::endl;
+                        std::cout << best_score << std::endl;
+                        UNREACHABLE();
+                    }
                     // SASSERT(before_weight - get_total_weight() == best_score);
                 } else if (mode == 1) {  // arith operation
                     // slack equational clauses
@@ -3090,13 +3105,13 @@ namespace nlsat {
                         else {
                             no_improve_cnt_nra++;
                         }
-                        // int after_weight = get_total_weight();
-                        // if (before_weight - after_weight != best_score) {
-                        //     std::cout << "before weight: " << before_weight << std::endl;
-                        //     std::cout << "after weight: " << after_weight << std::endl;
-                        //     std::cout << "best score: " << best_score << std::endl;
-                        //     UNREACHABLE();
-                        // }
+                        int after_weight = get_total_weight();
+                        if (before_weight - after_weight != best_score) {
+                            std::cout << "before weight: " << before_weight << std::endl;
+                            std::cout << "after weight: " << after_weight << std::endl;
+                            std::cout << "best score: " << best_score << std::endl;
+                            UNREACHABLE();
+                        }
                         // SASSERT(before_weight - get_total_weight() == best_score);
                     }
                 } else {
