@@ -1221,13 +1221,6 @@ namespace nlsat {
                 }
                 LSTRACE(tout << "var " << v << ", "; m_ism.display(tout, curr_arith->m_feasible_st); tout << std::endl;);
 
-                // int pos = rand_int() % 2047 - 1023;  // [-1023, 1023]
-                // scoped_anum num(m_am), denom(m_am), w(m_am);
-                // m_am.set(num, pos);
-                // m_am.set(denom, 1024);
-                // m_am.div(num, denom, w);
-                // m_assignment.set(v, w);
-
                 if(m_ism.contains_zero(curr_arith->m_feasible_st)){
                     LSTRACE(tout << "set zero\n";);
                     m_assignment.set(v, m_zero);
@@ -2516,34 +2509,6 @@ namespace nlsat {
             }
         }
 
-        void random_move(anum const & old_value, interval_set const * s, anum_vector & vec) {
-            // Starting from current value, randomly move to another value
-            vec.reset();
-
-            for (int i = 0; i < 10; i++) {
-                int pos = rand_int() % 2048;  // [0, 2048]
-                scoped_anum num(m_am), denom(m_am), w(m_am);
-                anum w2;
-                m_am.set(num, pos);
-                m_am.set(denom, 1024);
-                m_am.div(num, denom, w);
-                m_am.mul(w, old_value, w2);
-                vec.push_back(w2);
-            }
-            // if (is_int(old_value)) {
-            //     anum low_int, upp_int;
-            //     m_am.add(old_value, m_min, upp_int);
-            //     m_am.sub(old_value, m_min, low_int);
-            //     vec.push_back(low_int);
-            //     vec.push_back(upp_int);
-            // }
-            // anum low_int2, upp_int2;
-            // int_gt(old_value, upp_int2);
-            // int_lt(old_value, low_int2);
-            // vec.push_back(low_int2);
-            // vec.push_back(upp_int2);
-        }
-
         void dist_to(nra_literal const * lit, anum & dist) {
             ineq_atom const * a = lit->get_atom();
             atom::kind k = a->get_kind();
@@ -2593,15 +2558,6 @@ namespace nlsat {
                     picked_v = non_zero_coeff_vars[rand_int() % non_zero_coeff_vars.size()];
                 }
 
-                // int pos = rand_int() % 2047 - 1023;  // [-1023, 1023]
-                // scoped_anum num(m_am), denom(m_am), w(m_am);
-                // m_am.set(num, pos);
-                // m_am.set(denom, 1024);
-                // m_am.div(num, denom, w);
-                // m_assignment.set(picked_v, w);
-                // critical_nra_move(picked_v, w);
-                // return;
-
                 // choose value for picked arith var
                 anum w;
                 nra_arith_var const * curr_arith = m_arith_vars[picked_v];
@@ -2625,7 +2581,6 @@ namespace nlsat {
                     // we sample values for the arith var, then check stuck situation
                     else {
                         anum_vector sample_values;
-                        // random_move(old_value, curr_arith->m_infeasible_st, sample_values);
                         m_ism.peek_in_complement_heuristic(curr_arith->m_infeasible_st, sample_values);
                         anum w1, w2;
                         int_gt(old_value, w1);
@@ -2640,11 +2595,7 @@ namespace nlsat {
                         // for (int i = 0; i < sample_values.size(); i++) {
                         //     std::cout << "sample value "; m_am.display(std::cout, sample_values[i]); std::cout << std::endl;
                         // }
-                        // anum w;
-                        // m_ism.peek_in_complement(curr_st, false, w, true);
-                        // sample_values.push_back(w);
                         bool still_stuck = true;
-                        // SASSERT(!sample_values.empty());
                         for (auto ele: sample_values){
                             m_assignment.set(picked_v, ele);
                             if(!is_literal_stuck(lit)){
@@ -2677,6 +2628,7 @@ namespace nlsat {
                             // m_am.set(w, sample_values[best_index]);
                             m_am.set(w, sample_values[rand_int() % sample_values.size()]);
                         }
+                        sample_values.reset();
                     }
                 }
                 // std::cout << "choose value "; m_am.display(std::cout, w); std::cout << std::endl;

@@ -32,6 +32,9 @@ namespace nlsat {
         scoped_anum_vector       m_tmp_values;
         scoped_anum_vector       m_add_roots_tmp;
         scoped_anum_vector       m_inf_tmp;
+
+        scoped_anum              m_zero;
+        scoped_anum              dummy;
         
         // sign tables: light version
         struct sign_table {
@@ -369,7 +372,10 @@ namespace nlsat {
             m_tmp_values(m_am),
             m_add_roots_tmp(m_am),
             m_inf_tmp(m_am),
-            m_sign_table_tmp(m_am) {
+            m_sign_table_tmp(m_am),
+            m_zero(m_am),
+            dummy(m_am) {
+            m_am.set(m_zero, 0);
         }
 
         var max_var(poly const * p) const {
@@ -533,8 +539,6 @@ namespace nlsat {
             literal jst(a->bvar(), neg);
             atom::kind k = a->get_kind();
             
-            scoped_anum dummy(m_am);
-
             // Shortcut for linear cases
             if (a->size() == 1 && a->is_odd(0)) {
                 poly* p0 = a->p(0);
@@ -547,9 +551,7 @@ namespace nlsat {
                     m_pm.eval(p, m_assignment, pval);
                     m_pm.eval(q, m_assignment, qval);
                     // inequality is p * x + q <> 0, so the boundary is -q / p
-                    anum res;
-                    scoped_anum m_zero(m_am);
-                    m_am.set(m_zero, 0);
+                    scoped_anum res(m_am);
 
                     interval_set_ref result2(m_ism);
                     if (m_am.eq(pval, m_zero)) {
@@ -590,21 +592,6 @@ namespace nlsat {
                             result2 = m_ism.mk(false, false, res, false, false, res, jst, cls);
                         }
                     }
-                    // if (!m_ism.eq(result, result2)) {
-                    //     std::cout << "infeasible_intervals" << std::endl;
-                    //     std::cout << "a: "; m_solver.display(std::cout, *a); std::cout << std::endl;
-                    //     std::cout << "k: " << k << std::endl;
-                    //     std::cout << "neg: " << neg << std::endl;
-                    //     std::cout << "x: " << x << std::endl;
-                    //     std::cout << "p0: "; m_pm.display(std::cout, p0); std::cout << std::endl;
-                    //     std::cout << "p: "; m_pm.display(std::cout, p); std::cout << std::endl;
-                    //     std::cout << "q: "; m_pm.display(std::cout, q); std::cout << std::endl;
-                    //     std::cout << "expected result: " << result << std::endl;
-                    //     std::cout << "pval: "; m_am.display(std::cout, pval); std::cout << std::endl;
-                    //     std::cout << "qval: "; m_am.display(std::cout, qval); std::cout << std::endl;
-                    //     std::cout << "got result: " << result2 << std::endl;
-                    //     exit(0);
-                    // }
                     return result2;
                 }
             }
