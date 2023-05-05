@@ -715,18 +715,19 @@ namespace nlsat {
         }
 
         bool is_simpler(anum const & val1, anum const & val2) {
-            // Return whether val2 is simpler than val1
-            if (is_rational(val1) && !is_rational(val2)) {
-                return false;
-            } else if (!is_rational(val1) && is_rational(val2)) {
-                return true;
-            } else if (!is_rational(val1) && !is_rational(val2)) {
-                return false;  // cannot compare
-            } else if (lt_denominator(val1, m_slack_min2) && lt_denominator(val2, m_slack_min2)) {
-                return false;  // does not compare denominator when less than 10
-            } else {
-                return lt_denominator(val2, val1);
-            }
+            return false;
+            // // Return whether val2 is simpler than val1
+            // if (is_rational(val1) && !is_rational(val2)) {
+            //     return false;
+            // } else if (!is_rational(val1) && is_rational(val2)) {
+            //     return true;
+            // } else if (!is_rational(val1) && !is_rational(val2)) {
+            //     return false;  // cannot compare
+            // } else if (lt_denominator(val1, m_slack_min2) && lt_denominator(val2, m_slack_min2)) {
+            //     return false;  // does not compare denominator when less than 10
+            // } else {
+            //     return lt_denominator(val2, val1);
+            // }
         }
 
         unsigned get_simplest_index(anum_vector & vs) {
