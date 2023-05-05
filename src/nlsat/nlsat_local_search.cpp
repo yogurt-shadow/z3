@@ -200,7 +200,7 @@ namespace nlsat {
         use_infeasible_st(true), m_restart_count(0), m_nra_operation_table(m_am, m_nra_operation_index, m_nra_operation_value),
         m_step(step), m_stuck(stuck), m_stuck_ratio(ratio), m_cache(cache), m_sub_value(vec),
         m_time_label(1), m_pure_bool_vars(pure_bool_vars), m_pure_bool_convert(pure_bool_convert), m_bvalues(bvalues),
-        use_equal_slack(true)
+        use_equal_slack(false)
         {
             set_const_anum();
             clear_statistics();
@@ -3153,7 +3153,7 @@ namespace nlsat {
                         SPLIT_LINE(tout);
                     );
                     init_solution(false);
-                    use_equal_slack = true;
+                    // use_equal_slack = true;
                     no_improve_cnt = 0;
                     use_infeasible_st = !use_infeasible_st;
                     m_restart_count += 1;
