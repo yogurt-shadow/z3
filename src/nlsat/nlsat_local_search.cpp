@@ -189,7 +189,7 @@ namespace nlsat {
         // Placeholder for empty clause vector
         svector<clause_index>                                m_empty_clause_lst;
 
-        const bool                                           m_use_incremental = true;
+        const bool                                           m_use_incremental = false;
 
         imp(solver & s, anum_manager & am, pmanager & pm, polynomial::cache & cache, interval_set_manager & ism, evaluator & ev, 
                          assignment & ass, svector<lbool> & bvalues, clause_vector const & cls, atom_vector const & ats, bool_var_vector const & pure_bool_vars, 
@@ -200,7 +200,7 @@ namespace nlsat {
         use_infeasible_st(true), m_restart_count(0), m_nra_operation_table(m_am, m_nra_operation_index, m_nra_operation_value),
         m_step(step), m_stuck(stuck), m_stuck_ratio(ratio), m_cache(cache), m_sub_value(vec),
         m_time_label(1), m_pure_bool_vars(pure_bool_vars), m_pure_bool_convert(pure_bool_convert), m_bvalues(bvalues),
-        use_equal_slack(false)
+        use_equal_slack(true)
         {
             set_const_anum();
             clear_statistics();
@@ -622,8 +622,8 @@ namespace nlsat {
             // }
         }
 
-        int get_best_arith_score(var v) {
-            if (!m_use_incremental) {
+        int get_best_arith_score(var v, bool compute) {
+            if (!m_use_incremental && compute) {
                 compute_arith_var_info(v);
                 compute_boundary(v);
             }
@@ -715,19 +715,18 @@ namespace nlsat {
         }
 
         bool is_simpler(anum const & val1, anum const & val2) {
-            return false;
-            // // Return whether val2 is simpler than val1
-            // if (is_rational(val1) && !is_rational(val2)) {
-            //     return false;
-            // } else if (!is_rational(val1) && is_rational(val2)) {
-            //     return true;
-            // } else if (!is_rational(val1) && !is_rational(val2)) {
-            //     return false;  // cannot compare
-            // } else if (lt_denominator(val1, m_slack_min2) && lt_denominator(val2, m_slack_min2)) {
-            //     return false;  // does not compare denominator when less than 10
-            // } else {
-            //     return lt_denominator(val2, val1);
-            // }
+            // Return whether val2 is simpler than val1
+            if (is_rational(val1) && !is_rational(val2)) {
+                return false;
+            } else if (!is_rational(val1) && is_rational(val2)) {
+                return true;
+            } else if (!is_rational(val1) && !is_rational(val2)) {
+                return false;  // cannot compare
+            } else if (lt_denominator(val1, m_slack_min2) && lt_denominator(val2, m_slack_min2)) {
+                return false;  // does not compare denominator when less than 10
+            } else {
+                return lt_denominator(val2, val1);
+            }
         }
 
         unsigned get_simplest_index(anum_vector & vs) {
@@ -1741,21 +1740,26 @@ namespace nlsat {
 
             unsigned start = 0;
             unsigned count = m_unsat_clauses.size();
-            if (!m_use_incremental && m_unsat_clauses.size() > 45) {
-                start = rand_int() % m_unsat_clauses.size();
-                count = 45;
-            }
+            // if (!m_use_incremental && m_unsat_clauses.size() > 45) {
+            //     start = rand_int() % m_unsat_clauses.size();
+            //     count = 45;
+            // }
 
             for (int i = 0; i < count; i++) {
                 clause_index c_idx = m_unsat_clauses[(start + i) % m_unsat_clauses.size()];
                 nra_clause const * curr_clause = m_nra_clauses[c_idx];
                 for (var v : curr_clause->m_vars) {
-                    curr_score = get_best_arith_score(v);
-                    if (curr_score > best_arith_score) {
-                        best_arith_score = curr_score;
+                    if (!m_vars_visited.contains(v)) {
+                        m_vars_visited.insert(v);
+                        curr_score = get_best_arith_score(v, true);
+                        if (curr_score > best_arith_score) {
+                            best_arith_score = curr_score;
+                        }
                     }
                 }
             }
+
+            m_vars_visited.reset();
 
             for (int i = 0; i < count; i++) {
                 clause_index c_idx = m_unsat_clauses[(start + i) % m_unsat_clauses.size()];
@@ -1765,7 +1769,7 @@ namespace nlsat {
                     for (var v : curr_clause->m_vars) {
                         if (!m_vars_visited.contains(v)) {
                             m_vars_visited.insert(v);
-                            curr_score = get_best_arith_score(v);
+                            curr_score = get_best_arith_score(v, false);
                             if (curr_score == best_arith_score) {
                                 best_arith_index.push_back(v);
                                 scoped_anum w(m_am);
@@ -3154,7 +3158,7 @@ namespace nlsat {
                         SPLIT_LINE(tout);
                     );
                     init_solution(false);
-                    // use_equal_slack = true;
+                    use_equal_slack = true;
                     no_improve_cnt = 0;
                     use_infeasible_st = !use_infeasible_st;
                     m_restart_count += 1;
