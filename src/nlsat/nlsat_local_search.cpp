@@ -200,7 +200,7 @@ namespace nlsat {
         use_infeasible_st(true), m_restart_count(0), m_nra_operation_table(m_am, m_nra_operation_index, m_nra_operation_value),
         m_step(step), m_stuck(stuck), m_stuck_ratio(ratio), m_cache(cache), m_sub_value(vec),
         m_time_label(1), m_pure_bool_vars(pure_bool_vars), m_pure_bool_convert(pure_bool_convert), m_bvalues(bvalues),
-        use_equal_slack(false)
+        use_equal_slack(true)
         {
             set_const_anum();
             clear_statistics();
@@ -722,8 +722,8 @@ namespace nlsat {
                 return true;
             } else if (!is_rational(val1) && !is_rational(val2)) {
                 return false;  // cannot compare
-            // } else if (lt_denominator(val1, m_slack_min2) && lt_denominator(val2, m_slack_min2)) {
-            //     return false;  // does not compare denominator when less than 10
+            } else if (lt_denominator(val1, m_slack_min2) && lt_denominator(val2, m_slack_min2)) {
+                return false;  // does not compare denominator when less than 10
             } else {
                 return lt_denominator(val2, val1);
             }
@@ -3153,7 +3153,7 @@ namespace nlsat {
                         SPLIT_LINE(tout);
                     );
                     init_solution(false);
-                    // use_equal_slack = true;
+                    use_equal_slack = true;
                     no_improve_cnt = 0;
                     use_infeasible_st = !use_infeasible_st;
                     m_restart_count += 1;
