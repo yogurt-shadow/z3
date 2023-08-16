@@ -1,0 +1,32 @@
+unsat
+(:arith-conflicts              4
+ :arith-lower                  5
+ :arith-make-feasible          3
+ :arith-max-columns            27
+ :arith-max-rows               6
+ :arith-nla-explanations       6
+ :arith-nla-lemmas             4
+ :arith-nra-calls              1
+ :arith-upper                  9
+ :binary-propagations          1
+ :conflicts                    1
+ :decisions                    1
+ :final-checks                 3
+ :max-memory                   30.92
+ :memory                       18.41
+ :mk-bool-var                  14
+ :mk-clause-binary             1
+ :nlsat-arith-var              6
+ :nlsat-atoms                  28
+ :nlsat-bool-var               3
+ :nlsat-clauses                22
+ :nlsat-conflicts              4
+ :nlsat-irrational-assignments 2
+ :nlsat-propagations           33
+ :nlsat-stages                 8
+ :num-allocs                   1903770624686.00
+ :num-checks                   1
+ :propagations                 1
+ :rlimit-count                 227848
+ :time                         1119.96
+ :total-time                   1117.32)

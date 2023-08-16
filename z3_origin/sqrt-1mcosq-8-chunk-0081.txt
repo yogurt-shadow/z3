@@ -1,0 +1,16 @@
+sat
+(:elim-unconstrained  2
+ :max-memory          18.33
+ :memory              18.33
+ :nlsat-arith-var     2
+ :nlsat-atoms         4
+ :nlsat-bool-var      1
+ :nlsat-clauses       4
+ :nlsat-propagations  4
+ :nlsat-stages        3
+ :num-allocs          34087
+ :rlimit-count        438
+ :solve-eqs-elim-vars 1
+ :solve-eqs-steps     1
+ :time                0.00
+ :total-time          0.01)

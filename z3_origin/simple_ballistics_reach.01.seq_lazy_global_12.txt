@@ -1,0 +1,9 @@
+unsat
+(:max-memory          20.28
+ :memory              19.29
+ :num-allocs          967391
+ :rlimit-count        58983
+ :solve-eqs-elim-vars 100
+ :solve-eqs-steps     464
+ :time                0.02
+ :total-time          0.04)

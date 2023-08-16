@@ -1,0 +1,14 @@
+unsat
+(:max-memory         18.82
+ :memory             18.52
+ :nlsat-arith-var    107
+ :nlsat-atoms        291
+ :nlsat-bool-var     26
+ :nlsat-clauses      190
+ :nlsat-conflicts    269
+ :nlsat-propagations 1064
+ :nlsat-stages       294
+ :num-allocs         145174
+ :rlimit-count       40000
+ :time               0.02
+ :total-time         0.03)

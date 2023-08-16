@@ -1,0 +1,19 @@
+unsat
+(:elim-unconstrained           264
+ :max-memory                   25.49
+ :memory                       21.15
+ :nlsat-arith-var              797
+ :nlsat-atoms                  4210
+ :nlsat-bool-var               362
+ :nlsat-clauses                2036
+ :nlsat-conflicts              18252
+ :nlsat-decisions              43911
+ :nlsat-irrational-assignments 3
+ :nlsat-propagations           213672
+ :nlsat-stages                 67942
+ :num-allocs                   64148011
+ :rlimit-count                 10341592
+ :solve-eqs-elim-vars          1278
+ :solve-eqs-steps              4670
+ :time                         3.18
+ :total-time                   3.21)

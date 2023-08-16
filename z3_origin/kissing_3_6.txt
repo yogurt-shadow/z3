@@ -1,0 +1,33 @@
+sat
+(:added-eqs                    159572
+ :binary-propagations          1143563
+ :bv-bit2core                  9663
+ :bv-diseqs                    51
+ :bv-dynamic-eqs               491
+ :bv->core-eq                  157921
+ :conflicts                    2806
+ :decisions                    15765
+ :del-clause                   1884
+ :final-checks                 1
+ :max-memory                   71.88
+ :memory                       23.30
+ :minimized-lits               17125
+ :mk-bool-var                  34675
+ :mk-clause                    107079
+ :mk-clause-binary             25456
+ :nlsat-arith-var              36
+ :nlsat-atoms                  89
+ :nlsat-bool-var               2
+ :nlsat-clauses                44
+ :nlsat-conflicts              10
+ :nlsat-decisions              4
+ :nlsat-irrational-assignments 6
+ :nlsat-propagations           45
+ :nlsat-stages                 38
+ :num-allocs                   92776519
+ :num-checks                   1
+ :propagations                 2733875
+ :restarts                     23
+ :rlimit-count                 3483175
+ :time                         15.91
+ :total-time                   15.88)

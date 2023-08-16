@@ -1,0 +1,7 @@
+timeout
+(:max-memory   4042.46
+ :memory       3017.58
+ :num-allocs   880694383464.00
+ :rlimit-count 76239513
+ :time         1199.98
+ :total-time   1197.12)

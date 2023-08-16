@@ -1,0 +1,9 @@
+sat
+(:elim-unconstrained  4
+ :max-memory          18.33
+ :memory              18.33
+ :num-allocs          34162
+ :rlimit-count        400
+ :solve-eqs-elim-vars 2
+ :solve-eqs-steps     2
+ :time                0.00)

@@ -1,0 +1,17 @@
+sat
+(:max-memory          486.64
+ :memory              401.07
+ :nlsat-arith-var     1120
+ :nlsat-atoms         48871
+ :nlsat-bool-var      18630
+ :nlsat-clauses       139227
+ :nlsat-conflicts     2423
+ :nlsat-decisions     847
+ :nlsat-propagations  199809
+ :nlsat-stages        21456
+ :num-allocs          10295208756.00
+ :rlimit-count        54244416
+ :solve-eqs-elim-vars 138424
+ :solve-eqs-steps     159850
+ :time                14.05
+ :total-time          16.64)

@@ -1,0 +1,14 @@
+sat
+(:max-memory                   18.52
+ :memory                       18.43
+ :nlsat-arith-var              3
+ :nlsat-atoms                  15
+ :nlsat-bool-var               1
+ :nlsat-clauses                15
+ :nlsat-irrational-assignments 1
+ :nlsat-propagations           15
+ :nlsat-stages                 4
+ :num-allocs                   59629
+ :rlimit-count                 2298
+ :time                         0.00
+ :total-time                   0.02)
