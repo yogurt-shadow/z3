@@ -1,6 +1,8 @@
 #pragma once
 
 #include "nlsat/nlsat_advanced_types.h"
+#include "nlsat/nlsat_watcher.h"
+#include "nlsat/nlsat_ordering.h"
 #include "nlsat/nlsat_clause.h"
 #include "nlsat/nlsat_assignment.h"
 #include "nlsat/nlsat_evaluator.h"
@@ -14,42 +16,10 @@
 #define DCTRACE(COND, CODE) CTRACE("dnlsat", COND, CODE)
 
 namespace nlsat {
-    /**
-     * Branching Heuristic for Dynamic Nlsat
-     * * 1. ORIGIN_STATIC_BOOL_FIRST_MODE
-     * ~ bool first, theory next, static order
-     * * 2. BOOL_FIRST_VSIDS
-     * ~ bool first, theory next, vsids order
-     * * 3. THEORY_FIRST_VSIDS
-     * ~ theory first, bool next, vsids order
-     * * 4. UNIFORM_VSIDS
-     * ~ bool and theory vsids order
-     * * 5. RANDOM_ORDER
-     * ~ random pick next bool/theory var
-    */
-    #define                                                 UNIFORM_VSIDS                          1
-    #define                                                 BOOL_FIRST_VSIDS                       2
-    #define                                                 THEORY_FIRST_VSIDS                     3
-    #define                                                 ORIGIN_STATIC_BOOL_FIRST_MODE          4
-    #define                                                 RANDOM_MODE                            5
-
-    // * choose dynamic order
-    #define DYNAMIC_MODE                                    UNIFORM_VSIDS
-
-    /**
-     * ^ BOOL: search bool var
-     * ^ ARITH: search arith var
-     * ^ INIT: search begin
-     * ^ FINISH: search finish
-     * ^ switch: search from arith to bool, new stage
-    */
     enum search_mode {
         BOOL, ARITH, INIT, FINISH, SWITCH
     };
 
-    /**
-     * @brief manager of dynamic nlsat
-    */
     class Dynamic_manager {
     public:
         struct imp;
