@@ -25,7 +25,7 @@ Revision History:
  * @date start time: 2022/09/23
  * @author Zhonghan Wang (wzh)
  * @brief This version supports arbitrary order of hybrid boolean var and arith var
- * 
+ *
  * @note Implementation Note
  * ------------------- version 1 -------------------
  * 1. Do not distinguish hybrid vars (bool var and arith var) when watching, doing or undoing clauses
@@ -39,27 +39,36 @@ Revision History:
  *    3.4 left two unassigned vars, unreachable
  * 4. New Stage at the end of arith assignment (m_xk = num_arith_vars())
  * 5. Register new stage when switching mode
- * ------------------- version 2 -------------------
  * 6. unit propagate after assignment
- * 
+ *
  * @version
  * version1 (2022/10/02)
  * version2 (2022/10/05)
  * 
+ * ------------------- version 2 -------------------
  * @date 2023/08/24
  * @todo 1. new watcher implement
  *       2. clause infeasible
  *       3. phase saving for inconnectivity variables
  *       4. lbd delete strategy
- * 
+ *
  * @note Question about justification of clause infeasible
- * 
+ *
  * @date 2023/08/26
  * @note 1. should we decide literals after considering clause infeasible ?
  *       2. should we assign arith literal when unit propagation (is it useful ?)
- *      \example x + y + z >= 12 \/ b \/ c 
+ *      \example x + y + z >= 12 \/ b \/ c
  *      [b, c] we can propagate x + y + z >= 12, while this literal is useless until it is arith-unit
  *      [x, y, z, b] we can unit propagate c
+ * 
+ * @date 2023/09/05
+ * @note When we update clause infeasible set for an arith var, if we encounter a conflict, what should we do ?
+ *       Some basic idea:
+ *       I. Assume first k clauses didn't overlap R, then if we reprocess them, there won't be any conflict
+ *          Moreover, the infeasible set won't change larger when we reprocess them (maybe smaller due to semantics decision)
+ *       II. The kth clause is the conflict clause, num_undef will be zero
+ *       III. Implementation: do not convert infeasible set to nullptr, just process and do semantics decision, save update infeasible trail,
+ *            and use that infeasible trail to detect atom status as usual, the conflict clause should be propagated false.
  * ---------------------------------------------------------------------------------------------------------------
  **/
 
@@ -235,6 +244,7 @@ namespace nlsat {
         struct semantics_decision {};
         struct bvar_assignment {};
         struct avar_assignment {};
+        struct branch {};
 
         /**
             BVAR_ASSIGNMENT: assign literal (may be bool var)
@@ -244,7 +254,7 @@ namespace nlsat {
             SEMANTICS_DECISION: we face a conflict when processing arith var, use semantics decision to choose explain's literals
         */
         struct trail {
-            enum kind { BVAR_ASSIGNMENT, ARITH_ASSIGNMENT, INFEASIBLE_UPDT, UPDT_EQ, NEW_LEVEL, NEW_STAGE, SEMANTICS_DECISION };
+            enum kind { BVAR_ASSIGNMENT, ARITH_ASSIGNMENT, INFEASIBLE_UPDT, UPDT_EQ, NEW_LEVEL, NEW_STAGE, SEMANTICS_DECISION, BRANCH };
             kind               m_kind;
             hybrid_var         m_x;
 
@@ -260,6 +270,7 @@ namespace nlsat {
             trail(var x, interval_set * old_set): m_kind(INFEASIBLE_UPDT), m_old_set(old_set), m_x{x} {}
             trail(var x, atom * a):m_kind(UPDT_EQ), m_old_eq(a), m_x(x) {}
             trail(var x, semantics_decision): m_kind(SEMANTICS_DECISION), m_x(x) {} 
+            trail(var x, branch): m_kind(BRANCH), m_x(x) {}
         };
         svector<trail>         m_trail;
 
@@ -360,6 +371,7 @@ namespace nlsat {
         // Trail recording assignment of hybrid variables
         var_vector             m_hybrid_trail;
         unsigned               m_hybrid_var_clause_prop, m_hybrid_var_learned_prop;
+        unsigned_vector        m_hybrid_assigned_indices;
 
         unsigned               m_num_assigned_bool;
         unsigned               m_num_assigned_arith;
@@ -1281,6 +1293,10 @@ namespace nlsat {
             m_trail.push_back(trail(b, bvar_assignment()));
         }
 
+        void save_arith_assignment_trail(var v){
+            m_trail.push_back(trail(v, avar_assignment()));
+        }
+
         void save_set_updt_trail(var x, interval_set * old_set) {
             m_trail.push_back(trail(x, old_set));
         }
@@ -1301,12 +1317,8 @@ namespace nlsat {
             m_trail.push_back(trail(level()));
         }
 
-        void save_arith_assignment_trail(var v){
-            m_trail.push_back(trail(v, avar_assignment()));
-        }
-
-        void save_decide_trail() {
-            m_trail.push_back(trail(level()));
+        void save_branch_trail(var old_v) {
+            m_trail.push_back(trail(old_v, branch()));
         }
      
         void undo_bvar_assignment(bool_var b) {
@@ -1316,7 +1328,12 @@ namespace nlsat {
             del_jst(m_allocator, m_justifications[b]);
             m_justifications[b] = null_justification;
             if(m_atoms[b] == nullptr){
-                update_unit_after_var_unassigned(m_pure_bool_convert[b]);
+                bool_var pure_b = m_pure_bool_convert[b];
+                update_unit_after_var_unassigned(pure_b);
+                m_hybrid_find_stage[pure_b] = null_var;
+                m_hybrid_assigned_indices[pure_b] = null_var;
+                m_hybrid_trail.pop_back();
+                m_bool_trail.pop_back();
             }
         }
 
@@ -1325,8 +1342,8 @@ namespace nlsat {
           \note We only need to erase clauses and atoms that are watched by x
         */
         void update_unit_after_var_unassigned(hybrid_var x) {
-            if(x >= num_bool_vars()) {
-                update_unit_atom_after_var_unassigned(x - num_bool_vars());
+            if(hybrid_is_arith(x)) {
+                update_unit_atom_after_var_unassigned(hybrid2arith(x));
             }
             update_unit_clause_after_var_unassigned(x);
         }
@@ -1383,10 +1400,15 @@ namespace nlsat {
             }
         }
 
-        void undo_arith_var_assignment(var x){
+        void undo_avar_assignment(var x){
             DTRACE(tout << "undo arith var assignment for var " << x << std::endl;);
+            hybrid_var hv = arith2hybrid(x);
             m_assignment.reset(x);
-            update_unit_after_var_unassigned(x + num_bool_vars());
+            m_hybrid_find_stage[hv] = null_var;
+            m_hybrid_assigned_indices[hv] = null_var;
+            m_hybrid_trail.pop_back();
+            m_arith_trail.pop_back();
+            update_unit_after_var_unassigned(hv);
         }
 
         void undo_set_updt(var x, interval_set * old_set) {
@@ -1424,6 +1446,10 @@ namespace nlsat {
             DTRACE(tout << "undo semantics decision for var " << v << std::endl;);
         }
 
+        void undo_branch(hybrid_var old_v) {
+            m_hk = old_v;
+        }
+
         template<typename Predicate>
         void undo_until(Predicate const & pred) {
             while (pred() && !m_trail.empty()) {
@@ -1445,10 +1471,13 @@ namespace nlsat {
                     undo_updt_eq(t.m_x, t.m_old_eq);
                     break;
                 case trail::ARITH_ASSIGNMENT:
-                    undo_arith_var_assignment(t.m_x);
+                    undo_avar_assignment(t.m_x);
                     break;
                 case trail::SEMANTICS_DECISION:
                     undo_semantics_decision(t.m_x);
+                    break;
+                case trail::BRANCH:
+                    undo_branch(t.m_x);
                     break;
 
                 default:
@@ -1560,7 +1589,7 @@ namespace nlsat {
         /**
            \brief Assign literal using the given justification
          */
-        void assign(literal l, justification j) {
+        void assign_literal(literal l, justification j) {
             if(m_valued_atom_table.contains(l.var())) { // assigned previously
                 return;
             }
@@ -1588,6 +1617,8 @@ namespace nlsat {
                 m_num_assigned_bool++;
                 m_bool_trail.push_back(pure_b);
                 m_hybrid_trail.push_back(pure_b);
+                m_hybrid_find_stage[pure_b] = m_scope_stage;
+                m_hybrid_assigned_indices[pure_b] = m_hybrid_trail.size() - 1;
             }
             TRACE("nlsat_assign", tout << "[debug] bool assign: b" << b << " -> " << m_bvalues[b]  << "\n";);
         }
@@ -1597,7 +1628,7 @@ namespace nlsat {
         */
         void decide_literal(literal l) {
             new_level(l.var());
-            assign(l, decided_justification);
+            assign_literal(l, decided_justification);
         }
 
         lbool value(literal l){
@@ -1662,7 +1693,7 @@ namespace nlsat {
             m_ism.get_justifications(s, core, clauses);
             if (include_l) 
                 core.push_back(~l);
-            assign(l, mk_lazy_jst(m_allocator, core.size(), core.data(), clauses.size(), clauses.data()));
+            assign_literal(l, mk_lazy_jst(m_allocator, core.size(), core.data(), clauses.size(), clauses.data()));
             SASSERT(value(l) == l_true);
         }
 
@@ -1797,7 +1828,7 @@ namespace nlsat {
             if(num_undef == 0) {
                 return false;
             } else if(num_undef == 1) { // unit propagate
-                assign(cls[first_undef], mk_clause_jst(&cls));
+                assign_literal(cls[first_undef], mk_clause_jst(&cls));
                 if(m_atoms[cls[first_undef].var()] != nullptr) {
                     var v = hybrid2arith(m_hk);
                     update_infeasible_set(v, first_undef_set);
@@ -1926,6 +1957,7 @@ namespace nlsat {
                                     unsigned idx = watches[i]->m_clause_index;
                                     m_arith_unit_clauses[v].push_back(idx);
                                     if(!update_clause_infeasible_set(idx, v)) { // conflict
+                                        save_branch_trail(m_hk);
                                         m_hk = another_var;
                                         new_stage();
                                         m_hybrid_find_stage[m_hk] = m_scope_stage;
@@ -1988,7 +2020,8 @@ namespace nlsat {
                                     if(check_learned_unit(idx, arith_var)) {
                                         m_arith_unit_learned[arith_var].push_back(idx);
                                         if(!update_learned_infeasible_set(idx, arith_var)) { // conflict clause
-                                            m_hk = arith2hybrid(arith_var);
+                                            save_branch_trail(m_hk);
+                                            m_hk = another_var;
                                             new_stage();
                                             m_hybrid_find_stage[m_hk] = m_scope_stage;
                                             return m_arith_unit_clauses_more_lits[arith_var].empty() ? m_learned[idx] : process_and_decide_literals_while_conflict();
@@ -2184,7 +2217,7 @@ namespace nlsat {
                             } else {
                                 m_pos_literal_watching_clauses[-new_l1].push_back(watches[i]);
                             }
-                            assign(cls[unit_index], mk_clause_jst(&cls));
+                            assign_literal(cls[unit_index], mk_clause_jst(&cls));
                         }
                     } else { // current literal is false, the other is undef
                         int new_l = 0, another_idx = watches[i]->get_another_literal_index_using_abs(curr_idx);
@@ -2218,7 +2251,7 @@ namespace nlsat {
                                 m_pos_literal_watching_clauses[new_l].push_back(watches[i]);
                             }
                         } else { // unit to another literal, still watch
-                            assign(cls[another_idx], mk_clause_jst(&cls));
+                            assign_literal(cls[another_idx], mk_clause_jst(&cls));
                             watches[j++] = watches[i];
                         }
                     }
@@ -2324,16 +2357,15 @@ namespace nlsat {
         */
         bool decide() {
             bool last_arith = hybrid_is_arith(m_hk);
+            save_branch_trail(m_hk);
             m_hk = pick_branching_var();
             if(hybrid_is_bool(m_hk)) { // branch bool var
                 if(last_arith) {
                     new_stage();
                 }
-                m_hybrid_find_stage[m_hk] = m_scope_stage;
                 decide_literal(literal(m_pure_bool_vars[m_hk], true));
             } else { // branch arith var
                 new_stage();
-                m_hybrid_find_stage[m_hk] = m_scope_stage;
                 select_witness();
             }
             if(m_num_assigned_arith == num_arith_vars() && m_num_assigned_bool == num_bool_vars()) {
@@ -2359,6 +2391,11 @@ namespace nlsat {
                 m_irrational_assignments++;
             m_assignment.set_core(x, w);
             save_arith_assignment_trail(x);
+            m_hybrid_find_stage[m_hk] = m_scope_stage;
+            m_hybrid_trail.push_back(m_hk);
+            m_arith_trail.push_back(x);
+            m_hybrid_assigned_indices[m_hk] = m_hybrid_trail.size() - 1;
+            m_num_assigned_arith++;
         }
 
         /**
@@ -2579,6 +2616,7 @@ namespace nlsat {
         }
 
         void make_space() {
+            m_hybrid_assigned_indices.resize(m_num_hybrid_vars, null_var);
             m_hybrid_find_stage.resize(m_num_hybrid_vars, null_var);
             m_hybrid_activity.resize(m_num_hybrid_vars);
             m_var_heap.set_bounds(m_num_hybrid_vars);
@@ -2840,7 +2878,7 @@ namespace nlsat {
                         return false;
                     }
                     // assign unit literal
-                    assign(l, mk_clause_jst(&curr_clause));
+                    assign_literal(l, mk_clause_jst(&curr_clause));
                 } else {
                     literal l1 = curr_clause[0], l2 = curr_clause[1];
                     int id1 = l1.sign() ? -l1.var() : l1.var();
@@ -2897,6 +2935,7 @@ namespace nlsat {
         }
 
         void init_search() {
+            m_hk = null_var;
             undo_until_empty();
             while (m_scope_lvl > 0) {
                 undo_new_level();
@@ -3449,8 +3488,6 @@ namespace nlsat {
             max_stage = find_var_stage(is_bool ? res : arith2hybrid(res));
             return res;
         }
-
-        unsigned_vector       m_hybrid_assigned_indices;
 
         unsigned find_assigned_index(hybrid_var x) const {
             return m_hybrid_assigned_indices[x];
@@ -5272,6 +5309,10 @@ namespace nlsat {
 
                     case trail::SEMANTICS_DECISION:
                         out << "[START SEMANTICS DECISION]: " << ele.m_x << std::endl;
+                        break;
+
+                    case trail::BRANCH:
+                        out << "[BRANCH] old m_hk: " << ele.m_x << std::endl;
                         break;
 
                     default:
