@@ -811,6 +811,24 @@ namespace nlsat {
         return left && right;
     }
 
+    bool interval_set_manager::contains(interval_set const* s, anum const& w) const {
+        if(s == nullptr) {
+            return false;
+        }
+        for (unsigned i = 0; i < s->m_num_intervals; i++) {
+            if (interval_contains(s->m_intervals[i], w)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    bool interval_set_manager::interval_contains(interval inter, anum const& w) const {
+        bool left = inter.m_lower_inf || m_am.lt(inter.m_lower, w) || (m_am.eq(inter.m_lower, w) && !inter.m_lower_open);
+        bool right = inter.m_upper_inf || m_am.gt(inter.m_upper, w) || (m_am.eq(inter.m_upper, w) && !inter.m_upper_open);
+        return left && right;
+    }
+
     void interval_set_manager::set_const_anum(){
         m_am.set(m_zero, 0);
         m_am.set(m_one, 1);

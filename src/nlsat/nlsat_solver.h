@@ -24,8 +24,11 @@ Revision History:
 #include "util/params.h"
 #include "util/statistics.h"
 #include "util/rlimit.h"
+#include "nlsat_advanced_types.h"
 
 namespace nlsat {
+#define DTRACE(CODE) TRACE("dnlsat", CODE)
+#define DCTRACE(COND, CODE) CTRACE("dnlsat", COND, CODE)
 
     class evaluator;
     class explain;
@@ -181,7 +184,7 @@ namespace nlsat {
         /**
            \brief Return number of integer/real variables
         */
-        unsigned num_vars() const;
+        unsigned num_arith_vars() const;
 
         bool is_int(var x) const;
 
@@ -262,14 +265,23 @@ namespace nlsat {
         
         display_var_proc const & display_proc() const;
 
-        // dnlsat
+        // dnlsat display
          void del_clause(clause *);
 
          std::ostream & display(std::ostream & out, clause const & cls) const;
          std::ostream & display_bool_assignment(std::ostream & out) const;
+        // dnlsat display
 
-         bool enable_unit_propagate() const;
-        // dnlsat
+        /**
+          \brief Core method for managing stage and max var
+        */
+       var max_stage_var_poly(poly const* p) const;
+       unsigned max_stage_poly(poly const* p) const;
+       unsigned max_stage_literal(literal l) const;
+       unsigned find_var_stage(hybrid_var x) const;
+       var max_stage_or_unassigned_ps(polynomial_ref_vector const &ps) const;
+       var max_stage_or_unassigned_literals(unsigned num, literal const *ls) const;
+       var max_stage_or_unassigned_atom(atom const *a) const;
     };
 
 };

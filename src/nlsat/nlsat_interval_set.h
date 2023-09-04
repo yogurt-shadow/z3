@@ -76,6 +76,9 @@ namespace nlsat {
         interval_set * mk_full();
         bool contains_zero(interval_set const * s) const;
         bool interval_contains_zero(interval inter) const;
+
+        bool contains(interval_set const* s, anum const& w) const;
+        bool interval_contains(interval inter, anum const &w) const;
         // hzw ls
         
         /**

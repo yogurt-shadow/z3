@@ -1,5 +1,7 @@
 #pragma once
 
+#include "nlsat_advanced_types.h"
+
 namespace nlsat {
     #define                                                 UNIFORM_VSIDS                          1
     #define                                                 BOOL_FIRST_VSIDS                       2
