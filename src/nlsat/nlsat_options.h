@@ -8,7 +8,7 @@ namespace nlsat {
         const bool rand_init_act          =               false;
 
         // reduce
-        const bool enable_reduce          =               true;
+        const bool enable_reduce          =               false;
         const double clause_decay         =               0.999;
         const double learnt_size_fatcor   =               1.0 / 3.0;
         const double learnt_size_inc      =               1.1;
@@ -17,10 +17,10 @@ namespace nlsat {
         const double reduce_conf_inc      =               1.5;
 
         // rephase
-        const bool enable_rephase         =               true;
+        const bool enable_rephase         =               false;
 
         // restart
-        const bool enable_restart         =               true;
+        const bool enable_restart         =               false;
         const bool luby_restart           =               false;
         const int restart_init            =               100;
         const double restart_inc          =               1.5;

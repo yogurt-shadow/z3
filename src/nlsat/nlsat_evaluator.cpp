@@ -20,6 +20,8 @@ Revision History:
 #include "nlsat/nlsat_evaluator.h"
 #include "nlsat/nlsat_solver.h"
 
+#include <iostream>
+
 namespace nlsat {
 
     struct evaluator::imp {
@@ -490,15 +492,11 @@ namespace nlsat {
 
         svector<sign> m_add_signs_tmp;
         void add(poly * p, var x, sign_table & t) {
-            // SASSERT(m_pm.max_var(p) <= x);
-            // if (m_pm.max_var(p) < x) {
-                // t.add_const(eval_sign(p));
-            // }
-            // wzh dynamic
-            if(all_assigned_poly(p)){
+            var_vector vars;
+            m_pm.vars(p, vars);
+            if(!vars.contains(x)){
                 t.add_const(eval_sign(p));
             }
-            // hzw dynamic
             else {
                 // isolate roots of p
                 scoped_anum_vector & roots = m_add_roots_tmp;
@@ -540,12 +538,14 @@ namespace nlsat {
             for (unsigned i = 0; i < num_ps; i++) {
                 add(a->p(i), x, table);
                 TRACE("nlsat_evaluator_bug", tout << "table after:\n"; m_pm.display(tout, a->p(i)); tout << "\n"; table.display_raw(tout);); 
-                
             }
             TRACE("nlsat_evaluator", 
                   tout << "sign table for:\n"; 
                   for (unsigned i = 0; i < num_ps; i++) { m_pm.display(tout, a->p(i)); tout << "\n"; }
                   table.display(tout););
+
+            table.display(std::cout);
+            std::cout << std::endl;
 
             interval_set_ref result(m_ism);
             interval_set_ref set(m_ism);
@@ -559,6 +559,7 @@ namespace nlsat {
             unsigned prev_root_id = UINT_MAX;
             
             unsigned num_cells = table.num_cells();
+            std::cout << num_cells << std::endl;
             for (unsigned c = 0; c < num_cells; c++) {
                 TRACE("nlsat_evaluator",
                       tout << "cell: " << c << "\n";
@@ -633,6 +634,11 @@ namespace nlsat {
                 }
             }
             TRACE("nlsat_evaluator", tout << "interval_set: " << result << "\n";);
+            if(result == nullptr) {
+                std::cout << "nullptr" << std::endl;
+            } else if(m_ism.is_full(result)) {
+                std::cout << "full set 1" << std::endl;
+            }
             return result;
         }
 

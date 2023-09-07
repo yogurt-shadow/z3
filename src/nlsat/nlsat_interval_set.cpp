@@ -19,6 +19,8 @@ Revision History:
 #include "nlsat/nlsat_interval_set.h"
 #include "util/buffer.h"
 
+#include <iostream>
+
 namespace nlsat {
 
     // struct interval {
@@ -779,9 +781,20 @@ namespace nlsat {
             display(tout, s2);
             tout << std::endl;
         );
+        std::cout << "here 012213" << std::endl;
+        display(std::cout, s1) << std::endl;
+        display(std::cout, s2) << std::endl;
         if(s1 == nullptr || s2 == nullptr){
             return nullptr;
         }
+        std::cout << "before complement" << std::endl;
+        interval_set * sp1 = mk_complement(s1);
+        std::cout << "after complement" << std::endl;
+        display(std::cout, sp1) << std::endl;
+        std::cout << "before complement" << std::endl;
+        interval_set *sp2 = mk_complement(s2);
+        std::cout << "after complement" << std::endl;
+        display(std::cout, sp2) << std::endl;
         return mk_complement(mk_union(mk_complement(s1), mk_complement(s2)));
     }
 
