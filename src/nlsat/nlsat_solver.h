@@ -278,7 +278,7 @@ namespace nlsat {
        var max_stage_var_poly(poly const* p) const;
        unsigned max_stage_poly(poly const* p) const;
        unsigned max_stage_literal(literal l) const;
-       unsigned find_var_stage(hybrid_var x) const;
+       unsigned find_hybrid_var_stage(hybrid_var x) const;
        var max_stage_or_unassigned_ps(polynomial_ref_vector const &ps) const;
        var max_stage_or_unassigned_literals(unsigned num, literal const *ls) const;
        var max_stage_or_unassigned_atom(atom const *a) const;

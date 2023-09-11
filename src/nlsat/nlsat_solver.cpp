@@ -1885,6 +1885,8 @@ namespace nlsat {
             return true;
         }
 
+        vector<std::pair<unsigned, var>>    m_newly_unit_atoms;
+
         /**
            \brief using arith variable assignment trail to propagate valued literals
            \example x + y >= 12 is watched by arith var x and y
@@ -1896,6 +1898,8 @@ namespace nlsat {
         */
         void check_atom_status_using_arith() {
             std::cout << "using arith to propagate atom" << std::endl;
+            // step 1. check unit atoms
+            m_newly_unit_atoms.clear();
             while(m_arith_atom_prop < m_arith_trail.size()) {
                 var curr_var = m_arith_trail[m_arith_atom_prop++];
                 vector<atom_var_watcher*> &watches = m_var_watching_atoms[curr_var];
@@ -1924,11 +1928,31 @@ namespace nlsat {
                             m_var_watching_atoms[new_watched_var].push_back(watches[i]);
                         } else { // still watch, unit literal to another var
                             watches[j++] = watches[i];
-                            m_arith_unit_atom[another_var].push_back(idx);;
+                            m_arith_unit_atom[another_var].push_back(idx);
+                            m_newly_unit_atoms.push_back(std::make_pair(idx, another_var));
                         }
                     }
                 }
                 watches.shrink(j);
+            }
+            // step 2. propagate unit atoms
+            for(auto const& new_atom: m_newly_unit_atoms) {
+                var v = new_atom.second;
+                unsigned idx = new_atom.first;
+                interval_set *curr_st = get_atom_infeasible_set(idx, v);
+                if(m_ism.is_empty(curr_st)) {
+                    R_propagate(literal(idx, false), nullptr);
+                } else if(m_ism.is_full(curr_st)) {
+                    R_propagate(literal(idx, true), nullptr);
+                } else if(m_ism.subset(curr_st, m_infeasible[v])) {
+                    R_propagate(literal(idx, false), m_infeasible[v]);
+                } else {
+                    interval_set_ref tmp(m_ism);
+                    tmp = m_ism.mk_union(curr_st, m_infeasible[v]);
+                    if (m_ism.is_full(tmp)) {
+                        R_propagate(literal(idx, true), tmp, false);
+                    }
+                }
             }
         }
 
@@ -2377,6 +2401,8 @@ namespace nlsat {
             while(check_propagate_counter()) {
                 // using variable to check literal assigned or unit
                 check_atom_status_using_arith();
+                // using infeasible set to theory propagate literal's value
+                propagate_literal_using_infeasible();
                 clause *conf;
                 // using valued and assigned literal to check unit clause
                 // we do not assign literal in up
@@ -2393,7 +2419,6 @@ namespace nlsat {
                 if(conf != nullptr) {
                     return conf;
                 }
-                propagate_literal_using_infeasible();
             }
             return nullptr;
         }
@@ -2483,8 +2508,9 @@ namespace nlsat {
             TRACE("nlsat_proof_sk", tout << "ASSERTED\n"; display_abst(tout);); 
             TRACE("nlsat_mathematica", display_mathematica(tout););
             TRACE("nlsat", display_smt2(tout););
-            std::cout << "start solving..." << std::endl;
 
+            display_vars(std::cout);
+            std::cout << "start solving..." << std::endl;
             if(!set_watches()) { // conflict in original clauses
                 std::cout << "conflict in original clauses" << std::endl;
                 return l_false;
@@ -3380,6 +3406,7 @@ namespace nlsat {
 
         void resolve_lazy_justification(bool_var b, lazy_justification const & jst) {
             TRACE("nlsat_resolve", tout << "resolving lazy_justification for b" << b << "\n";);
+            std::cout << "resolve lazy justification for b" << b << std::endl;
             unsigned sz = jst.num_lits();
 
             // Dump lemma as Mathematica formula that must be true,
@@ -3404,6 +3431,9 @@ namespace nlsat {
                   tout << "m_xk: " << m_xk << ", "; m_display_var(tout, m_xk) << "\n";
                   tout << "new valid clause:\n";
                   display(tout, m_lazy_clause.size(), m_lazy_clause.data()) << "\n";);
+
+            std::cout << "new valid clause:\n";
+            display(std::cout, m_lazy_clause.size(), m_lazy_clause.data()) << "\n";
 
             if (m_check_lemmas) {
                 m_valids.push_back(mk_clause_core(m_lazy_clause.size(), m_lazy_clause.data(), false, nullptr));
@@ -3435,7 +3465,7 @@ namespace nlsat {
         /**
           \brief Stage Manager
         */
-       unsigned find_var_stage(hybrid_var x) const {
+       unsigned find_hybrid_var_stage(hybrid_var x) const {
             if(x == null_var) {
                 return null_var;
             }
@@ -3473,9 +3503,9 @@ namespace nlsat {
                 return null_var;
             }
             var res = *(curr->m_vars.begin());
-            unsigned max_stage = find_var_stage(arith2hybrid(res));
+            unsigned max_stage = find_hybrid_var_stage(arith2hybrid(res));
             for(var cur: curr->m_vars){
-                var curr_stage = find_var_stage(arith2hybrid(cur));
+                var curr_stage = find_hybrid_var_stage(arith2hybrid(cur));
                 if(curr_stage > max_stage){
                     max_stage = curr_stage;
                     res = cur;
@@ -3486,12 +3516,12 @@ namespace nlsat {
 
         unsigned max_stage_atom(bool_var b) const {
             if(m_atoms[b] == nullptr) {
-                return find_var_stage(m_pure_bool_convert[b]);
+                return find_hybrid_var_stage(m_pure_bool_convert[b]);
             } else {
                 nlsat_atom const *a = m_nlsat_atoms[b];
                 unsigned res = 0;
                 for(var v: a->m_vars) {
-                    unsigned curr_stage = find_var_stage(arith2hybrid(v));
+                    unsigned curr_stage = find_hybrid_var_stage(arith2hybrid(v));
                     if(res == 0 || curr_stage > res) {
                         res = curr_stage;
                     }
@@ -3508,7 +3538,7 @@ namespace nlsat {
             m_pm.vars(p, curr);
             unsigned x = 0;
             for(var v: curr) {
-                unsigned curr_stg = find_var_stage(arith2hybrid(v));
+                unsigned curr_stg = find_hybrid_var_stage(arith2hybrid(v));
                 if(x == 0 || curr_stg > x) {
                     x = curr_stg;
                 }
@@ -3524,7 +3554,7 @@ namespace nlsat {
             m_pm.vars(p, curr);
             var res_x = 0, max_stage = 0;
             for(var v: curr){
-                var curr_stage = find_var_stage(arith2hybrid(v));
+                var curr_stage = find_hybrid_var_stage(arith2hybrid(v));
                 if(max_stage == 0 || curr_stage > max_stage){
                     max_stage = curr_stage;
                     res_x = v;
@@ -3554,7 +3584,7 @@ namespace nlsat {
                 if(!m_assignment.is_assigned(v)){
                     return v;
                 }
-                var curr = find_var_stage(arith2hybrid(v));
+                var curr = find_hybrid_var_stage(arith2hybrid(v));
                 if(max_stage == 0 || curr > max_stage){
                     max_stage = curr;
                     res_x = v;
@@ -3581,7 +3611,7 @@ namespace nlsat {
                 if(!m_assignment.is_assigned(v)){
                     return v;
                 }
-                var curr_stage = find_var_stage(arith2hybrid(v));
+                var curr_stage = find_hybrid_var_stage(arith2hybrid(v));
                 if(max_stage == 0 || curr_stage > max_stage){
                     max_stage = curr_stage;
                     res_x = v;
@@ -3596,7 +3626,7 @@ namespace nlsat {
                 if(!m_assignment.is_assigned(v)){
                     return v;
                 }
-                var curr_stage = find_var_stage(arith2hybrid(v));
+                var curr_stage = find_hybrid_var_stage(arith2hybrid(v));
                 if(max_stage == 0 || curr_stage > max_stage){
                     max_stage = curr_stage;
                     res_x = v;
@@ -3648,7 +3678,7 @@ namespace nlsat {
                     }
                 }
             }
-            max_stage = find_var_stage(is_bool ? res : arith2hybrid(res));
+            max_stage = find_hybrid_var_stage(is_bool ? res : arith2hybrid(res));
             return res;
         }
 
@@ -3891,6 +3921,10 @@ namespace nlsat {
                     display(tout, m_lemma.size(), m_lemma.data());
                     tout << std::endl;
                 );
+                std::cout << "show lemma: \n";
+                display(std::cout, m_lemma.size(), m_lemma.data());
+                std::cout << std::endl;
+
                 DTRACE(tout << "[debug] current m_xk: " << m_xk << std::endl;);
                 bump_conflict_hybrid_vars();
                 DTRACE(
@@ -5443,6 +5477,7 @@ namespace nlsat {
             display_trails(out);
             display_infeasible_set(out);
             display_arith_unit_clauses(out);
+            display_arith_unit_atoms(out);
             return out;
         }
 
@@ -5450,11 +5485,25 @@ namespace nlsat {
             for(var v = 0; v < num_arith_vars(); v++) {
                 if(m_arith_unit_clauses[v].size() + m_arith_unit_learned[v].size() > 0) {
                     m_display_var(out, v);
-                    out << " -> unit: ";
+                    out << " -> unit clause: ";
                     for(unsigned idx: m_arith_unit_clauses[v]) {
                         out << idx << " ";
                     }
                     for(unsigned idx: m_arith_unit_learned[v]) {
+                        out << idx << " ";
+                    }
+                    out << std::endl;
+                }
+            }
+            return out;
+        }
+
+        std::ostream & display_arith_unit_atoms(std::ostream & out) const {
+            for(var v = 0; v < num_arith_vars(); v++) {
+                if(m_arith_unit_atom[v].size() > 0) {
+                    m_display_var(out, v);
+                    out << " -> unit atom: ";
+                    for(unsigned idx: m_arith_unit_atom[v]) {
                         out << idx << " ";
                     }
                     out << std::endl;
@@ -5888,8 +5937,8 @@ namespace nlsat {
         return m_imp->max_stage_literal(l);
     }
 
-    unsigned solver::find_var_stage(hybrid_var x) const {
-        return m_imp->find_var_stage(x);
+    unsigned solver::find_hybrid_var_stage(hybrid_var x) const {
+        return m_imp->find_hybrid_var_stage(x);
     }
 
     var solver::max_stage_or_unassigned_ps(polynomial_ref_vector const& ps) const {
