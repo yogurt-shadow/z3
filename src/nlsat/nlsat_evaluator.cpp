@@ -544,9 +544,6 @@ namespace nlsat {
                   for (unsigned i = 0; i < num_ps; i++) { m_pm.display(tout, a->p(i)); tout << "\n"; }
                   table.display(tout););
 
-            table.display(std::cout);
-            std::cout << std::endl;
-
             interval_set_ref result(m_ism);
             interval_set_ref set(m_ism);
             literal jst(a->bvar(), neg);
@@ -559,7 +556,6 @@ namespace nlsat {
             unsigned prev_root_id = UINT_MAX;
             
             unsigned num_cells = table.num_cells();
-            std::cout << num_cells << std::endl;
             for (unsigned c = 0; c < num_cells; c++) {
                 TRACE("nlsat_evaluator",
                       tout << "cell: " << c << "\n";
@@ -634,11 +630,6 @@ namespace nlsat {
                 }
             }
             TRACE("nlsat_evaluator", tout << "interval_set: " << result << "\n";);
-            if(result == nullptr) {
-                std::cout << "nullptr" << std::endl;
-            } else if(m_ism.is_full(result)) {
-                std::cout << "full set 1" << std::endl;
-            }
             return result;
         }
 
