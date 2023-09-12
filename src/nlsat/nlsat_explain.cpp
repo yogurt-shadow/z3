@@ -978,16 +978,6 @@ namespace nlsat {
                     ! (y > root_i(p1)) or !(y < root_j(p2))
         */
         void add_cell_lits(polynomial_ref_vector & ps, var y) {
-            std::cout << "[cell lits] add cell lits\n";
-            for(auto ele: ps) {
-                m_pm.display(std::cout, ele);
-                std::cout << std::endl;
-            }
-            std::cout << "var: " << y << std::endl;
-            std::cout << "value: ";
-            m_am.display(std::cout, m_assignment.value(y));
-            std::cout << std::endl;
-
             SASSERT(m_assignment.is_assigned(y));
             bool lower_inf = true;
             bool upper_inf = true;
@@ -1009,11 +999,8 @@ namespace nlsat {
                 //     continue;
                 
                 // wzh dynamic
-                std::cout << "max stage poly: " << m_solver.max_stage_poly(p) << std::endl;
-                std::cout << "var stage: " << m_solver.find_hybrid_var_stage(arith2hybrid(y)) << std::endl;
-
+               
                 if(m_solver.max_stage_poly(p) != m_solver.find_hybrid_var_stage(arith2hybrid(y))){
-                    std::cout << "jump poly" << std::endl;
                     continue;
                 }
                 // hzw dynamic
@@ -1105,7 +1092,6 @@ namespace nlsat {
            \brief Apply model-based projection operation defined in our paper.
         */
         void project(polynomial_ref_vector & ps, var max_x) {
-            std::cout << "project max_x: " << max_x << std::endl;
             if (ps.empty())
                 return;
             m_todo.reset();
@@ -1119,12 +1105,6 @@ namespace nlsat {
                 }
                 tout << std::endl;
             );
-
-            std::cout << "[dynamic] show polynomials before var:\n";
-            for (auto ele : ps) {
-                m_pm.display(std::cout << std::endl, ele);
-            }
-            std::cout << std::endl;
             // wzh dynamic
             polynomial_ref_vector todo_ps(m_pm);
             m_todo.collect_ps(todo_ps);
@@ -1134,16 +1114,8 @@ namespace nlsat {
                 }
                 tout << std::endl;
             );
-
-            std::cout << "[dynamic] show todo polynomials:\n";
-            for (auto ele : todo_ps) {
-                m_pm.display(std::cout << std::endl, ele);
-            }
-            std::cout << std::endl;
-
             var x = m_solver.max_stage_or_unassigned_ps(todo_ps);
             TRACE("nlsat_explain", tout << "[dynamic] next projection var: " << x << std::endl;);
-            std::cout << "[dynamic] next projection var: " << x << std::endl;
             m_todo.remove_var_polys(ps, x);
             TRACE("nlsat_explain", tout << "[dynamic] show polynomials after remove:\n";
                 for(auto ele: ps){
@@ -1151,22 +1123,13 @@ namespace nlsat {
                 }
                 tout << std::endl;
             );
-
-            std::cout << "[dynamic] show polynomials after remove:\n";
-            for (auto ele : ps)
-            {
-                m_pm.display(std::cout << std::endl, ele);
-            }
-            std::cout << std::endl;
             // hzw dynamic
 
             // Remark: after vanishing coefficients are eliminated, ps may not contain max_x anymore
             if (x < max_x)
                 add_cell_lits(ps, x);
             while (true) {
-                std::cout << "enter explain while true" << std::endl;
                 if (all_univ(ps, x) && m_todo.empty()) {
-                    std::cout << "break todo set" << std::endl;
                     m_todo.reset();
                     break;
                 }
@@ -1185,13 +1148,6 @@ namespace nlsat {
                     }
                     tout << std::endl;
                 );
-
-                std::cout << "[dynamic] show polynomials before var:\n";
-                for (auto ele : ps)
-                {
-                    m_pm.display(std::cout << std::endl, ele);
-                }
-                std::cout << std::endl;
                 // wzh dynamic
                 polynomial_ref_vector todo_ps(m_pm);
                 m_todo.collect_ps(todo_ps);
@@ -1201,13 +1157,6 @@ namespace nlsat {
                     }
                     tout << std::endl;
                 );
-
-                std::cout << "[dynamic] show todo polynomials:\n";
-                for (auto ele : todo_ps)
-                {
-                    m_pm.display(std::cout << std::endl, ele);
-                }
-                std::cout << std::endl;
                 x = m_solver.max_stage_or_unassigned_ps(todo_ps);
                 TRACE("nlsat_explain", tout << "[dynamic] next projection var: " << x << std::endl;);
                 m_todo.remove_var_polys(ps, x);
@@ -1642,7 +1591,6 @@ namespace nlsat {
             // var max_x = max_var(m_ps);
             var max_x = m_solver.max_stage_or_unassigned_ps(m_ps);
             TRACE("nlsat_explain", tout << "polynomials in the conflict:\n"; display(tout, m_ps); tout << "\n";);
-            std::cout << "polynomials in the conflict:\n"; display(std::cout, m_ps); std::cout << "\n";
             // elim_vanishing(m_ps);
             TRACE("nlsat_explain", tout << "elim vanishing\n"; display(tout, m_ps); tout << "\n";);
             project(m_ps, max_x);
@@ -1760,9 +1708,6 @@ namespace nlsat {
         void operator()(unsigned num, literal const * ls, scoped_literal_vector & result) {
             SASSERT(check_already_added());
             SASSERT(num > 0);
-            std::cout << "[enter explain] ";
-            m_solver.display(std::cout, num, ls) << std::endl;
-
             m_result = &result;
             process(num, ls);
             reset_already_added();

@@ -684,6 +684,14 @@ public:
         m_data[idx] = elem;
     }
 
+    // enlarge until size with default element
+    // the difference between enlarge and setx is that enlarge does not change inserted elements
+    void enlarge(SZ idx, T const & elem) {
+        while(idx >= size()) {
+            push_back(elem);
+        }
+    }
+
     // return element at position idx, if idx >= size, then return default
     T const & get(SZ idx, T const & d) const {
         if (idx >= size()) {

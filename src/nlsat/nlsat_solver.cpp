@@ -77,6 +77,9 @@ Revision History:
  *          When resolving conflict, we found that the literal is assigned by UP and thus learn an empty clause.
  *          In this case, we prove unsat and this is totally wrong.
  * @note    Current version does not support assignment by unit propagate, 
+ * 
+ * @date 2023/09/11
+ * @brief Add watcher for vars, atoms and clauses (lemmas) incrementally
  * ---------------------------------------------------------------------------------------------------------------
  **/
 
@@ -266,7 +269,7 @@ namespace nlsat {
         struct trail {
             enum kind { BVAR_ASSIGNMENT, ARITH_ASSIGNMENT, INFEASIBLE_UPDT, UPDT_EQ, NEW_LEVEL, NEW_STAGE, SEMANTICS_DECISION, BRANCH };
             kind               m_kind;
-            hybrid_var         m_x;
+            hybrid_var         m_x, m_x2;
 
             union {
                 interval_set * m_old_set;
@@ -280,7 +283,7 @@ namespace nlsat {
             trail(var x, interval_set * old_set): m_kind(INFEASIBLE_UPDT), m_old_set(old_set), m_x{x} {}
             trail(var x, atom * a):m_kind(UPDT_EQ), m_old_eq(a), m_x(x) {}
             trail(var x, semantics_decision): m_kind(SEMANTICS_DECISION), m_x(x) {} 
-            trail(var x, branch): m_kind(BRANCH), m_x(x) {}
+            trail(var x, var y, branch): m_kind(BRANCH), m_x(x), m_x2(y) {}
         };
         svector<trail>         m_trail;
 
@@ -323,6 +326,15 @@ namespace nlsat {
         vector<vector<atom_var_watcher *>>       m_var_watching_atoms;
         vector<vector<clause_var_watcher *>>     m_var_watching_clauses;
         vector<vector<clause_literal_watcher *>> m_pos_literal_watching_clauses, m_neg_literal_watching_clauses;
+        vector<vector<clause_literal_watcher *>> m_pos_literal_watching_learned, m_neg_literal_watching_learned;
+
+        vector<unsigned_vector>                  m_arith_unit_atom;
+        vector<unsigned_vector>                  m_arith_unit_clauses;
+        vector<unsigned_vector>                  m_arith_unit_clauses_more_lits;
+
+        vector<unsigned_vector>                  m_arith_unit_learned;
+        vector<unsigned_vector>                  m_arith_unit_learned_more_lits;
+        vector<vector<clause_var_watcher*>>      m_var_watching_learned;
 
         double                 arith_var_bump = 1;
         double                 bool_var_bump = 1;
@@ -387,6 +399,7 @@ namespace nlsat {
 
         vector<var_vector>     m_var_atoms;
         vector<var_vector>     m_var_clauses;
+        vector<var_vector>     m_var_learned;
 
         // Cache for infeasible set computation
         vector<vector<interval_set_bool>>  m_var_clause_infeasible_set, m_var_learned_infeasible_set;
@@ -397,6 +410,9 @@ namespace nlsat {
         unsigned               m_scope_lvl;
         unsigned               m_scope_stage;
         unsigned_vector        m_hybrid_find_stage;
+
+        clause *               conflict_clause;
+        bool                   frontend_conflict;
 
         imp(solver &s, ctx &c) : m_ctx(c),
                                  m_solver(s),
@@ -435,6 +451,7 @@ namespace nlsat {
 #endif
 
         {
+            clear();
             updt_params(c.m_params);
             reset_statistics();
             mk_true_bvar();
@@ -484,6 +501,7 @@ namespace nlsat {
             del_unref_atoms();
             m_cache.reset();
             m_assignment.reset();
+            clear_nlsat_structures();
         }
 
         void clear() {
@@ -493,6 +511,7 @@ namespace nlsat {
             undo_until_size(0);
             del_clauses();
             del_unref_atoms();
+            clear_nlsat_structures();
         }
 
         void checkpoint() {
@@ -595,8 +614,14 @@ namespace nlsat {
             return b;
         }
 
+        /**
+         \brief Create a fresh boolean variable that is not associated with any
+          nonlinear arithmetic atom.
+        */
         bool_var mk_bool_var() {
-            return mk_bool_var_core();
+            bool_var res = mk_bool_var_core();
+            register_nlsat_bvar(res);
+            return res;
         }
 
         var mk_var(bool is_int) {
@@ -604,10 +629,10 @@ namespace nlsat {
             register_var(x, is_int);
             return x;
         }
+
         void register_var(var x, bool is_int) {
             SASSERT(x == num_arith_vars());
             m_is_int.    push_back(is_int);
-            // m_watches.   push_back(clause_vector());
             m_infeasible.push_back(0);
             m_var2eq.    push_back(nullptr);
             m_perm.      push_back(x);
@@ -616,6 +641,7 @@ namespace nlsat {
             SASSERT(m_is_int.size() == m_var2eq.size());
             SASSERT(m_is_int.size() == m_perm.size());
             SASSERT(m_is_int.size() == m_inv_perm.size());
+            register_nlsat_avar(x);
         }
 
         bool_vector m_found_vars;
@@ -663,22 +689,7 @@ namespace nlsat {
             m_atoms[b] = nullptr;
             m_bvalues[b] = l_undef;
             m_bid_gen.recycle(b);
-            delete_bool_var_from_nlsat(b);
-        }
-
-        void delete_bool_var_from_nlsat(bool_var b) {
-            SASSERT(b < m_nlsat_atoms.size());
-            m_nlsat_atoms[b] = nullptr;
-            for(int v = 0; v < m_var_watching_atoms.size(); v++) {
-                int j = 0;
-                for(int i = 0; i < m_var_watching_atoms[v].size(); i++) {
-                    atom_var_watcher *watcher = m_var_watching_atoms[v][i];
-                    if(watcher->m_atom_index != b) {
-                        m_var_watching_atoms[v][j++] = watcher;
-                    }
-                }
-                m_var_watching_atoms[v].shrink(j);
-            }
+            del_nlsat_atom(b);
         }
 
         void del(ineq_atom * a) {
@@ -725,28 +736,21 @@ namespace nlsat {
             int sign = 1;
             polynomial_ref p(m_pm);
             ptr_buffer<poly> uniq_ps;
-            // var max = null_var;
             for (unsigned i = 0; i < sz; i++) {
                 p = m_pm.flip_sign_if_lm_neg(ps[i]);
                 if (p.get() != ps[i] && !is_even[i]) {
                     sign = -sign;
                 }
-                // var curr_max = max_var(p.get());
-                // if (curr_max > max || max == null_var)
-                    // max = curr_max;
                 uniq_ps.push_back(m_cache.mk_unique(p));
                 TRACE("nlsat_table_bug", tout << "p: " << p << ", uniq: " << uniq_ps.back() << "\n";);
             }
             void * mem = m_allocator.allocate(ineq_atom::get_obj_size(sz));
             if (sign < 0)
                 k = atom::flip(k);
-            // ineq_atom * tmp_atom = new (mem) ineq_atom(k, sz, uniq_ps.data(), is_even, max);
             ineq_atom * tmp_atom = new (mem) ineq_atom(k, sz, uniq_ps.data(), is_even);
             ineq_atom * atom = m_ineq_atoms.insert_if_not_there(tmp_atom);
             CTRACE("nlsat_table_bug", tmp_atom != atom, ineq_atom::hash_proc h; 
                   tout << "mk_ineq_atom hash: " << h(tmp_atom) << "\n"; display(tout, *tmp_atom, m_display_var) << "\n";);
-            // CTRACE("nlsat_table_bug", atom->max_var() != max, display(tout << "nonmax: ", *atom, m_display_var) << "\n";);
-            // SASSERT(atom->max_var() == max);
             is_new = (atom == tmp_atom);
             if (is_new) {
                 for (unsigned i = 0; i < sz; i++) {
@@ -813,13 +817,10 @@ namespace nlsat {
             uniq_p = m_cache.mk_unique(p1); 
             TRACE("nlsat_solver", tout << x << " " << p1 << " " << uniq_p << "\n";);
             SASSERT(i > 0);
-            // SASSERT(x >= max_var(p));
             SASSERT(k == atom::ROOT_LT || k == atom::ROOT_GT || k == atom::ROOT_EQ || k == atom::ROOT_LE || k == atom::ROOT_GE);
-
             void * mem = m_allocator.allocate(sizeof(root_atom));
             root_atom * new_atom = new (mem) root_atom(k, x, i, uniq_p);
             root_atom * old_atom = m_root_atoms.insert_if_not_there(new_atom);
-            // SASSERT(old_atom->max_var() == x);
             if (old_atom != new_atom) {
                 deallocate(new_atom);
                 return old_atom->bvar();
@@ -861,6 +862,11 @@ namespace nlsat {
         }
         
         void del_clause(clause * cls) {
+            if(cls->is_learned()) {
+                del_nlsat_learned(cls->id());
+            } else {
+                del_nlsat_clause(cls->id());
+            }
             m_cid_gen.recycle(cls->id());
             unsigned sz = cls->size();
             for (unsigned i = 0; i < sz; i++)
@@ -886,13 +892,6 @@ namespace nlsat {
             del_clauses(m_clauses);
             del_clauses(m_learned);
             del_clauses(m_valids);
-            del_clauses_from_nlsat();
-        }
-
-        void del_clauses_from_nlsat() {
-            m_nlsat_clauses.clear();
-            m_var_watching_clauses.resize(m_num_hybrid_vars, vector<clause_var_watcher*>(0));
-            m_var_watching_learned.resize(m_num_hybrid_vars, vector<clause_var_watcher*>(0));
         }
 
         // We use a simple heuristic to sort literals
@@ -1076,7 +1075,6 @@ namespace nlsat {
             clause * cls = mk_clause_core(num_lits, lits, learned, a);
             ++m_lemma_count;
             TRACE("nlsat_sort", display(tout << "mk_clause:\n", *cls) << "\n";);
-            // TRACE("wzh", tout << "[dynamic] sort clause" << std::endl;);
             std::sort(cls->begin(), cls->end(), lit_lt(*this));
             TRACE("nlsat_sort", display(tout << "#" << m_lemma_count << " after sort:\n", *cls) << "\n";);
             if (learned && m_log_lemmas) {
@@ -1088,11 +1086,12 @@ namespace nlsat {
             if (learned){
                 m_learned.push_back(cls);
                 m_learned_added++;
-                register_learned_clause(m_learned.size() - 1);
+                register_nlsat_learned(m_learned.size() - 1);
                 clause_bump_act(*cls);
             }
             else{
                 m_clauses.push_back(cls);
+                register_nlsat_clause(m_clauses.size() - 1);
                 SASSERT(m_clauses.size() == m_clause_vars.size());
             }
             return cls;
@@ -1159,54 +1158,9 @@ namespace nlsat {
             }
         }
 
-        void register_learned_clause(int idx) {
-            clause *cls = m_learned[idx];
-            bool_var_table bvars;
-            var_table avars;
-            // avars and bvars
-            for(literal l: *cls) {
-                if(m_atoms[l.var()] == nullptr) {
-                    bvars.insert_if_not_there(m_pure_bool_convert[l.var()]);
-                } else {
-                    var_table curr_vars;
-                    collect_atom_vars(m_atoms[l.var()], curr_vars);
-                    for(var v: curr_vars) {
-                        avars.insert_if_not_there(v);
-                    }
-                }
-            }
-            // rp vars
-            var_table rpvars;
-            for(literal l: *cls) {
-                atom *a = m_atoms[l.var()];
-                if(a != nullptr && a->is_root_atom()) {
-                    root_atom *ra = to_root_atom(a);
-                    var_vector curr_vars;
-                    m_pm.vars(ra->p(), curr_vars);
-                    for(var v: curr_vars) {
-                        if(v != ra->x()) {
-                            rpvars.insert_if_not_there(v);
-                        }
-                    }
-                }
-            }
-            m_nlsat_learned.push_back(new nlsat_learned(idx, cls, bvars, avars, rpvars));
-            set_learned_watches(idx);
-        }
-
-        vector<unsigned_vector>              m_arith_unit_learned;
-        vector<unsigned_vector>              m_arith_unit_learned_more_lits;
-        vector<vector<clause_var_watcher*>>  m_var_watching_learned;
-
-        /**
-          \brief Set watches for each new added learned clause
-          Find two unassigned var to watch the clause
-          \if unit (just one var), set (v, null_var)
-          \else find unassigned vars
-        */
-        void set_learned_watches(int idx) {
+        void set_learned_var_watcher(unsigned idx) {
             // set watches
-            nlsat_learned *cls = m_nlsat_learned[idx];
+            nlsat_learned const *cls = m_nlsat_learned[idx];
             clause_var_watcher *new_watcher;
             type_var_table m_vars;
             for(bool_var b: cls->m_bool_vars) {
@@ -1216,17 +1170,28 @@ namespace nlsat {
                 m_vars.insert(type_var(v, false));
             }
             if(m_vars.size() == 1) { // unit clause
-                hybrid_var v = convert2hybrid(*m_vars.begin());
-                new_watcher = new clause_var_watcher(idx, v, null_var);
-                m_var_watching_learned[v].push_back(new_watcher);
-            } else {
+                hybrid_var v = type2hybrid(*m_vars.begin());
+                if(hybrid_is_bool(v)) { 
+                    // we do nothing, since this will be assigned by up
+                } else {
+                    var av = hybrid2arith(v);
+                    m_arith_unit_learned[av].push_back(idx);
+                    if(m_learned[idx]->size() >= 2) {
+                        m_arith_unit_learned_more_lits[av].push_back(idx);
+                    }
+                    if(!update_learned_infeasible_set(idx, av)) {
+                        conflict_clause = m_learned[idx];
+                        return;
+                    }
+                }
+            } else { // vars >= 2
                 hybrid_var v1 = null_var, v2 = null_var;
                 for(auto const &tv: m_vars) {
                     if(!type_var_assigned(tv)) {
                         if(v1 == null_var) {
-                            v1 = convert2hybrid(tv);
+                            v1 = type2hybrid(tv);
                         } else if(v2 == null_var) {
-                            v2 = convert2hybrid(tv);
+                            v2 = type2hybrid(tv);
                         }
                     }
                 }
@@ -1234,51 +1199,108 @@ namespace nlsat {
                     // do nothing
                 } else if(v1 != null_var && v2 == null_var) { // one unassigned
                     for (auto const &tv : m_vars) {
-                        if(convert2hybrid(tv) != v1) {
-                            v2 = convert2hybrid(tv);
+                        if(type2hybrid(tv) != v1) {
+                            v2 = type2hybrid(tv);
                             break;
                         }
                     }
                 } else { // no unassigned
                     auto it = m_vars.begin();
-                    v1 = convert2hybrid(*it);
+                    v1 = type2hybrid(*it);
                     it++;
-                    v2 = convert2hybrid(*it);
+                    v2 = type2hybrid(*it);
                 }
                 new_watcher = new clause_var_watcher(idx, v1, v2);
                 m_var_watching_learned[v1].push_back(new_watcher);
                 m_var_watching_learned[v2].push_back(new_watcher);
-            }
-            // check unit
-            if(new_watcher->size() == 1) {
-                hybrid_var v = new_watcher->get_another_var(null_var);
-                if(hybrid_is_arith(v)) {
-                    m_arith_unit_learned[hybrid2arith(v)].push_back(idx);
-                    if(m_learned[idx]->size() > 1) {
-                        m_arith_unit_learned_more_lits[hybrid2arith(v)].push_back(idx);
-                    }
-                }
-            } else {
-                hybrid_var v1 = new_watcher->v1, v2 = new_watcher->v2;
-                if(hybrid_var_assigned(v1) && !hybrid_var_assigned(v2)) {
+                if(hybrid_var_assigned(v1) && !hybrid_var_assigned(v2)) { // unit to v2
                     if(hybrid_is_arith(v2)) {
-                        m_arith_unit_learned[hybrid2arith(v2)].push_back(idx);
-                        if(m_learned[idx]->size() > 1) {
-                            m_arith_unit_learned_more_lits[hybrid2arith(v2)].push_back(idx);
+                        var av = hybrid2arith(v2);
+                        m_arith_unit_learned[av].push_back(idx);
+                        if(m_learned[idx]->size() >= 2) {
+                            m_arith_unit_learned_more_lits[av].push_back(idx);
+                        }
+                        if(!update_learned_infeasible_set(idx, av)) {
+                            conflict_clause = m_learned[idx];
+                            return;
                         }
                     }
-                } else if(!hybrid_var_assigned(v1) && hybrid_var_assigned(v2)) {
+                } else if(!hybrid_var_assigned(v1) && hybrid_var_assigned(v2)) { // unit to v1
                     if(hybrid_is_arith(v1)) {
-                        m_arith_unit_learned[hybrid2arith(v1)].push_back(idx);
-                        if(m_learned[idx]->size() > 1) {
-                            m_arith_unit_learned_more_lits[hybrid2arith(v1)].push_back(idx);
+                        var av = hybrid2arith(v1);
+                        m_arith_unit_learned[av].push_back(idx);
+                        if(m_learned[idx]->size() >= 2) {
+                            m_arith_unit_learned_more_lits[av].push_back(idx);
+                        }
+                        if (!update_learned_infeasible_set(idx, av)) {
+                            conflict_clause = m_learned[idx];
+                            return;
                         }
                     }
                 }
             }
         }
 
-        hybrid_var convert2hybrid(type_var const &tv) const {
+        void set_learned_literal_watcher(unsigned idx) {
+            clause const &curr_clause = *m_learned[idx];
+            SASSERT(curr_clause.size() > 0);
+            if(curr_clause.size() == 1) { // unit clause
+                literal l = curr_clause[0];
+                if(value(l) == l_false) {
+                    conflict_clause = m_learned[idx];
+                    return;
+                }
+                if(is_bool_literal(l)) {
+                    assign_literal(l, mk_clause_jst(&curr_clause));
+                }
+            } else {
+                bool is_sat = false; unsigned id1 = null_var, id2 = null_var;
+                for(int idx2 = 0; idx2 < curr_clause.size(); idx2++) {
+                    literal l = curr_clause[idx2];
+                    if(value(l) == l_true) {
+                        is_sat = true;
+                        continue;
+                    }
+                    if(value(l) == l_false) {
+                        continue;
+                    }
+                    if(id1 == null_var) {
+                        id1 = idx2;
+                    } else if(id2 == null_var) {
+                        id2 = idx2;
+                    }
+                }
+                if(id1 == null_var && id2 == null_var) { // conflict
+                    conflict_clause = m_learned[idx];
+                    id1 = 0; id2 = 1;
+                }
+                else if(id1 != null_var && id2 == null_var) { // one unassigned clause
+                    if(is_bool_literal(curr_clause[id1])) {
+                        assign_literal(curr_clause[id1], mk_clause_jst(&curr_clause));
+                    }
+                    for(id2 = 0; id2 < curr_clause.size() && id2 == id1; id2++);
+                } else if(id1 != null_var && id2 != null_var) { // two unassigned
+                    // do nothing
+                }
+                literal l1 = curr_clause[id1], l2 = curr_clause[id2];
+                int i1 = l1.sign() ? -l1.var() : l1.var();
+                int i2 = l2.sign() ? -l2.var() : l2.var();
+                SASSERT(i1 != 0 && i2 != 0);
+                clause_literal_watcher *new_watcher = new clause_literal_watcher(idx, i1, i2);
+                if(!l1.sign()) {
+                    m_pos_literal_watching_learned[l1.var()].push_back(new_watcher);
+                } else {
+                    m_neg_literal_watching_learned[l1.var()].push_back(new_watcher);
+                }
+                if(!l2.sign()) {
+                    m_pos_literal_watching_learned[l2.var()].push_back(new_watcher);
+                } else {
+                    m_neg_literal_watching_learned[l2.var()].push_back(new_watcher);
+                }
+            }
+        }
+
+        hybrid_var type2hybrid(type_var const &tv) const {
             return tv.is_bool ? tv.v : tv.v + num_bool_vars();
         }
 
@@ -1335,8 +1357,8 @@ namespace nlsat {
             m_trail.push_back(trail(level()));
         }
 
-        void save_branch_trail(var old_v) {
-            m_trail.push_back(trail(old_v, branch()));
+        void save_branch_trail(var old_v, var new_v) {
+            m_trail.push_back(trail(old_v, new_v, branch()));
         }
      
         void undo_bvar_assignment(bool_var b) {
@@ -1957,12 +1979,11 @@ namespace nlsat {
         }
 
         bool is_hybrid_assigned(hybrid_var x) const {
+            if(x == null_var) {
+                return false;
+            }
             return x < num_bool_vars() ? m_bvalues[x] != l_undef : m_assignment.is_assigned(x - num_bool_vars());
         }
-
-        vector<unsigned_vector>        m_arith_unit_atom;
-        vector<unsigned_vector>        m_arith_unit_clauses;
-        vector<unsigned_vector>        m_arith_unit_clauses_more_lits;
 
         /**
            \brief using hybrid variable to check clause real-unit status
@@ -2029,7 +2050,7 @@ namespace nlsat {
                                         m_arith_unit_clauses_more_lits[v].push_back(idx);
                                     }
                                     if(!update_clause_infeasible_set(idx, v)) { // conflict
-                                        save_branch_trail(m_hk);
+                                        save_branch_trail(m_hk, another_var);
                                         m_hk = another_var;
                                         new_stage();
                                         m_hybrid_find_stage[m_hk] = m_scope_stage;
@@ -2096,7 +2117,7 @@ namespace nlsat {
                                             m_arith_unit_learned_more_lits[arith_var].push_back(idx);
                                         }
                                         if(!update_learned_infeasible_set(idx, arith_var)) { // conflict clause
-                                            save_branch_trail(m_hk);
+                                            save_branch_trail(m_hk, another_var);
                                             m_hk = another_var;
                                             new_stage();
                                             m_hybrid_find_stage[m_hk] = m_scope_stage;
@@ -2227,6 +2248,7 @@ namespace nlsat {
             while(m_atom_prop < m_valued_atom_trail.size()) {
                 unsigned curr_idx = m_valued_atom_trail[m_atom_prop++];
                 SASSERT(value_atom(curr_idx) != l_undef);
+                // propagate clause
                 vector<clause_literal_watcher *> &watches = value_atom(curr_idx) == l_true ? // assign positive, scan negative; assign negative, scan positive
                               m_neg_literal_watching_clauses[curr_idx] : m_pos_literal_watching_clauses[curr_idx];
                 int i, j = 0, size = watches.size();
@@ -2329,6 +2351,119 @@ namespace nlsat {
                                 m_neg_literal_watching_clauses[new_l].push_back(watches[i]);
                             } else {
                                 m_pos_literal_watching_clauses[new_l].push_back(watches[i]);
+                            }
+                        } else { // unit to another literal, still watch
+                            if(is_bool_literal(cls[another_idx])) {
+                                assign_literal(cls[another_idx], mk_clause_jst(&cls));
+                            }
+                            watches[j++] = watches[i];
+                        }
+                    }
+                }
+                watches.shrink(j);
+                // propagate learned
+                watches = value_atom(curr_idx) == l_true ? // assign positive, scan negative; assign negative, scan positive
+                              m_neg_literal_watching_learned[curr_idx] : m_pos_literal_watching_learned[curr_idx];
+                j = 0, size = watches.size();
+                for(i = 0; i < size; i++) {
+                    int c_idx = watches[i]->m_clause_index;
+                    int l1 = watches[i]->l1, l2 = watches[i]->l2;
+                    // the watches have already been changed (this may happen after the loop of first watcher)
+                    // this case only happens for SMT, 
+                    // since in "multi-valued" problem, two watches can be assigned and changed simutaneously
+                    if(abs(l1) != curr_idx && abs(l2) != curr_idx) { // watches have been updated, adopt it
+                        continue;
+                    }
+                    lbool v1 = get_literal_value(l1), v2 = get_literal_value(l2);
+                    SASSERT(v1 == l_false || v2 == l_false); // must have a false literal, since we assign one of the literals
+                    if(v1 == l_true || v2 == l_true) { // the clause is already satisfied, keep watch and loop next
+                        watches[j++] = watches[i];
+                        continue;
+                    } else if(v1 == l_false && v2 == l_false) { // both are false, this is caused by arith assignment
+                        int new_l1 = 0, new_l2 = 0;
+                        int unit_index = -1;
+                        clause const &cls = *m_learned[c_idx]; 
+                        bool sat = false;
+                        for (int looped_idx = 0; looped_idx < cls.size(); looped_idx++) {
+                            literal l = cls[looped_idx];
+                            if(l.var() == v1 || l.var() == v2 || value(l) == l_false) {
+                                continue;
+                            }
+                            if(value(l) == l_true) {
+                                sat = true;
+                                break;
+                            }
+                            if(new_l1 == 0) {
+                                unit_index = looped_idx;
+                                new_l1 = l.sign() ? -l.var() : l.var();
+                            } else if(new_l2 == 0) {
+                                new_l2 = l.sign() ? -l.var() : l.var();
+                            } else {
+                                break;
+                            }
+                        }
+                        if(sat) { // sat clause
+                            watches[j++] = watches[i];
+                            continue;
+                        }
+                        if(new_l1 != 0 && new_l2 != 0) { // change both watches
+                            watches[i]->replace_literal(l1, new_l1);
+                            watches[i]->replace_literal(l2, new_l2);
+                            if(new_l1 > 0) {
+                                m_neg_literal_watching_learned[new_l1].push_back(watches[i]);
+                            } else {
+                                m_pos_literal_watching_learned[-new_l1].push_back(watches[i]);
+                            }
+                            if(new_l2 > 0) {
+                                m_neg_literal_watching_learned[new_l2].push_back(watches[i]);
+                            } else {
+                                m_pos_literal_watching_learned[-new_l2].push_back(watches[i]);
+                            }
+                        } else if(new_l1 == 0 && new_l2 == 0) { // conflict clause
+                            watches[j++] = watches[i];
+                            return m_learned[c_idx];
+                        } else { // change one of them, then propagate
+                            SASSERT(new_l1 != 0 && new_l2 == 0);
+                            watches[i]->replace_literal_using_abs(curr_idx, new_l1);
+                            if(new_l1 > 0) {
+                                m_neg_literal_watching_learned[new_l1].push_back(watches[i]);
+                            } else {
+                                m_pos_literal_watching_learned[-new_l1].push_back(watches[i]);
+                            }
+                            if(is_bool_literal(cls[unit_index])) {
+                                assign_literal(cls[unit_index], mk_clause_jst(&cls));
+                            }
+                        }
+                    } else { // current literal is false, the other is undef
+                        int new_l = 0, another_idx = watches[i]->get_another_literal_index_using_abs(curr_idx);
+                        clause const &cls = *m_learned[c_idx];
+                        bool sat = false;
+                        for(int looped_idx = 0; looped_idx < cls.size(); looped_idx++) {
+                            literal l = cls[looped_idx];
+                            if(l.var() == abs(another_idx)) {
+                                another_idx = looped_idx;
+                                continue;
+                            }
+                            if(l.var() == curr_idx || value(l) == l_false) {
+                                continue;
+                            }
+                            if(value(l) == l_true) {
+                                sat = true;
+                                break;
+                            }
+                            new_l = l.sign() ? -l.var() : l.var();
+                            break;
+                        }
+                        if(sat) {
+                            watches[j++] = watches[i];
+                            continue;
+                        }
+                        if(new_l != 0) { // found replacement
+                            watches[i]->replace_literal_using_abs(curr_idx, new_l);
+                            if(new_l > 0) {
+                                m_neg_literal_watching_learned[new_l].push_back(watches[i]);
+                            } else {
+                                m_pos_literal_watching_learned[new_l].push_back(watches[i]);
                             }
                         } else { // unit to another literal, still watch
                             if(is_bool_literal(cls[another_idx])) {
@@ -2449,22 +2584,28 @@ namespace nlsat {
         */
         bool decide() {
             bool last_arith = hybrid_is_arith(m_hk);
-            save_branch_trail(m_hk);
+            hybrid_var old_hk = m_hk;
             m_hk = pick_branching_var();
+            save_branch_trail(old_hk, m_hk);
             if(m_hk == null_var) { // var heap is empty, all vars assigned
                 std::cout << "------------- SAT -------------" << std::endl;
                 return true;
             }
-            if(hybrid_is_bool(m_hk)) { // branch bool var
-                if(last_arith) {
-                    new_stage();
-                }
-                decide_literal(literal(m_pure_bool_vars[m_hk], true));
-            } else { // branch arith var
+            // 1. branch bool, split previous arith vars
+            // 2. arith var
+            if((hybrid_is_bool(m_hk) && last_arith) || hybrid_is_arith(m_hk)) {
                 new_stage();
+            }
+            choose_value();
+            return false;
+        }
+
+        void choose_value() {
+            if(hybrid_is_bool(m_hk)) {
+                decide_literal(literal(m_pure_bool_vars[m_hk], true));
+            } else {
                 select_witness();
             }
-            return false;
         }
 
         void select_witness() {
@@ -2511,14 +2652,14 @@ namespace nlsat {
 
             display_vars(std::cout);
             std::cout << "start solving..." << std::endl;
-            if(!set_watches()) { // conflict in original clauses
+            if(frontend_conflict) { // conflict in original clauses
                 std::cout << "conflict in original clauses" << std::endl;
                 return l_false;
             }
             while(true) {
                 std::cout << "-------------- new while true --------------" << std::endl;
                 display_status(std::cout);
-                clause * conflict_clause = overall_propagate();
+                conflict_clause = overall_propagate();
                 std::cout << "-------------- after propagate --------------" << std::endl;
                 display_status(std::cout);
                 if(conflict_clause == nullptr) { // consistent
@@ -2531,6 +2672,7 @@ namespace nlsat {
                         restart();
                     } else { // branch
                         if(decide()) { // sat
+                            check_overall_satisfied(); // check model
                             return l_true;
                         }
                     }
@@ -2677,6 +2819,7 @@ namespace nlsat {
                 if(r != l_true){
                     return r;
                 }
+                // nra done
 
                 // branch and bound for nia instances
                 vector<std::pair<var, rational>> bounds;                
@@ -2725,27 +2868,293 @@ namespace nlsat {
             return r;
         }
 
-        void make_space() {
-            m_hybrid_assigned_indices.resize(m_num_hybrid_vars, null_var);
-            m_hybrid_find_stage.resize(m_num_hybrid_vars, null_var);
-            m_hybrid_activity.resize(m_num_hybrid_vars);
-            m_var_heap.set_bounds(m_num_hybrid_vars);
-            m_nlsat_atoms.clear();
-            m_nlsat_clauses.clear();
+        void register_nlsat_avar(var x) {
+            m_num_hybrid_vars++;
+            m_hybrid_assigned_indices.setx(arith2hybrid(x), null_var, null_var);
+            m_hybrid_find_stage.setx(arith2hybrid(x), null_var, null_var);
+            m_hybrid_activity.setx(arith2hybrid(x), 0, 0);
+            m_var_atoms.enlarge(x, var_vector(0));
+            m_var_clauses.enlarge(x, var_vector(0));
+            m_var_learned.enlarge(x, var_vector(0));
+            m_var_watching_atoms.setx(x, vector<atom_var_watcher*>(0), vector<atom_var_watcher*>(0));
+            m_var_watching_clauses.setx(x, vector<clause_var_watcher*>(0), vector<clause_var_watcher*>(0));
+            m_var_watching_learned.setx(x, vector<clause_var_watcher*>(0), vector<clause_var_watcher*>(0));
+            m_var_atom_infeasible_set.enlarge(x, vector<interval_set_bool>(m_atoms.size()));
+            m_var_clause_infeasible_set.enlarge(x, vector<interval_set_bool>(m_clauses.size()));
+            m_var_learned_infeasible_set.enlarge(x, vector<interval_set_bool>(m_learned.size()));
+            m_arith_unit_atom.setx(x, var_vector(0), var_vector(0));
+            m_arith_unit_clauses.setx(x, var_vector(0), var_vector(0));
+            m_arith_unit_clauses_more_lits.setx(x, var_vector(0), var_vector(0));
+            m_arith_unit_learned.setx(x, var_vector(0), var_vector(0));
+            m_arith_unit_learned_more_lits.setx(x, var_vector(0), var_vector(0));
+        }
+
+        void register_nlsat_bvar(bool_var b) {
+            m_num_hybrid_vars++;
+            m_hybrid_assigned_indices.setx(b, null_var, null_var);
+            m_hybrid_find_stage.setx(b, null_var, null_var);
+            m_hybrid_activity.setx(b, 0, 0);
+            if(!m_pure_bool_vars.contains(b)) {
+                m_pure_bool_vars.push_back(b);
+                m_pure_bool_convert.enlarge(b, null_var);
+                m_pure_bool_convert[b] = m_pure_bool_vars.size() - 1;
+            }
+        }
+
+         void register_nlsat_atom(bool_var b) {
+            m_nlsat_atoms.enlarge(b, nullptr);
+            var_table vars;
+            collect_atom_vars(m_atoms[b], vars);
+            m_nlsat_atoms[b] = new nlsat_atom(b, m_atoms[b], vars);
+            m_pos_literal_watching_clauses.enlarge(b, vector<clause_literal_watcher*>(0));
+            m_pos_literal_watching_learned.enlarge(b, vector<clause_literal_watcher*>(0));
+            m_neg_literal_watching_clauses.enlarge(b, vector<clause_literal_watcher*>(0));
+            m_neg_literal_watching_learned.enlarge(b, vector<clause_literal_watcher*>(0));
+            m_up_bvalues.enlarge(b, l_undef);
+            for(var v: vars) {
+                m_var_atoms.enlarge(v, unsigned_vector(0));
+                m_var_atoms[v].push_back(b);
+            }
+            for(var v = 0; v < m_var_atom_infeasible_set.size(); v++) {
+                m_var_atom_infeasible_set[v].enlarge(b, std::make_pair(false, nullptr));
+            }
+            set_atom_arith_watcher(b);
+        }
+
+        void register_nlsat_clause(unsigned idx) {
+            m_nlsat_clauses.enlarge(idx, nullptr);
+            var_table avars; bool_var_table bvars;
+            collect_clause_arith_and_bool_vars(m_clauses[idx], avars, bvars);
+            m_nlsat_clauses[idx] = new nlsat_clause(idx, m_clauses[idx], avars, bvars);
+            for(var av: avars) {
+                m_var_clauses.enlarge(av, unsigned_vector(0));
+                m_var_clauses[av].push_back(idx);
+            }
+            for(var v = 0; v < m_var_clause_infeasible_set.size(); v++) {
+                m_var_clause_infeasible_set[v].enlarge(idx, std::make_pair(false, nullptr));
+            }
+            set_clause_literal_watcher(idx);
+            set_clause_var_watcher(idx);
+        }
+
+        void collect_learned_arith_and_bool_vars(clause const *cls, bool_var_table bvars, var_table avars, var_table rpvars) {
+            bvars.reset(); avars.reset(); rpvars.reset();
+            for(literal l: *cls) {
+                if(m_atoms[l.var()] == nullptr) {
+                    bvars.insert_if_not_there(m_pure_bool_convert[l.var()]);
+                } else {
+                    var_table curr_vars;
+                    collect_atom_vars(m_atoms[l.var()], curr_vars);
+                    for(var v: curr_vars) {
+                        avars.insert_if_not_there(v);
+                    }
+                    if(m_atoms[l.var()]->is_root_atom()) {
+                        root_atom *ra = to_root_atom(m_atoms[l.var()]);
+                        var_vector curr_vars;
+                        m_pm.vars(ra->p(), curr_vars);
+                        for(var v: curr_vars) {
+                            if(v != ra->x()) {
+                                rpvars.insert_if_not_there(v);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        void register_nlsat_learned(unsigned idx) {
+            m_nlsat_learned.enlarge(idx, nullptr);
+            var_table avars, rpvars; bool_var_table bvars;
+            collect_learned_arith_and_bool_vars(m_learned[idx], bvars, avars, rpvars);
+            m_nlsat_learned[idx] = new nlsat_learned(idx, m_learned[idx], bvars, avars, rpvars);
+            for(var av: avars) {
+                m_var_learned.enlarge(av, unsigned_vector(0));
+                m_var_learned[av].push_back(idx);
+            }
+            for(var v = 0; v < m_var_learned_infeasible_set.size(); v++) {
+                m_var_learned_infeasible_set[v].enlarge(idx, std::make_pair(false, nullptr));
+            }
+            set_learned_literal_watcher(idx);
+            set_learned_var_watcher(idx);
+        }
+
+        void clear_assignment() {
+            for (unsigned i = 0; i < m_bvalues.size(); i++) {
+                m_bvalues[i] = l_undef;
+            }
+            m_assignment.reset();
+        }
+
+        void clear_nlsat_structures() {
+            clear_nlsat_vars();
+            clear_nlsat_atoms();
+            clear_nlsat_clauses();
+            clear_nlsat_learned();
+            clear_nlsat_trails();
+            conflict_clause = nullptr;
+            frontend_conflict = false;
+            m_up_bvalues.clear();
+        }
+
+        void clear_nlsat_vars() {
+            m_num_hybrid_vars = 0;
+            m_pure_bool_convert.clear();
+            m_pure_bool_vars.clear();
+            m_hybrid_assigned_indices.clear();
+            m_hybrid_find_stage.clear();
+            m_hybrid_activity.clear();
+            m_var_heap.clear();
             m_var_atoms.clear();
             m_var_clauses.clear();
-            m_var_atoms.resize(num_arith_vars(), var_vector(0));
-            m_var_clauses.resize(num_arith_vars(), var_vector(0));
+            m_var_learned.clear();
+            m_var_watching_atoms.clear();
+            m_var_watching_clauses.clear();
+            m_var_watching_learned.clear();
+            m_var_atom_infeasible_set.clear();
+            m_var_clause_infeasible_set.clear();
+            m_var_learned_infeasible_set.clear();
             m_arith_unit_atom.clear();
-            m_arith_unit_atom.resize(num_arith_vars(), unsigned_vector(0));
             m_arith_unit_clauses.clear();
-            m_arith_unit_clauses.resize(num_arith_vars(), unsigned_vector(0));
-            m_arith_unit_learned.clear();
-            m_arith_unit_learned.resize(num_arith_vars(), unsigned_vector(0));
             m_arith_unit_clauses_more_lits.clear();
-            m_arith_unit_clauses_more_lits.resize(num_arith_vars(), unsigned_vector(0));
+            m_arith_unit_learned.clear();
             m_arith_unit_learned_more_lits.clear();
-            m_arith_unit_learned_more_lits.resize(num_arith_vars(), unsigned_vector(0));
+        }
+
+        void clear_nlsat_atoms() {
+            m_nlsat_atoms.clear();
+        }
+
+        void clear_nlsat_clauses() {
+            m_nlsat_clauses.clear();
+        }
+
+        void clear_nlsat_learned() {
+            m_nlsat_learned.clear();
+        }
+
+        void clear_nlsat_trails() {
+            m_bool_trail.clear();
+            m_arith_trail.clear();
+            m_hybrid_trail.clear();
+            m_valued_atom_table.reset();
+            m_valued_atom_trail.clear();
+            m_infeasible_var_trail.clear();
+            m_neg_literal_watching_clauses.clear();
+            m_pos_literal_watching_clauses.clear();
+            m_neg_literal_watching_learned.clear();
+            m_pos_literal_watching_learned.clear();
+            m_atom_prop = 0;
+            m_arith_atom_prop = 0;
+            m_infeasible_prop = 0;
+            m_hybrid_var_clause_prop = 0;
+            m_hybrid_var_learned_prop = 0;
+        }
+
+        void del_nlsat_atom(bool_var b) {
+            SASSERT(b < m_nlsat_atoms.size());
+            m_nlsat_atoms[b] = nullptr;
+            for (var v = 0; v < num_arith_vars(); v++) {
+                int j = 0;
+                for (int i = 0; i < m_var_watching_atoms[v].size(); i++) {
+                    atom_var_watcher *watcher = m_var_watching_atoms[v][i];
+                    if (watcher->m_atom_index != b) {
+                        m_var_watching_atoms[v][j++] = watcher;
+                    }
+                }
+                m_var_watching_atoms[v].shrink(j);
+                j = 0;
+                for(int i = 0; i < m_arith_unit_atom[v].size(); i++) {
+                    if(m_arith_unit_atom[v][i] != b) {
+                        m_arith_unit_atom[v][j++] = m_arith_unit_atom[v][i];
+                    }
+                }
+                m_arith_unit_atom[v].shrink(j);
+                j = 0;
+                for(int i = 0; i < m_var_atoms[v].size(); i++) {
+                    if(m_var_atoms[v][i] != b) {
+                        m_var_atoms[v][j++] = m_var_atoms[v][i];
+                    }
+                }    
+                m_var_atoms[v].shrink(j);
+                m_var_atom_infeasible_set[v][b] = std::make_pair(false, nullptr);
+            }
+        }
+
+        void del_nlsat_clause(unsigned id) {
+            SASSERT(id < m_nlsat_clauses.size());
+            m_nlsat_clauses[id] = nullptr;
+            for(hybrid_var v = 0; v < num_hybrid_vars(); v++) {
+                int j = 0;
+                for(int i = 0; i < m_var_watching_clauses[v].size(); i++) {
+                    clause_var_watcher *watcher = m_var_watching_clauses[v][i];
+                    if(watcher->m_clause_index != id) {
+                        m_var_watching_clauses[v][j++] = watcher;
+                    }
+                }
+                m_var_watching_clauses[v].shrink(j);
+            }
+            for(var v = 0; v < num_arith_vars(); v++) {
+                int j = 0;
+                for(int i = 0; i < m_arith_unit_clauses[v].size(); i++) {
+                    if(m_arith_unit_clauses[v][i] != id) {
+                        m_arith_unit_clauses[v][j++] = m_arith_unit_clauses[v][i];
+                    }
+                }
+                m_arith_unit_clauses[v].shrink(j);
+                j = 0;
+                for(int i = 0; i < m_arith_unit_clauses_more_lits[v].size(); i++) {
+                    if(m_arith_unit_clauses_more_lits[v][i] != id) {
+                        m_arith_unit_clauses_more_lits[v][j++] = m_arith_unit_clauses_more_lits[v][i];
+                    }
+                }
+                m_arith_unit_clauses_more_lits[v].shrink(j);
+                j = 0;
+                for(int i = 0; i < m_var_clauses[v].size(); i++) {
+                    if(m_var_clauses[v][i] != id) {
+                        m_var_clauses[v][j++] = m_var_clauses[v][i];
+                    }
+                }
+                m_var_clauses[v].shrink(j);
+                m_var_clause_infeasible_set[v][id] = std::make_pair(false, nullptr);
+            }
+        }
+
+        void del_nlsat_learned(unsigned id) {
+            SASSERT(id < m_nlsat_learned.size());
+            m_nlsat_learned[id] = nullptr;
+            for(hybrid_var v = 0; v < num_hybrid_vars(); v++) {
+                int j = 0;
+                for(int i = 0; i < m_var_watching_learned[v].size(); i++) {
+                    if(m_var_watching_learned[v][i]->m_clause_index != id) {
+                        m_var_watching_learned[v][j++] = m_var_watching_learned[v][i];
+                    }
+                }
+                m_var_watching_learned[v].shrink(j);
+            }
+            for(var v = 0; v < num_arith_vars(); v++) {
+                int j = 0;
+                for(int i = 0; i < m_arith_unit_learned[v].size(); i++) {
+                    if(m_arith_unit_learned[v][i] != id) {
+                        m_arith_unit_learned[v][j++] = m_arith_unit_learned[v][i];
+                    }
+                }
+                m_arith_unit_learned[v].shrink(j);
+                j = 0;
+                for(int i = 0; i < m_arith_unit_learned_more_lits[v].size(); i++) {
+                    if(m_arith_unit_learned_more_lits[v][i] != id) {
+                        m_arith_unit_clauses_more_lits[v][j++] = m_arith_unit_learned_more_lits[v][i];
+                    }
+                }
+                m_arith_unit_learned_more_lits[v].shrink(j);
+                j = 0;
+                for(int i = 0; i < m_var_learned[v].size(); i++) {
+                    if(m_var_learned[v][i] != id) {
+                        m_var_learned[v][j++] = m_var_learned[v][i];
+                    }
+                }
+                m_var_learned[v].shrink(j);
+                m_var_learned_infeasible_set[v][id] = std::make_pair(false, nullptr);
+            }
         }
 
         void collect_atom_vars(atom const *a, var_table &vars) {
@@ -2799,54 +3208,7 @@ namespace nlsat {
             }
         }
 
-        void register_nlsat_structures() {
-            for(int i = 0; i < m_atoms.size(); i++) {
-                register_nlsat_atom(i);
-            }
-            for(int i = 0; i < m_clauses.size(); i++) {
-                register_nlsat_clause(i);
-            }
-        }
-
-        void register_nlsat_atom(int i) {
-            while(i >= m_nlsat_atoms.size()) {
-                m_nlsat_atoms.push_back(nullptr);
-            }
-            var_table vars;
-            collect_atom_vars(m_atoms[i], vars);
-            m_nlsat_atoms[i] = new nlsat_atom(i, m_atoms[i], vars);
-            for(var v: vars) {
-                while(v >= m_var_atoms.size()) {
-                    m_var_atoms.push_back(unsigned_vector(0));
-                }
-                m_var_atoms[v].push_back(i);
-            }
-        }
-
-        void register_nlsat_clause(int i) {
-            var_table avars, bvars;
-            collect_clause_arith_and_bool_vars(m_clauses[i], avars, bvars);
-            m_nlsat_clauses.push_back(new nlsat_clause(i, m_clauses[i], avars, bvars));
-            for (var v : avars) {
-                while(v >= m_var_clauses.size()) {
-                    m_var_clauses.push_back(unsigned_vector(0));
-                }
-                m_var_clauses[v].push_back(i);
-            }
-        }
-
-        /**
-          \return true -> consistent, false -> conflict
-        */
-        bool set_watches() {
-            set_literal_arith_watches();
-            if(!set_clause_literal_watches()) return false;
-            return set_clause_var_watches();
-        }
-
-        void set_literal_arith_watches() {
-            m_var_watching_atoms.clear();
-            m_var_watching_atoms.resize(num_arith_vars(), vector<atom_var_watcher*>(0));
+        void set_atom_arith_watcher(unsigned idx) {
             for(int idx = 0; idx < m_atoms.size(); idx++) {
                 nlsat_atom const *curr_atom = m_nlsat_atoms[idx];
                 if(curr_atom->m_vars.empty()) { // bool literal
@@ -2854,14 +3216,41 @@ namespace nlsat {
                 } else if(curr_atom->m_vars.size() == 1) { // unit arith atom
                     auto it = curr_atom->m_vars.begin();
                     var v = *it;
-                    m_arith_unit_atom[v].push_back(idx);
+                    if(!m_assignment.is_assigned(v)) {
+                        m_arith_unit_atom[v].push_back(idx);
+                    }
                 } else { // atom with arith vars >= 2
                     SASSERT(curr_atom->m_vars.size() >= 2);
-                    auto it = curr_atom->m_vars.begin();
-                    var v1 = *it;
-                    it++;
-                    var v2 = *it;
-                    atom_var_watcher *new_watcher = new atom_var_watcher(idx, v1, v2);
+                    var v1 = null_var, v2 = null_var;
+                    for(var v: curr_atom->m_vars) {
+                        if(!m_assignment.is_assigned(v)) {
+                            if(v1 == null_var) {
+                                v1 = v;
+                            } else if(v2 == null_var) {
+                                v2 = v;
+                            } else {
+                                break;
+                            }
+                        }
+                    }
+                    atom_var_watcher *new_watcher;
+                    if(v1 == null_var && v2 == null_var) { // all assigned
+                        auto it = curr_atom->m_vars.begin(); // random choose two vars
+                        v1 = *it; it++; v2 = *it;
+                    } else if(v1 != null_var && v2 == null_var) { // only v1 unassigned
+                        for(var v: curr_atom->m_vars) { // random choose a different var for v2
+                            if(v != v1) {
+                                v2 = v;
+                                break;
+                            }
+                        }
+                        m_arith_unit_atom[v1].push_back(idx);
+                    } else if(v1 != null_var && v2 != null_var) { // both unassigned
+                        // do nothing
+                    } else {
+                        UNREACHABLE();
+                    }
+                    new_watcher = new atom_var_watcher(idx, v1, v2);
                     m_var_watching_atoms[v1].push_back(new_watcher);
                     m_var_watching_atoms[v2].push_back(new_watcher);
                 }
@@ -2941,59 +3330,6 @@ namespace nlsat {
             return curr_st;
         }
 
-        bool set_clause_var_watches() {
-            m_var_watching_clauses.clear();
-            m_var_watching_clauses.resize(m_num_hybrid_vars, vector<clause_var_watcher*>(0));
-            m_var_watching_learned.clear();
-            m_var_watching_learned.resize(m_num_hybrid_vars, vector<clause_var_watcher*>(0));
-            for(int idx = 0; idx < m_clauses.size(); idx++) {
-                nlsat_clause const *curr_clause = m_nlsat_clauses[idx];
-                if(curr_clause->m_bool_vars.empty()) { // no bool var
-                    SASSERT(!curr_clause->m_vars.empty());
-                    auto it = curr_clause->m_vars.begin();
-                    if(curr_clause->m_vars.size() == 1) { // only one arith var
-                        var v = *it;
-                        m_arith_unit_clauses[v].push_back(idx);
-                        if(m_clauses[idx]->size() > 1) {
-                            m_arith_unit_clauses_more_lits[v].push_back(idx);
-                        }
-                        if(!update_clause_infeasible_set(idx, v)) { // conflict
-                            return false;
-                        }
-                    } else { // more arith vars
-                        var v1 = *it;
-                        it++;
-                        var v2 = *it;
-                        clause_var_watcher *new_watcher = new clause_var_watcher(idx, arith2hybrid(v1), arith2hybrid(v2));
-                        m_var_watching_clauses[arith2hybrid(v1)].push_back(new_watcher);
-                        m_var_watching_clauses[arith2hybrid(v2)].push_back(new_watcher);
-                    }
-                } else if(curr_clause->m_bool_vars.size() == 1) { // one bool var
-                    auto it = curr_clause->m_bool_vars.begin();
-                    bool_var b = *it;
-                    if(curr_clause->m_vars.empty()) { // unit bool var, propagate in unit propagation before
-                       // do nothing
-                    } else { // one bool var and more arith vars
-                        auto it2 = curr_clause->m_vars.begin();
-                        var v = *it2;
-                        clause_var_watcher *new_watcher = new clause_var_watcher(idx, b, arith2hybrid(v));
-                        m_var_watching_clauses[b].push_back(new_watcher);
-                        m_var_watching_clauses[arith2hybrid(v)].push_back(new_watcher);
-                    }
-                } else { // more bool vars
-                    SASSERT(curr_clause->m_bool_vars.size() >= 2);
-                    auto it = curr_clause->m_bool_vars.begin();
-                    bool_var b1 = *it;
-                    it++;
-                    bool_var b2 = *it;
-                    clause_var_watcher *new_watcher = new clause_var_watcher(idx, b1, b2);
-                    m_var_watching_clauses[b1].push_back(new_watcher);
-                    m_var_watching_clauses[b2].push_back(new_watcher);
-                }
-            }
-            return true;
-        }
-
         svector<lbool>         m_up_bvalues;
 
         void up_literal(literal l) {
@@ -3007,77 +3343,114 @@ namespace nlsat {
             return l.sign() ? ~m_up_bvalues[l.var()] : m_up_bvalues[l.var()];
         }
         
-        /**
-          \brief true -> consistent, false -> conflict
-        */
-        bool set_clause_literal_watches() {
-            m_up_bvalues.clear();
-            m_up_bvalues.resize(m_atoms.size(), l_undef);
-            m_pos_literal_watching_clauses.clear();
-            m_neg_literal_watching_clauses.clear();
-            m_pos_literal_watching_clauses.resize(m_atoms.size(), vector<clause_literal_watcher*>(0));
-            m_neg_literal_watching_clauses.resize(m_atoms.size(), vector<clause_literal_watcher*>(0));
-            for(int idx = 0; idx < m_clauses.size(); idx++) {
-                clause const &curr_clause = *m_clauses[idx];
-                SASSERT(curr_clause.size() > 0);
-                if(curr_clause.size() == 1) { // unit clause
-                    literal l = curr_clause[0];
-                    if(up_value(l) == l_false) { // found conflict in origin input clauses
-                        return false;
+        void set_clause_literal_watcher(unsigned idx) {
+            clause const &curr_clause = *m_clauses[idx];
+            SASSERT(curr_clause.size() > 0);
+            if(curr_clause.size() == 1) {
+                literal l = curr_clause[0];
+                if(up_value(l) == l_false) {
+                    frontend_conflict = true;
+                    return;
+                }
+                up_literal(l);
+                // assign unit bool literal
+                if(is_bool_literal(l)) {
+                    assign_literal(l, mk_clause_jst(&curr_clause));
+                }
+            } else {
+                bool is_sat = false; unsigned id1 = null_var, id2 = null_var;
+                for(int idx2 = 0; idx2 < curr_clause.size(); idx2++) {
+                    literal l = curr_clause[idx2];
+                    if(up_value(l) == l_true) {
+                        is_sat = true;
+                        break;
                     }
-                    // assign unit literal
-                    up_literal(l);
-                    if(is_bool_literal(l)) {
-                        assign_literal(l, mk_clause_jst(&curr_clause));
-                    }
-                } else {
-                    bool is_sat = false; unsigned id1 = null_var, id2 = null_var;
-                    for(int idx2 = 0; idx2 < curr_clause.size(); idx2++) {
-                        literal l = curr_clause[idx2];
-                        if(up_value(l) == l_true) {
-                            is_sat = true;
-                            break;
-                        }
-                        if(up_value(l) == l_false) {
-                            continue;
-                        }
-                        if(id1 == null_var) {
-                            id1 = idx2;
-                        } else if(id2 == null_var) {
-                            id2 = idx2;
-                        }
-                    }
-                    if(is_sat) { // sat clause
+                    if(up_value(l) == l_false) {
                         continue;
                     }
-                    if(id1 == null_var && id2 == null_var) { // conflict
-                        return false;
+                    if(id1 == null_var) {
+                        id1 = idx2;
+                    } else if(id2 == null_var) {
+                        id2 = idx2;
                     }
-                    if(id1 != null_var && id2 == null_var) { // unit clause
-                        up_literal(curr_clause[id1]);
-                        if(is_bool_literal(curr_clause[id1])) {
-                            assign_literal(curr_clause[id1], mk_clause_jst(&curr_clause));
-                        }
-                    } else if(id1 != null_var && id2 != null_var) { // set watches
-                        literal l1 = curr_clause[id1], l2 = curr_clause[id2];
-                        int i1 = l1.sign() ? -l1.var() : l1.var();
-                        int i2 = l2.sign() ? -l2.var() : l2.var();
-                        SASSERT(i1 != 0 && i2 != 0);
-                        clause_literal_watcher *new_watcher = new clause_literal_watcher(idx, i1, i2);
-                        if(!l1.sign()) {
-                            m_pos_literal_watching_clauses[l1.var()].push_back(new_watcher);
-                        } else {
-                            m_neg_literal_watching_clauses[l1.var()].push_back(new_watcher);
-                        }
-                        if(!l2.sign()) {
-                            m_pos_literal_watching_clauses[l2.var()].push_back(new_watcher);
-                        } else {
-                            m_neg_literal_watching_clauses[l2.var()].push_back(new_watcher);
-                        }
+                }
+                if(is_sat) { // valid clause, delete it from front_end
+                    del_clause(m_clauses[idx]);
+                    return;
+                }
+                if(id1 == null_var && id2 == null_var) { // conflict
+                    frontend_conflict = true;
+                }
+                else if(id1 != null_var && id2 == null_var) { // unit clause
+                    up_literal(curr_clause[id1]);
+                    if(is_bool_literal(curr_clause[id1])) {
+                        assign_literal(curr_clause[id1], mk_clause_jst(&curr_clause));
+                    }
+                } else if(id1 != null_var && id2 != null_var) { // set watches
+                    literal l1 = curr_clause[id1], l2 = curr_clause[id2];
+                    int i1 = l1.sign() ? -l1.var() : l1.var();
+                    int i2 = l2.sign() ? -l2.var() : l2.var();
+                    SASSERT(i1 != 0 && i2 != 0);
+                    clause_literal_watcher *new_watcher = new clause_literal_watcher(idx, i1, i2);
+                    if(!l1.sign()) {
+                        m_pos_literal_watching_clauses[l1.var()].push_back(new_watcher);
+                    } else {
+                        m_neg_literal_watching_clauses[l1.var()].push_back(new_watcher);
+                    }
+                    if(!l2.sign()) {
+                        m_pos_literal_watching_clauses[l2.var()].push_back(new_watcher);
+                    } else {
+                        m_neg_literal_watching_clauses[l2.var()].push_back(new_watcher);
                     }
                 }
             }
-            return true;
+        }
+
+        void set_clause_var_watcher(unsigned idx) {
+            nlsat_clause const *curr_clause = m_nlsat_clauses[idx];
+            if(curr_clause->m_bool_vars.empty()) { // no bool var
+                SASSERT(!curr_clause->m_vars.empty());
+                auto it = curr_clause->m_vars.begin();
+                if(curr_clause->m_vars.size() == 1) { // only one arith var
+                    var v = *it;
+                    m_arith_unit_clauses[v].push_back(idx);
+                    if(m_clauses[idx]->size() > 1) {
+                        m_arith_unit_clauses_more_lits[v].push_back(idx);
+                    }
+                    if(!update_clause_infeasible_set(idx, v)) { // conflict
+                        frontend_conflict = true;
+                        return;
+                    }
+                } else { // more arith vars
+                    var v1 = *it;
+                    it++;
+                    var v2 = *it;
+                    clause_var_watcher *new_watcher = new clause_var_watcher(idx, arith2hybrid(v1), arith2hybrid(v2));
+                    m_var_watching_clauses[arith2hybrid(v1)].push_back(new_watcher);
+                    m_var_watching_clauses[arith2hybrid(v2)].push_back(new_watcher);
+                }
+            } else if(curr_clause->m_bool_vars.size() == 1) { // one bool var
+                auto it = curr_clause->m_bool_vars.begin();
+                bool_var b = *it;
+                if(curr_clause->m_vars.empty()) { // unit bool var, propagate in unit propagation before
+                    // do nothing
+                } else { // one bool var and more arith vars
+                    auto it2 = curr_clause->m_vars.begin();
+                    var v = *it2;
+                    clause_var_watcher *new_watcher = new clause_var_watcher(idx, b, arith2hybrid(v));
+                    m_var_watching_clauses[b].push_back(new_watcher);
+                    m_var_watching_clauses[arith2hybrid(v)].push_back(new_watcher);
+                }
+            } else { // more bool vars
+                SASSERT(curr_clause->m_bool_vars.size() >= 2);
+                auto it = curr_clause->m_bool_vars.begin();
+                bool_var b1 = *it;
+                it++;
+                bool_var b2 = *it;
+                clause_var_watcher *new_watcher = new clause_var_watcher(idx, b1, b2);
+                m_var_watching_clauses[b1].push_back(new_watcher);
+                m_var_watching_clauses[b2].push_back(new_watcher);
+            }
         }
 
         void init_reduce_options() {
@@ -3098,12 +3471,7 @@ namespace nlsat {
                 if (!simplify()) 
                     return l_false;
             }
-            register_bool_vars();
-            make_space();
-            register_nlsat_structures();
             init_search();
-            std::cout << "after init search" << std::endl;
-            DTRACE(display_clauses(tout););
             display_clauses(std::cout);
             m_explain.set_full_dimensional(is_full_dimensional());
             if(OPTIONS::enable_reduce) {
@@ -3126,39 +3494,24 @@ namespace nlsat {
             while (m_scope_lvl > 0) {
                 undo_new_level();
             }
-            for (unsigned i = 0; i < m_bvalues.size(); ++i) {
-                m_bvalues[i] = l_undef;
-            }
-            m_assignment.reset();
+            clear_assignment();
             m_scope_stage = 0;
-            m_var_heap.set_bounds(m_num_hybrid_vars);
             rebuild_var_heap();
-            reset_assigned_trails();
-            reset_infeasible_set_cache();
+            clear_nlsat_trails();
+            clear_infeasible_set_cache();
+            conflict_clause = nullptr;
+            frontend_conflict = false;
         }
 
         void rebuild_var_heap() {
             m_var_heap.clear();
+            m_var_heap.set_bounds(m_num_hybrid_vars);
             for(hybrid_var v = 0; v < m_num_hybrid_vars; v++){
                 m_var_heap.insert(v);
             }
         }
 
-        void reset_assigned_trails() {
-            m_hybrid_trail.clear();
-            m_arith_trail.clear();
-            m_bool_trail.clear();
-            m_atom_prop = 0;
-            m_arith_atom_prop = 0;
-            m_hybrid_var_clause_prop = 0;
-            m_hybrid_var_learned_prop = 0;
-            m_valued_atom_table.reset();
-            m_valued_atom_trail.clear();
-            m_infeasible_prop = 0;
-            m_infeasible_var_trail.clear();
-        }
-
-        void reset_infeasible_set_cache() {
+        void clear_infeasible_set_cache() {
             m_var_atom_infeasible_set.clear();
             m_var_clause_infeasible_set.clear();
             m_var_learned_infeasible_set.clear();
@@ -3171,29 +3524,6 @@ namespace nlsat {
                 m_var_clause_infeasible_set[v] = vector<interval_set_bool>(m_clauses.size(), std::make_pair(false, nullptr));
                 m_var_learned_infeasible_set[v] = vector<interval_set_bool>(m_learned.size(), std::make_pair(false, nullptr));
             }
-        }
-
-        void register_bool_vars(){
-            m_pure_bool_vars.reset();
-            for(bool_var b = 0; b < m_atoms.size(); b++){
-                if(m_atoms[b] == nullptr){
-                    m_pure_bool_vars.push_back(b);
-                }
-            }
-            m_pure_bool_convert.reset();
-            if (num_bool_vars() > 0) {
-                m_pure_bool_convert.resize(num_bool_vars() + 1, null_var);
-            }
-            for(unsigned i = 0; i < m_pure_bool_vars.size(); i++){
-                m_pure_bool_convert[m_pure_bool_vars[i]] = i;
-            }
-            m_num_hybrid_vars = num_bool_vars() + num_arith_vars();
-            DTRACE(tout << "num of pure bools: " << num_bool_vars() << std::endl;
-                tout << "num of hybrid vars: " << m_num_hybrid_vars << std::endl;
-            );
-            DTRACE(tout << "display pure bool vars\n";
-                display_var_vector(tout, m_pure_bool_vars);
-            );
         }
 
         lbool check(literal_vector& assumptions) {
@@ -4096,6 +4426,8 @@ namespace nlsat {
             if(OPTIONS::enable_reduce) {
                 update_learnt_management();
             }
+            std::cout << "============ resolving done ============" << std::endl;
+            display_status(std::cout);
             NLSAT_VERBOSE(display(verbose_stream(), *new_cls) << "\n";);
             DTRACE(display(tout, *new_cls););
             TRACE("wzh", tout << "[debug] exit process lemma\n";);
@@ -5473,6 +5805,7 @@ namespace nlsat {
 
         std::ostream & display_status(std::ostream & out) const {
             out << "Display Status" << std::endl;
+            out << "m_hk: " << m_hk << std::endl;
             display_assignment(out);
             display_trails(out);
             display_infeasible_set(out);
@@ -5489,6 +5822,8 @@ namespace nlsat {
                     for(unsigned idx: m_arith_unit_clauses[v]) {
                         out << idx << " ";
                     }
+                    out << std::endl;
+                    out << " -> unit learned: ";
                     for(unsigned idx: m_arith_unit_learned[v]) {
                         out << idx << " ";
                     }
@@ -5560,7 +5895,7 @@ namespace nlsat {
                         break;
 
                     case trail::BRANCH:
-                        out << "[BRANCH] old m_hk: " << ele.m_x << std::endl;
+                        out << "[BRANCH] old m_hk: " << ele.m_x << "  new m_hk: " << ele.m_x2 << std::endl;
                         break;
 
                     default:
