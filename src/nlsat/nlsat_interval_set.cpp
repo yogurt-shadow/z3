@@ -646,13 +646,9 @@ namespace nlsat {
         js.reset();
         clauses.reset();
         unsigned num = num_intervals(s);
-        std::cout << "num: " << num << std::endl;
         for (unsigned i = 0; i < num; i++) {
-            std::cout << "before get l" << std::endl;
             literal l     = s->m_intervals[i].m_justification;
-            std::cout << "after get l" << std::endl;
             unsigned lidx = l.index();
-            std::cout << "lidx: " << lidx << std::endl;
             if (m_already_visited.get(lidx, false))
                 continue;
             m_already_visited.setx(lidx, true, false);
@@ -702,7 +698,7 @@ namespace nlsat {
         inter1.m_upper_inf = false;
         inter1.m_lower_open = true;
         inter1.m_upper_open = true;
-        inter1.m_justification = jst;
+        inter1.m_justification = ~jst;
         push_back(m_am, result, inter1);
 
         // (w, +oo)
@@ -713,7 +709,7 @@ namespace nlsat {
         inter2.m_upper_inf = true;
         inter2.m_lower_open = true;
         inter2.m_upper_open = true;
-        inter2.m_justification = jst;
+        inter2.m_justification = ~jst;
         push_back(m_am, result, inter2);
 
         return mk_interval(m_allocator, result, false);
@@ -755,7 +751,7 @@ namespace nlsat {
             inter.m_upper_inf = false;
             inter.m_lower_open = true;
             inter.m_upper_open = !s->m_intervals[0].m_lower_open;
-            inter.m_justification = s->m_intervals[0].m_justification;
+            inter.m_justification = ~s->m_intervals[0].m_justification;
             push_back(m_am, result, inter);
         }
         // middle area
@@ -768,7 +764,7 @@ namespace nlsat {
             inter.m_upper_inf = false;
             inter.m_lower_open = !s->m_intervals[i - 1].m_upper_open;
             inter.m_upper_open = !curr_inter.m_lower_open;
-            inter.m_justification = curr_inter.m_justification;
+            inter.m_justification = ~curr_inter.m_justification;
             push_back(m_am, result, inter);
         }
         // x, +oo)
@@ -780,7 +776,7 @@ namespace nlsat {
             inter.m_upper_inf = true;
             inter.m_lower_open = !s->m_intervals[num - 1].m_upper_open;
             inter.m_upper_open = true;
-            inter.m_justification = s->m_intervals[num - 1].m_justification;
+            inter.m_justification = ~s->m_intervals[num - 1].m_justification;
             push_back(m_am, result, inter);
         }
         // bool found_slack  = !result[0].m_lower_inf || !result[num-1].m_upper_inf;

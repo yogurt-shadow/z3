@@ -85,7 +85,10 @@ Revision History:
  * @brief Add frontend processing and information caching when reseting
  * @brief Change infeasible cache dynamicly
  * 
- * @todo set watcher pointer in watched structures, useful when deleting
+ * @date 2023/09/14
+ * @brief set watcher pointer in watched structures, useful when deleting
+ * @brief literal negation when making complement for interval sets
+ * @brief unit checker for root atom, propagate newly added atoms when registering new lemma
  * ---------------------------------------------------------------------------------------------------------------
  **/
 
@@ -344,6 +347,8 @@ namespace nlsat {
         vector<unsigned_vector>                  m_arith_unit_learned;
         vector<unsigned_vector>                  m_arith_unit_learned_more_lits;
         vector<vector<clause_var_watcher*>>      m_var_watching_learned;
+
+        bool_var_table                           m_decision_bools;
 
         double                 arith_var_bump = 1;
         double                 bool_var_bump = 1;
@@ -1393,7 +1398,9 @@ namespace nlsat {
                 bool_var pure_b = m_pure_bool_convert[b];
                 update_unit_after_var_unassigned(pure_b);
                 m_hybrid_find_stage[pure_b] = null_var;
-                m_hybrid_assigned_indices[pure_b] = null_var;
+                if(!m_decision_bools.contains(pure_b)) {
+                    m_hybrid_assigned_indices[pure_b] = null_var;
+                }
                 m_hybrid_trail.pop_back();
                 m_bool_trail.pop_back();
                 m_hybrid_var_clause_prop--;
@@ -1425,17 +1432,26 @@ namespace nlsat {
             sublemma: if a clause is watched by <x, y>, x and y are unassigned or most recent assigned
         */
         void update_unit_atom_after_var_unassigned(var x) {
+            std::cout << "update unit after unassigned" << std::endl;
             SASSERT(m_arith_unit_atom[x].empty());
             for(int i = 0; i < m_var_watching_atoms[x].size(); i++) {
                 atom_var_watcher *watcher = m_var_watching_atoms[x][i];
                 var another_var = watcher->get_another_var(x);
                 int idx = watcher->m_atom_index;
                 if(another_var == null_var || m_assignment.is_assigned(another_var)) { // previously all assigned
-                    m_arith_unit_atom[x].insert(idx);
+                    if(m_atoms[idx]->is_ineq_atom() || to_root_atom(m_atoms[idx])->x() == x) {
+                        insert_unit_atom(idx, x);
+                    }
                 } else { // another var is unassigned, currently x is also unassigned
                     m_arith_unit_atom[another_var].erase(idx);
                 }
             }
+            std::cout << "update unit after unassigned done" << std::endl;
+        }
+
+        void insert_unit_atom(unsigned idx, var x) {
+            m_arith_unit_atom[x].push_back(idx);
+            propagate_atom(idx, x);
         }
 
         void update_unit_clause_after_var_unassigned(hybrid_var x) {
@@ -1488,7 +1504,6 @@ namespace nlsat {
             std::cout << "undo arith ass" << std::endl;
             hybrid_var hv = arith2hybrid(x);
             m_assignment.reset(x);
-            m_hybrid_find_stage[hv] = null_var;
             m_hybrid_assigned_indices[hv] = null_var;
             m_hybrid_trail.pop_back();
             m_arith_trail.pop_back();
@@ -1544,6 +1559,10 @@ namespace nlsat {
 
         void undo_branch(hybrid_var old_v) {
             std::cout << "undo branch" << std::endl;
+            m_hybrid_find_stage[m_hk] = null_var;
+            if(hybrid_is_bool(m_hk)) {
+                m_decision_bools.erase(m_hk);
+            }
             m_hk = old_v;
         }
 
@@ -1551,36 +1570,38 @@ namespace nlsat {
         void undo_until(Predicate const & pred) {
             while (pred() && !m_trail.empty()) {
                 trail & t = m_trail.back();
-                switch (t.m_kind) {
-                case trail::BVAR_ASSIGNMENT:
-                    undo_bvar_assignment(t.m_x);
-                    break;
-                case trail::INFEASIBLE_UPDT:
-                    undo_set_updt(t.m_x, t.m_old_set);
-                    break;
-                case trail::NEW_STAGE:
-                    undo_new_stage();
-                    break;
-                case trail::NEW_LEVEL:
-                    undo_new_level();
-                    break;
-                case trail::UPDT_EQ:
-                    undo_updt_eq(t.m_x, t.m_old_eq);
-                    break;
-                case trail::ARITH_ASSIGNMENT:
-                    undo_avar_assignment(t.m_x);
-                    break;
-                case trail::SEMANTICS_DECISION:
-                    undo_semantics_decision(t.m_x);
-                    break;
-                case trail::BRANCH:
-                    undo_branch(t.m_x);
-                    break;
-
-                default:
-                    UNREACHABLE();
-                }
+                // we pop back before undo, because undo may inserting new trails
+                // for example, undo avar assignment may cause bvar assignment for new unit atoms
                 m_trail.pop_back();
+                switch (t.m_kind) {
+                    case trail::BVAR_ASSIGNMENT:
+                        undo_bvar_assignment(t.m_x);
+                        break;
+                    case trail::INFEASIBLE_UPDT:
+                        undo_set_updt(t.m_x, t.m_old_set);
+                        break;
+                    case trail::NEW_STAGE:
+                        undo_new_stage();
+                        break;
+                    case trail::NEW_LEVEL:
+                        undo_new_level();
+                        break;
+                    case trail::UPDT_EQ:
+                        undo_updt_eq(t.m_x, t.m_old_eq);
+                        break;
+                    case trail::ARITH_ASSIGNMENT:
+                        undo_avar_assignment(t.m_x);
+                        break;
+                    case trail::SEMANTICS_DECISION:
+                        undo_semantics_decision(t.m_x);
+                        break;
+                    case trail::BRANCH:
+                        undo_branch(t.m_x);
+                        break;
+
+                    default:
+                        UNREACHABLE();
+                }
             }
         }
         
@@ -1653,6 +1674,7 @@ namespace nlsat {
                 SASSERT(!m_assignment.is_assigned(x));
             }
             std::cout << "undo until unassigned done" << std::endl;
+            display_status(std::cout);
         }
 
         struct true_pred {
@@ -1693,6 +1715,13 @@ namespace nlsat {
             }
             display(std::cout << "assigning literal: ", l); 
             display(std::cout << " <- ", j);
+            if(j.get_kind() == justification::LAZY) {
+                std::cout << "R propagate" << std::endl;
+            } else if(j.get_kind() == justification::CLAUSE) {
+                std::cout << "unit propagate" << std::endl;
+            } else if(j.is_decision()) {
+                std::cout << "deicision" << std::endl;
+            }
             TRACE("nlsat", 
                   display(tout << "assigning literal: ", l); 
                   display(tout << " <- ", j););
@@ -1716,7 +1745,9 @@ namespace nlsat {
                 bool_var pure_b = m_pure_bool_convert[b];
                 m_bool_trail.push_back(pure_b);
                 m_hybrid_trail.push_back(pure_b);
-                m_hybrid_find_stage[pure_b] = m_scope_stage;
+                if(!m_decision_bools.contains(pure_b)) {
+                    m_hybrid_find_stage[pure_b] = m_scope_stage;
+                }
                 m_hybrid_assigned_indices[pure_b] = m_hybrid_trail.size() - 1;
             }
             TRACE("nlsat_assign", tout << "[debug] bool assign: b" << b << " -> " << m_bvalues[b]  << "\n";);
@@ -1942,8 +1973,6 @@ namespace nlsat {
             return true;
         }
 
-        vector<std::pair<unsigned, var>>    m_newly_unit_atoms;
-
         /**
            \brief using arith variable assignment trail to propagate valued literals
            \example x + y >= 12 is watched by arith var x and y
@@ -1955,8 +1984,6 @@ namespace nlsat {
         */
         void check_atom_status_using_arith() {
             std::cout << "using arith to propagate atom" << std::endl;
-            // step 1. check unit atoms
-            m_newly_unit_atoms.clear();
             while(m_arith_atom_prop < m_arith_trail.size()) {
                 var curr_var = m_arith_trail[m_arith_atom_prop++];
                 vector<atom_var_watcher*> &watches = m_var_watching_atoms[curr_var];
@@ -1986,32 +2013,13 @@ namespace nlsat {
                             m_var_watching_atoms[new_watched_var].push_back(watches[i]);
                         } else { // still watch, unit literal to another var
                             watches[j++] = watches[i];
-                            m_arith_unit_atom[another_var].push_back(idx);
-                            m_newly_unit_atoms.push_back(std::make_pair(idx, another_var));
+                            if(m_atoms[idx]->is_ineq_atom() || to_root_atom(m_atoms[idx])->x() == another_var) {
+                                insert_unit_atom(idx, another_var);
+                            }
                         }
                     }
                 }
                 watches.shrink(j);
-            }
-            // step 2. propagate unit atoms
-            for(auto const& new_atom: m_newly_unit_atoms) {
-                var v = new_atom.second;
-                unsigned idx = new_atom.first;
-                interval_set_ref curr_st(m_ism);
-                curr_st = get_atom_infeasible_set(idx, v, false);
-                if(m_ism.is_empty(curr_st)) {
-                    R_propagate(literal(idx, false), nullptr);
-                } else if(m_ism.is_full(curr_st)) {
-                    R_propagate(literal(idx, true), nullptr);
-                } else if(m_ism.subset(curr_st, m_infeasible[v])) {
-                    R_propagate(literal(idx, false), m_infeasible[v]);
-                } else {
-                    interval_set_ref tmp(m_ism);
-                    tmp = m_ism.mk_union(curr_st, m_infeasible[v]);
-                    if (m_ism.is_full(tmp)) {
-                        R_propagate(literal(idx, true), tmp, false);
-                    }
-                }
             }
         }
 
@@ -2171,9 +2179,9 @@ namespace nlsat {
             if(v == null_var) {
                 return;
             }
+            new_stage();
             save_branch_trail(m_hk, v);
             m_hk = v;
-            new_stage();
             m_hybrid_find_stage[m_hk] = m_scope_stage;
         }
 
@@ -2697,6 +2705,9 @@ namespace nlsat {
             while(!m_var_heap.empty()) {
                 hybrid_var res = m_var_heap.erase_min();
                 if(!is_hybrid_assigned(res)) {
+                    if(hybrid_is_bool(res)) {
+                        m_decision_bools.insert(res);
+                    }
                     return res;
                 }
             }
@@ -2720,7 +2731,6 @@ namespace nlsat {
             bool last_arith = hybrid_is_arith(m_hk);
             hybrid_var old_hk = m_hk;
             m_hk = pick_branching_var();
-            save_branch_trail(old_hk, m_hk);
             if(m_hk == null_var) { // var heap is empty, all vars assigned
                 return true;
             }
@@ -2729,6 +2739,8 @@ namespace nlsat {
             if((hybrid_is_bool(m_hk) && last_arith) || hybrid_is_arith(m_hk)) {
                 new_stage();
             }
+            save_branch_trail(old_hk, m_hk);
+            m_hybrid_find_stage[m_hk] = m_scope_stage;
             choose_value();
             return false;
         }
@@ -2755,7 +2767,6 @@ namespace nlsat {
                 m_irrational_assignments++;
             m_assignment.set_core(x, w);
             save_arith_assignment_trail(x);
-            m_hybrid_find_stage[m_hk] = m_scope_stage;
             m_hybrid_trail.push_back(m_hk);
             m_arith_trail.push_back(x);
             m_hybrid_assigned_indices[m_hk] = m_hybrid_trail.size() - 1;
@@ -3113,6 +3124,8 @@ namespace nlsat {
         }
 
         void register_nlsat_learned(unsigned idx) {
+            std::cout << "register nlsat learned" << std::endl;
+            display_status(std::cout);
             m_nlsat_learned.enlarge(idx, nullptr);
             var_table avars, rpvars; bool_var_table bvars;
             collect_learned_arith_and_bool_vars(m_learned[idx], bvars, avars, rpvars);
@@ -3168,6 +3181,7 @@ namespace nlsat {
             m_arith_unit_clauses_more_lits.clear();
             m_arith_unit_learned.clear();
             m_arith_unit_learned_more_lits.clear();
+            m_decision_bools.reset();
         }
 
         void clear_nlsat_atoms() {
@@ -3447,7 +3461,7 @@ namespace nlsat {
                 auto it = curr_atom->m_vars.begin();
                 var v = *it;
                 if(!m_assignment.is_assigned(v)) {
-                    m_arith_unit_atom[v].push_back(idx);
+                    insert_unit_atom(idx, v);
                 }
             } else { // atom with arith vars >= 2
                 SASSERT(curr_atom->m_vars.size() >= 2);
@@ -3474,7 +3488,9 @@ namespace nlsat {
                             break;
                         }
                     }
-                    m_arith_unit_atom[v1].push_back(idx);
+                    if(m_atoms[idx]->is_ineq_atom() || to_root_atom(m_atoms[idx])->x() == v1) {
+                        insert_unit_atom(idx, v1);
+                    }
                 } else if(v1 != null_var && v2 != null_var) { // both unassigned
                     // do nothing
                 } else {
@@ -3484,6 +3500,29 @@ namespace nlsat {
                 m_var_watching_atoms[v1].push_back(new_watcher);
                 m_var_watching_atoms[v2].push_back(new_watcher);
                 m_nlsat_atoms[idx]->m_var_watcher = new_watcher;
+            }
+        }
+
+        void propagate_atom(unsigned idx, var unit_v) {
+            if(unit_v != null_var) {
+                interval_set_ref curr_st(m_ism);
+                curr_st = get_atom_infeasible_set(idx, unit_v, false);
+                if (m_ism.is_empty(curr_st)) {
+                    R_propagate(literal(idx, false), nullptr);
+                }
+                else if (m_ism.is_full(curr_st)) {
+                    R_propagate(literal(idx, true), nullptr);
+                }
+                else if (m_ism.subset(curr_st, m_infeasible[unit_v])) {
+                    R_propagate(literal(idx, false), m_infeasible[unit_v]);
+                }
+                else {
+                    interval_set_ref tmp(m_ism);
+                    tmp = m_ism.mk_union(curr_st, m_infeasible[unit_v]);
+                    if (m_ism.is_full(tmp)) {
+                        R_propagate(literal(idx, true), tmp, false);
+                    }
+                }
             }
         }
 
@@ -3984,6 +4023,8 @@ namespace nlsat {
                 );
                 std::cout << "b_lvl: " << b_lvl << std::endl;
                 std::cout << "scoped_lvl: " << scope_lvl() << std::endl;
+                std::cout << "scoped_stg: " << m_scope_stage << std::endl;
+                std::cout << "max stage: " << max_stage_atom(b) << std::endl;
                 if(b_lvl == scope_lvl() && same_stage_atom(b, m_scope_stage)){
                     TRACE("nlsat_resolve", tout << "literal is in the same level and stage, increasing marks\n";);
                     std::cout << "literal is in the same level and stage, increasing marks" << std::endl;
@@ -4684,10 +4725,6 @@ namespace nlsat {
                         display_assigned_vars(tout);
                     );
                     undo_until_unassigned(new_max_hybrid_var, false);
-                    DTRACE(tout << "after backtrack to arith var unassigned " << new_max_hybrid_var << std::endl;
-                        display_trails(tout);
-                        display_assigned_vars(tout);
-                    );
                 }
                 // generate new clause based on lemma's contained literals
                 new_cls = mk_clause(sz, m_lemma.data(), true, m_lemma_assumptions.get());
@@ -6096,9 +6133,15 @@ namespace nlsat {
             return out;
         }
 
+        static inline std::string bool2str(bool b) {
+            return b ? "true" : "false";
+        }
+
         std::ostream & display_status(std::ostream & out) const {
             out << "Display Status" << std::endl;
             out << "m_hk: " << m_hk << std::endl;
+            out << "stage: " << m_scope_stage << std::endl;
+            out << "level: " << m_scope_lvl << std::endl;
             display_assignment(out);
             display_trails(out);
             display_infeasible_set(out);
