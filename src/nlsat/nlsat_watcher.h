@@ -1,5 +1,8 @@
 #pragma once
 
+#include "nlsat/nlsat_types.h"
+#include "nlsat/nlsat_interval_set.h"
+
 /**
    \brief Implement Watcher for clauses (which may contain both bool and arith variables)
 
@@ -16,10 +19,12 @@
 
    \ref A Generalized Two-watched-literal Scheme (Tino Teige & Christian Herde, EPIA'2007)
 */
-
-#include "nlsat/nlsat_advanced_types.h"
-
 namespace nlsat {
+    using interval_set_vector = ptr_vector<interval_set>;
+    using lbool_vector        = vector<lbool>;
+
+    using hybrid_var    = var;
+    using hybrid_var_vector   = var_vector;
     /**
       \brief Implement arith var watcher for arith literals
     */
@@ -115,17 +120,4 @@ namespace nlsat {
           }
         }
     };
-
-    /**
-      \brief When does a learnt clause is unit to a var
-      case 1: all poly vars are assigned, only left one root var (which do not occur in other root atom's poly var) unassigned
-      \example x > atom(x^3 * y^2 + 5 x^2 -8 >= 0, 2) \/ x y z <= -1    [y assigned], unit to x
-      case 2: all root vars are assigned, left one hybrid var unassigned which is not in any root_atom's poly
-      \example x > atom(x^3 * y^2 + 5 x^2 -8 >= 0, 2) \/ x z <= -1    [x, y assigned], unit to z
-
-      \note Algorithm: Still use two hybrid watcher for learned clause
-      when a var is assigned, find another unassigned var
-      \if not find, determine whether another watched var is qualified, if yes, set unit
-      \else find, change watch
-    */
 };

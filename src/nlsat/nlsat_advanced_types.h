@@ -1,17 +1,10 @@
 #pragma once
 
-#include "nlsat/nlsat_types.h"
-#include "nlsat/nlsat_interval_set.h"
+#include "nlsat/nlsat_watcher.h"
 #include "util/hashtable.h"
 #include "nlsat/nlsat_solver.h"
 
 namespace nlsat {
-    using interval_set_vector = ptr_vector<interval_set>;
-    using lbool_vector        = vector<lbool>;
-
-    using hybrid_var    = var;
-    using hybrid_var_vector   = var_vector;
-
     struct var_hash {
         unsigned operator()(var x) const {
             return x;
@@ -64,8 +57,9 @@ namespace nlsat {
         atom *               m_atom;
     public: 
         var_table            m_vars;
+        atom_var_watcher    *m_var_watcher;
 
-        nlsat_atom(unsigned id, atom * at, var_table const & vars): m_index(id), m_atom(at), m_vars(vars)
+        nlsat_atom(unsigned id, atom * at, var_table const & vars): m_index(id), m_atom(at), m_vars(vars), m_var_watcher(nullptr)
         {}
 
         ~nlsat_atom(){}
@@ -87,9 +81,11 @@ namespace nlsat {
     public: 
         var_table            m_vars;
         bool_var_table       m_bool_vars;
+        clause_var_watcher  *m_var_watcher;
+        clause_literal_watcher *m_atom_watcher;
 
         nlsat_clause(unsigned id, clause * cls, var_table const & vars, var_table const & bool_vars): 
-            m_index(id), m_clause(cls), m_vars(vars), m_bool_vars(bool_vars) 
+            m_index(id), m_clause(cls), m_vars(vars), m_bool_vars(bool_vars), m_var_watcher(nullptr), m_atom_watcher(nullptr)
         {}
 
         ~nlsat_clause(){}
@@ -127,9 +123,11 @@ namespace nlsat {
         bool_var_table      m_bool_vars;
         var_table           m_arith_vars;
         var_table           m_rp_vars;
+        clause_var_watcher  *m_var_watcher;
+        clause_literal_watcher *m_atom_watcher;
 
         nlsat_learned(unsigned id, clause * cls, bool_var_table const &bvars, var_table const &avars, var_table const& rp_vars):
-            m_index(id), m_clause(cls), m_bool_vars(bvars), m_arith_vars(avars), m_rp_vars(rp_vars)
+            m_index(id), m_clause(cls), m_bool_vars(bvars), m_arith_vars(avars), m_rp_vars(rp_vars), m_var_watcher(nullptr), m_atom_watcher(nullptr)
         {
 
         }

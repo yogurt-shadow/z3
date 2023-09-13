@@ -84,6 +84,8 @@ Revision History:
  * @date 2023/09/13
  * @brief Add frontend processing and information caching when reseting
  * @brief Change infeasible cache dynamicly
+ * 
+ * @todo set watcher pointer in watched structures, useful when deleting
  * ---------------------------------------------------------------------------------------------------------------
  **/
 
@@ -1222,6 +1224,7 @@ namespace nlsat {
                 new_watcher = new clause_var_watcher(idx, v1, v2);
                 m_var_watching_learned[v1].push_back(new_watcher);
                 m_var_watching_learned[v2].push_back(new_watcher);
+                m_nlsat_learned[idx]->m_var_watcher = new_watcher;
                 if(hybrid_var_assigned(v1) && !hybrid_var_assigned(v2)) { // unit to v2
                     if(hybrid_is_arith(v2)) {
                         var av = hybrid2arith(v2);
@@ -1306,6 +1309,7 @@ namespace nlsat {
                 } else {
                     m_neg_literal_watching_learned[l2.var()].push_back(new_watcher);
                 }
+                m_nlsat_learned[idx]->m_atom_watcher = new_watcher;
             }
         }
 
@@ -3124,16 +3128,24 @@ namespace nlsat {
 
         void del_nlsat_atom(bool_var b) {
             SASSERT(b < m_nlsat_atoms.size());
-            m_nlsat_atoms[b] = nullptr;
-            for (var v = 0; v < num_arith_vars(); v++) {
-                int j = 0;
-                for (int i = 0; i < m_var_watching_atoms[v].size(); i++) {
-                    atom_var_watcher *watcher = m_var_watching_atoms[v][i];
-                    if (watcher->m_atom_index != b) {
-                        m_var_watching_atoms[v][j++] = watcher;
+            m_pos_literal_watching_clauses[b].clear();
+            m_neg_literal_watching_clauses[b].clear();
+            m_pos_literal_watching_learned[b].clear();
+            m_neg_literal_watching_learned[b].clear();
+            int j;
+            if(m_nlsat_atoms[b]->m_var_watcher != nullptr) {
+                var v1 = m_nlsat_atoms[b]->m_var_watcher->v1, v2 = m_nlsat_atoms[b]->m_var_watcher->v2;
+                for(var v: var_vector{v1, v2}) {
+                    j = 0;
+                    for(int i = 0; i < m_var_watching_atoms[v].size(); i++) {
+                        if(m_var_watching_atoms[v][i]->m_atom_index != b) {
+                            m_var_watching_atoms[v][j++] = m_var_watching_atoms[v][i];
+                        }
                     }
+                    m_var_watching_atoms[v].shrink(j);
                 }
-                m_var_watching_atoms[v].shrink(j);
+            }
+            for (var v: m_nlsat_atoms[b]->m_vars) {
                 j = 0;
                 for(int i = 0; i < m_arith_unit_atom[v].size(); i++) {
                     if(m_arith_unit_atom[v][i] != b) {
@@ -3150,23 +3162,48 @@ namespace nlsat {
                 m_var_atoms[v].shrink(j);
                 m_var_atom_infeasible_set[v][b] = std::make_pair(false, nullptr);
             }
+            m_nlsat_atoms[b] = nullptr;
         }
 
         void del_nlsat_clause(unsigned id) {
             SASSERT(id < m_nlsat_clauses.size());
-            m_nlsat_clauses[id] = nullptr;
-            for(hybrid_var v = 0; v < num_hybrid_vars(); v++) {
-                int j = 0;
-                for(int i = 0; i < m_var_watching_clauses[v].size(); i++) {
-                    clause_var_watcher *watcher = m_var_watching_clauses[v][i];
-                    if(watcher->m_clause_index != id) {
-                        m_var_watching_clauses[v][j++] = watcher;
+            int j;
+            if(m_nlsat_clauses[id]->m_var_watcher != nullptr) { // chaneg clause var watcher
+                hybrid_var v1 = m_nlsat_clauses[id]->m_var_watcher->v1, v2 = m_nlsat_clauses[id]->m_var_watcher->v2;
+                for(hybrid_var v: var_vector{v1, v2}) {
+                    j = 0;
+                    for(int i = 0; i < m_var_watching_clauses[v1].size(); i++) {
+                        if(m_var_watching_clauses[v][i]->m_clause_index != id) {
+                            m_var_watching_clauses[v][j++] = m_var_watching_clauses[v][i];
+                        }
+                    }
+                    m_var_watching_clauses[v].shrink(j);
+                }
+            }
+            if(m_nlsat_clauses[id]->m_atom_watcher != nullptr) { // change clause literal watcher
+                int i1 = m_nlsat_clauses[id]->m_atom_watcher->l1, i2 = m_nlsat_clauses[id]->m_atom_watcher->l2;
+                for(int index: int_vector{i1, i2}) {
+                    j = 0;
+                    SASSERT(index != 0);
+                    if(index > 0) {
+                        for(int i = 0; i < m_pos_literal_watching_clauses[index].size(); i++) {
+                            if(m_pos_literal_watching_clauses[index][i]->m_clause_index != id) {
+                                m_pos_literal_watching_clauses[index][j++] = m_pos_literal_watching_clauses[index][i];
+                            }
+                        }
+                        m_pos_literal_watching_clauses[index].shrink(j);
+                    } else {
+                        for(int i = 0; i < m_neg_literal_watching_clauses[-index].size(); i++) {
+                            if(m_neg_literal_watching_clauses[-index][i]->m_clause_index != id) {
+                                m_neg_literal_watching_clauses[-index][j++] = m_neg_literal_watching_clauses[-index][i];
+                            }
+                        }
+                        m_neg_literal_watching_clauses[-index].shrink(j);
                     }
                 }
-                m_var_watching_clauses[v].shrink(j);
             }
-            for(var v = 0; v < num_arith_vars(); v++) {
-                int j = 0;
+            for(var v: m_nlsat_clauses[id]->m_vars) { // change var's unit clause
+                j = 0;
                 for(int i = 0; i < m_arith_unit_clauses[v].size(); i++) {
                     if(m_arith_unit_clauses[v][i] != id) {
                         m_arith_unit_clauses[v][j++] = m_arith_unit_clauses[v][i];
@@ -3189,21 +3226,47 @@ namespace nlsat {
                 m_var_clauses[v].shrink(j);
                 m_var_clause_infeasible_set[v][id] = std::make_pair(false, nullptr);
             }
+            m_nlsat_clauses[id] = nullptr;
         }
 
         void del_nlsat_learned(unsigned id) {
             SASSERT(id < m_nlsat_learned.size());
-            m_nlsat_learned[id] = nullptr;
-            for(hybrid_var v = 0; v < num_hybrid_vars(); v++) {
-                int j = 0;
-                for(int i = 0; i < m_var_watching_learned[v].size(); i++) {
-                    if(m_var_watching_learned[v][i]->m_clause_index != id) {
-                        m_var_watching_learned[v][j++] = m_var_watching_learned[v][i];
+            int j;
+            if(m_nlsat_learned[id]->m_var_watcher != nullptr) { // change learned var watcher
+                hybrid_var v1 = m_nlsat_learned[id]->m_var_watcher->v1, v2 = m_nlsat_learned[id]->m_var_watcher->v2;
+                for(hybrid_var v: var_vector{v1, v2}) {
+                    j = 0;
+                    for(int i = 0; i < m_var_watching_learned[v].size(); i++) {
+                        if(m_var_watching_learned[v][i]->m_clause_index != id) {
+                            m_var_watching_learned[v][j++] = m_var_watching_learned[v][i];
+                        }
+                    }
+                    m_var_watching_learned.shrink(j);
+                }
+            }
+            if(m_nlsat_learned[id]->m_atom_watcher != nullptr) { // change learned literal watcher
+                int i1 = m_nlsat_learned[id]->m_atom_watcher->l1, i2 = m_nlsat_learned[id]->m_atom_watcher->l2;
+                for(int index: int_vector{i1, i2}) {
+                    j = 0;
+                    SASSERT(index != 0);
+                    if(index > 0) {
+                        for(int i = 0; i < m_pos_literal_watching_learned[index].size(); i++) {
+                            if(m_pos_literal_watching_learned[index][i]->m_clause_index != id) {
+                                m_pos_literal_watching_learned[index][j++] = m_pos_literal_watching_learned[index][i];
+                            }
+                        }
+                        m_pos_literal_watching_learned[index].shrink(j);
+                    } else {
+                        for(int i = 0; i < m_neg_literal_watching_learned[-index].size(); i++) {
+                            if(m_neg_literal_watching_learned[-index][i]->m_clause_index != id) {
+                                m_neg_literal_watching_learned[-index][j++] = m_neg_literal_watching_learned[-index][i];
+                            }
+                        }
+                        m_neg_literal_watching_learned[-index].shrink(j);
                     }
                 }
-                m_var_watching_learned[v].shrink(j);
             }
-            for(var v = 0; v < num_arith_vars(); v++) {
+            for(var v: m_nlsat_learned[id]->m_arith_vars) {
                 int j = 0;
                 for(int i = 0; i < m_arith_unit_learned[v].size(); i++) {
                     if(m_arith_unit_learned[v][i] != id) {
@@ -3227,6 +3290,7 @@ namespace nlsat {
                 m_var_learned[v].shrink(j);
                 m_var_learned_infeasible_set[v][id] = std::make_pair(false, nullptr);
             }
+            m_nlsat_learned[id] = nullptr;
         }
 
         void collect_atom_vars(atom const *a, var_table &vars) {
@@ -3324,6 +3388,7 @@ namespace nlsat {
                 new_watcher = new atom_var_watcher(idx, v1, v2);
                 m_var_watching_atoms[v1].push_back(new_watcher);
                 m_var_watching_atoms[v2].push_back(new_watcher);
+                m_nlsat_atoms[idx]->m_var_watcher = new_watcher;
             }
         }
 
@@ -3500,6 +3565,7 @@ namespace nlsat {
                     } else {
                         m_neg_literal_watching_clauses[l2.var()].push_back(new_watcher);
                     }
+                    m_nlsat_clauses[idx]->m_atom_watcher = new_watcher;
                 }
             }
         }
@@ -3538,6 +3604,7 @@ namespace nlsat {
                     clause_var_watcher *new_watcher = new clause_var_watcher(idx, b, arith2hybrid(v));
                     m_var_watching_clauses[b].push_back(new_watcher);
                     m_var_watching_clauses[arith2hybrid(v)].push_back(new_watcher);
+                    m_nlsat_clauses[idx]->m_var_watcher = new_watcher;
                 }
             } else { // more bool vars
                 SASSERT(curr_clause->m_bool_vars.size() >= 2);
@@ -3548,6 +3615,7 @@ namespace nlsat {
                 clause_var_watcher *new_watcher = new clause_var_watcher(idx, b1, b2);
                 m_var_watching_clauses[b1].push_back(new_watcher);
                 m_var_watching_clauses[b2].push_back(new_watcher);
+                m_nlsat_clauses[idx]->m_var_watcher = new_watcher;
             }
         }
 
