@@ -534,7 +534,6 @@ namespace nlsat {
             table.reset();
             TRACE("nsat_evaluator", m_solver.display(tout, *a) << "\n";);
             unsigned num_ps = a->size();
-            // var x = a->max_var();
             for (unsigned i = 0; i < num_ps; i++) {
                 add(a->p(i), x, table);
                 TRACE("nlsat_evaluator_bug", tout << "table after:\n"; m_pm.display(tout, a->p(i)); tout << "\n"; table.display_raw(tout);); 

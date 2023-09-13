@@ -42,6 +42,7 @@ namespace nlsat {
         svector<char>            m_already_visited;
         random_gen               m_rand;
         void del(interval_set * s);
+        bool all_same_justifications(interval_set const *s) const;
     public:
         interval_set_manager(anum_manager & m, small_object_allocator & a);
         ~interval_set_manager();
@@ -71,7 +72,7 @@ namespace nlsat {
         void set_const_anum();
         interval_set * mk_point_interval(anum const & w);
         interval_set * mk_complement(interval_set const * s);
-        interval_set * mk_complement(anum const & w);
+        interval_set * mk_complement(anum const & w, literal jst);
         interval_set * mk_intersection(interval_set const * s1, interval_set const * s2);
         interval_set * mk_full();
         bool contains_zero(interval_set const * s) const;

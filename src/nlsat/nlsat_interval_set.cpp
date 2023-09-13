@@ -22,18 +22,6 @@ Revision History:
 #include <iostream>
 
 namespace nlsat {
-
-    // struct interval {
-    //     unsigned  m_lower_open:1;
-    //     unsigned  m_upper_open:1;
-    //     unsigned  m_lower_inf:1;
-    //     unsigned  m_upper_inf:1;
-    //     literal   m_justification;
-    //     clause const* m_clause;
-    //     anum      m_lower;
-    //     anum      m_upper;
-    // };
-
     class interval_set {
     public:
         static unsigned get_obj_size(unsigned num) { return sizeof(interval_set) + num*sizeof(interval); }
@@ -658,9 +646,13 @@ namespace nlsat {
         js.reset();
         clauses.reset();
         unsigned num = num_intervals(s);
+        std::cout << "num: " << num << std::endl;
         for (unsigned i = 0; i < num; i++) {
+            std::cout << "before get l" << std::endl;
             literal l     = s->m_intervals[i].m_justification;
+            std::cout << "after get l" << std::endl;
             unsigned lidx = l.index();
+            std::cout << "lidx: " << lidx << std::endl;
             if (m_already_visited.get(lidx, false))
                 continue;
             m_already_visited.setx(lidx, true, false);
@@ -700,30 +692,47 @@ namespace nlsat {
         return mk(false, false, w, false, false, w, null_literal, nullptr);
     }
 
-    interval_set * interval_set_manager::mk_complement(anum const & w){
+    interval_set * interval_set_manager::mk_complement(anum const & w, literal jst){
         interval_buffer result;
         // (-oo, w)
-        anum zero;
         interval inter1;
-        inter1.m_lower = zero;
+        m_am.set(inter1.m_lower, 0);
         m_am.set(inter1.m_upper, w);
         inter1.m_lower_inf = true;
         inter1.m_upper_inf = false;
         inter1.m_lower_open = true;
         inter1.m_upper_open = true;
+        inter1.m_justification = jst;
         push_back(m_am, result, inter1);
 
         // (w, +oo)
         interval inter2;
         m_am.set(inter2.m_lower, w);
-        inter2.m_upper = zero;
+        m_am.set(inter2.m_upper, 0);
         inter2.m_lower_inf = false;
         inter2.m_upper_inf = true;
         inter2.m_lower_open = true;
         inter2.m_upper_open = true;
+        inter2.m_justification = jst;
         push_back(m_am, result, inter2);
 
         return mk_interval(m_allocator, result, false);
+    }
+
+    bool interval_set_manager::all_same_justifications(interval_set const *s) const {
+        if(s == nullptr) {
+            return true;
+        }
+        literal l;
+        for(unsigned i = 0; i < num_intervals(s); i++) {
+            literal curr = s->m_intervals[i].m_justification;
+            if(i == 0) {
+                l = curr;
+            } else if(l != curr) {
+                return false;
+            }
+        }
+        return true;
     }
 
     interval_set * interval_set_manager::mk_complement(interval_set const * s){
@@ -733,6 +742,7 @@ namespace nlsat {
         if(s->m_full){
             return nullptr;
         }
+        SASSERT(all_same_justifications(s));
         anum zero;
         unsigned num = num_intervals(s);
         interval_buffer result;
@@ -745,6 +755,7 @@ namespace nlsat {
             inter.m_upper_inf = false;
             inter.m_lower_open = true;
             inter.m_upper_open = !s->m_intervals[0].m_lower_open;
+            inter.m_justification = s->m_intervals[0].m_justification;
             push_back(m_am, result, inter);
         }
         // middle area
@@ -757,6 +768,7 @@ namespace nlsat {
             inter.m_upper_inf = false;
             inter.m_lower_open = !s->m_intervals[i - 1].m_upper_open;
             inter.m_upper_open = !curr_inter.m_lower_open;
+            inter.m_justification = curr_inter.m_justification;
             push_back(m_am, result, inter);
         }
         // x, +oo)
@@ -768,6 +780,7 @@ namespace nlsat {
             inter.m_upper_inf = true;
             inter.m_lower_open = !s->m_intervals[num - 1].m_upper_open;
             inter.m_upper_open = true;
+            inter.m_justification = s->m_intervals[num - 1].m_justification;
             push_back(m_am, result, inter);
         }
         // bool found_slack  = !result[0].m_lower_inf || !result[num-1].m_upper_inf;
