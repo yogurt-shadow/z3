@@ -1,0 +1,112 @@
+(declare-fun b0 () Bool)
+(declare-fun b1 () Bool)
+(declare-fun x0 () Real)
+(declare-fun x1 () Real)
+(assert (and true
+true
+(or b1 (not (> (+ (* (* x0 x1)) x1 (- 12)) 0)))
+))
+
+check begin
+display clauses
+true
+b1 or !(x y + y - 12 > 0)
+0 -> x
+1 -> y
+start solving...
+-------------- new while true --------------
+Display Status
+m_hk: 4294967295
+Display Assignment
+b0 -> true
+================== Display Trails ==================
+[BVAR ASSIGNMENT]: true -> bool_var 0
+================== Trails Done ==================
+x -> {}
+y -> {}
+here1
+using arith to propagate atom
+here2
+here3
+unit propagate
+here4
+using arith to propagate clause
+here5
+using arith to propagate learned
+here6
+-------------- after propagate --------------
+Display Status
+m_hk: 4294967295
+Display Assignment
+b0 -> true
+================== Display Trails ==================
+[BVAR ASSIGNMENT]: true -> bool_var 0
+================== Trails Done ==================
+x -> {}
+y -> {}
+[consistent]
+-------------- new while true --------------
+Display Status
+m_hk: 1
+Display Assignment
+b0 -> true
+b1 -> false
+================== Display Trails ==================
+[BVAR ASSIGNMENT]: true -> bool_var 0
+[BRANCH] old m_hk: 4294967295  new m_hk: 1
+[NEW LEVEL]
+[BVAR ASSIGNMENT]: b1 -> bool_var 1
+================== Trails Done ==================
+x -> {}
+y -> {}
+here1
+using arith to propagate atom
+here2
+here3
+unit propagate
+here4
+using arith to propagate clause
+here5
+using arith to propagate learned
+here6
+-------------- after propagate --------------
+Display Status
+m_hk: 1
+Display Assignment
+b0 -> true
+b1 -> false
+================== Display Trails ==================
+[BVAR ASSIGNMENT]: true -> bool_var 0
+[BRANCH] old m_hk: 4294967295  new m_hk: 1
+[NEW LEVEL]
+[BVAR ASSIGNMENT]: b1 -> bool_var 1
+================== Trails Done ==================
+x -> {}
+y -> {}
+[consistent]
+-------------- new while true --------------
+Display Status
+m_hk: 2
+Display Assignment
+b0 -> true
+b1 -> false
+x -> 0
+================== Display Trails ==================
+[BVAR ASSIGNMENT]: true -> bool_var 0
+[BRANCH] old m_hk: 4294967295  new m_hk: 1
+[NEW LEVEL]
+[BVAR ASSIGNMENT]: b1 -> bool_var 1
+[BRANCH] old m_hk: 1  new m_hk: 2
+[NEW STAGE]
+[ARITH ASSIGNMENT]: 0 -> 0
+================== Trails Done ==================
+x -> {}
+y -> {}
+here1
+using arith to propagate atom
+here2
+here3
+unit propagate
+here4
+using arith to propagate clause
+unit to another var
