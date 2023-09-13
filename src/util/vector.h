@@ -685,7 +685,6 @@ public:
     }
 
     // enlarge until size with default element
-    // the difference between enlarge and setx is that enlarge does not change inserted elements
     void enlarge(SZ idx, T const & elem) {
         while(idx >= size()) {
             push_back(elem);
