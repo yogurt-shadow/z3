@@ -1400,6 +1400,7 @@ namespace nlsat {
                 m_hybrid_find_stage[pure_b] = null_var;
                 if(!m_decision_bools.contains(pure_b)) {
                     m_hybrid_assigned_indices[pure_b] = null_var;
+                    m_var_heap.insert(b);
                 }
                 m_hybrid_trail.pop_back();
                 m_bool_trail.pop_back();
@@ -1563,6 +1564,7 @@ namespace nlsat {
             if(hybrid_is_bool(m_hk)) {
                 m_decision_bools.erase(m_hk);
             }
+            m_var_heap.insert(m_hk);
             m_hk = old_v;
         }
 
@@ -1988,7 +1990,6 @@ namespace nlsat {
                 var curr_var = m_arith_trail[m_arith_atom_prop++];
                 vector<atom_var_watcher*> &watches = m_var_watching_atoms[curr_var];
                 int i, j = 0, size = watches.size();
-                std::cout << "size: " << size << std::endl;
                 for(i = 0; i < size; i++) {
                     var another_var = watches[i]->get_another_var(curr_var);
                     SASSERT(another_var != null_var); // unit atom shall not be watched
@@ -2333,7 +2334,6 @@ namespace nlsat {
         */
         clause* unit_propagate() {
             std::cout << "unit propagate" << std::endl;
-            std::cout << m_atom_prop << ", " << m_valued_atom_trail.size() << std::endl;
             while(m_atom_prop < m_valued_atom_trail.size()) {
                 unsigned curr_idx = m_valued_atom_trail[m_atom_prop++];
                 SASSERT(value_atom(curr_idx) != l_undef);
@@ -2630,8 +2630,9 @@ namespace nlsat {
             std::cout << "using infeasible to propagate literal" << std::endl;
             while(m_infeasible_prop < m_infeasible_var_trail.size()) {
                 var v = m_infeasible_var_trail[m_infeasible_prop++];
+                std::cout << "curr var: " << v << std::endl;
                 for(int idx: m_arith_unit_atom[v]) {
-                    std::cout << idx << std::endl;
+                    display_atom(std::cout, idx) << std::endl;
                     interval_set_ref curr_st(m_ism);
                     curr_st = get_atom_infeasible_set(idx, v, false);
                     m_ism.display(std::cout, curr_st) << std::endl;
