@@ -459,11 +459,13 @@ namespace nlsat {
     #endif
 
         {
+            DTRACE(std::cout << "solver init" << std::endl;);
             clear();
             updt_params(c.m_params);
             reset_statistics();
             mk_true_bvar();
             m_lemma_count = 0;
+            DTRACE(std::cout << "solver done" << std::endl;);
         }
         
         ~imp() {
@@ -1947,9 +1949,6 @@ namespace nlsat {
                     SASSERT(another_var != null_var);
                     unsigned idx = watches[i]->m_clause_index;
                     clause const& cls = *m_clauses[idx];
-                    std::cout << "curr: " << curr_hybrid_var << std::endl;
-                    std::cout << "another var: " << another_var << std::endl;
-                    display(std::cout, cls) << std::endl;
                     if(is_hybrid_assigned(another_var)) { // clause is all assigned
                         bool is_sat = false;
                         for(literal l: cls) {
@@ -1961,7 +1960,6 @@ namespace nlsat {
                         }
                         watches[j++] = watches[i];
                         if(!is_sat) { // conflict clause
-                            std::cout << "conflict clause" << std::endl;
                             return m_clauses[idx];
                         }
                     } else { // try to find another unassigned hybrid var
@@ -2999,6 +2997,7 @@ namespace nlsat {
             for(var v = 0; v < m_is_int.size(); v++) {
                 register_nlsat_avar(v);
             }
+            DTRACE(std::cout << "register vars done" << std::endl;);
         }
 
         void register_nlsat_atoms() {
@@ -3007,12 +3006,14 @@ namespace nlsat {
                     register_nlsat_atom(b);
                 }
             }
+            DTRACE(std::cout << "register atoms done" << std::endl;);
         }
 
         void register_nlsat_clauses() {
             for(unsigned i = 0; i < m_clauses.size(); i++) {
                 register_nlsat_clause(i);
             }
+            DTRACE(std::cout << "register clauses done" << std::endl;);
         }
 
         void register_nlsat_avar(var x) {
@@ -3098,8 +3099,11 @@ namespace nlsat {
             for(var v = 0; v < m_var_clause_infeasible_set.size(); v++) {
                 m_var_clause_infeasible_set[v].enlarge(idx, std::make_pair(false, nullptr));
             }
-            set_clause_literal_watcher(idx);
-            set_clause_var_watcher(idx);
+            bool deleted;
+            set_clause_literal_watcher(idx, deleted);
+            if(!deleted) {
+                set_clause_var_watcher(idx);
+            }
         }
 
         void collect_learned_arith_and_bool_vars(clause const *cls, bool_var_table &bvars, var_table &avars, var_table &rpvars) {
@@ -3645,7 +3649,8 @@ namespace nlsat {
             return m_frontend_bvalues[b];
         }
         
-        void set_clause_literal_watcher(unsigned idx) {
+        void set_clause_literal_watcher(unsigned idx, bool & deleted) {
+            deleted = false;
             clause const &curr_clause = *m_clauses[idx];
             SASSERT(curr_clause.size() > 0);
             if(curr_clause.size() == 1) {
@@ -3675,6 +3680,7 @@ namespace nlsat {
                 }
                 if(is_sat) { // valid clause, delete it from front_end
                     del_clause(m_clauses[idx]);
+                    deleted = true;
                     return;
                 }
                 if(id1 == null_var && id2 == null_var) { // conflict
@@ -3725,6 +3731,7 @@ namespace nlsat {
                     clause_var_watcher *new_watcher = new clause_var_watcher(idx, arith2hybrid(v1), arith2hybrid(v2));
                     m_var_watching_clauses[arith2hybrid(v1)].push_back(new_watcher);
                     m_var_watching_clauses[arith2hybrid(v2)].push_back(new_watcher);
+                    m_nlsat_clauses[idx]->m_var_watcher = new_watcher;
                 }
             } else if(curr_clause->m_bool_vars.size() == 1) { // one bool var
                 auto it = curr_clause->m_bool_vars.begin();
@@ -3761,7 +3768,9 @@ namespace nlsat {
         }
 
         lbool check() {
+            DTRACE(std::cout << "start check..." << std::endl;);
             register_nlsat_structures();
+            DTRACE(std::cout << "register nlsat structures done" << std::endl;);
             if (!m_incremental && m_inline_vars) {
                 if (!simplify()) 
                     return l_false;
@@ -3953,7 +3962,6 @@ namespace nlsat {
             checkpoint();
             bool_var b  = antecedent.var();
             insert_conflict_from_atom(b);
-            DTRACE(std::cout << "here" << std::endl;);
             if (assigned_value(antecedent) == l_undef) {
                 checkpoint();
                 // antecedent must be false in the current arith interpretation
@@ -5986,7 +5994,10 @@ namespace nlsat {
     }
 
     bool_var solver::mk_bool_var() {
-        return m_imp->mk_bool_var();
+        DTRACE(std::cout << "make bool var" << std::endl;);
+        auto res = m_imp->mk_bool_var();
+        DTRACE(std::cout << "make bool var done" << std::endl;);
+        return res;
     }
     
     literal solver::mk_true() {
@@ -6065,11 +6076,17 @@ namespace nlsat {
     }
     
     var solver::mk_var(bool is_int) {
-        return m_imp->mk_var(is_int);
+        DTRACE(std::cout << "make var" << std::endl;);
+        var x = m_imp->mk_var(is_int);
+        DTRACE(std::cout << "make var done" << std::endl;);
+        return x;
     }
         
     bool_var solver::mk_ineq_atom(atom::kind k, unsigned sz, poly * const * ps, bool const * is_even) {
-        return m_imp->mk_ineq_atom(k, sz, ps, is_even);
+        DTRACE(std::cout << "make ineq atom" << std::endl;);
+        auto res = m_imp->mk_ineq_atom(k, sz, ps, is_even);
+        DTRACE(std::cout << "make ineq atom done" << std::endl;);
+        return res;
     }
 
     literal solver::mk_ineq_literal(atom::kind k, unsigned sz, poly * const * ps, bool const * is_even) {
@@ -6077,7 +6094,10 @@ namespace nlsat {
     }
 
     bool_var solver::mk_root_atom(atom::kind k, var x, unsigned i, poly * p) {
-        return m_imp->mk_root_atom(k, x, i, p);
+        DTRACE(std::cout << "make root atom" << std::endl;);
+        auto res = m_imp->mk_root_atom(k, x, i, p);
+        DTRACE(std::cout << "make root atom done" << std::endl;);
+        return res;
     }
     
     void solver::inc_ref(bool_var b) {
@@ -6089,7 +6109,9 @@ namespace nlsat {
     }
         
     void solver::mk_clause(unsigned num_lits, literal * lits, assumption a) {
+        DTRACE(std::cout << "make clause" << std::endl;);
         m_imp->mk_clause(num_lits, lits, a);
+        DTRACE(std::cout << "make clause done" << std::endl;);
     }
 
     std::ostream& solver::display(std::ostream & out) const {

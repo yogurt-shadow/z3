@@ -1591,7 +1591,7 @@ namespace nlsat {
             // var max_x = max_var(m_ps);
             var max_x = m_solver.max_stage_or_unassigned_ps(m_ps);
             TRACE("nlsat_explain", tout << "polynomials in the conflict:\n"; display(tout, m_ps); tout << "\n";);
-            // elim_vanishing(m_ps);
+            elim_vanishing(m_ps);
             TRACE("nlsat_explain", tout << "elim vanishing\n"; display(tout, m_ps); tout << "\n";);
             project(m_ps, max_x);
             TRACE("nlsat_explain", tout << "after projection\n"; display(tout, m_ps); tout << "\n";);
