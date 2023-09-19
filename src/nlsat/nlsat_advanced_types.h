@@ -30,6 +30,7 @@ namespace nlsat {
 
         type_var() {}
         type_var(var _v, bool _b): v(_v), is_bool(_b) {}
+        
         type_var& operator=(type_var const& other) {
             v = other.v;
             is_bool = other.is_bool;
@@ -58,16 +59,13 @@ namespace nlsat {
     public: 
         var_table            m_vars;
         atom_var_watcher    *m_var_watcher;
-
+        
         nlsat_atom(unsigned id, atom * at, var_table const & vars): m_index(id), m_atom(at), m_vars(vars), m_var_watcher(nullptr)
         {}
-
         ~nlsat_atom(){}
-
         unsigned get_index() const {
             return m_index;
         }
-
         atom * get_atom() const {
             return m_atom;
         }
@@ -87,7 +85,6 @@ namespace nlsat {
         nlsat_clause(unsigned id, clause * cls, var_table const & vars, var_table const & bool_vars): 
             m_index(id), m_clause(cls), m_vars(vars), m_bool_vars(bool_vars), m_var_watcher(nullptr), m_atom_watcher(nullptr)
         {}
-
         ~nlsat_clause(){}
 
         unsigned get_index() const {

@@ -92,8 +92,9 @@ namespace nlsat {
     public:
         unsigned             m_clause_index;
         int                  l1, l2;
+        bool                 updated, deleted;
 
-        clause_literal_watcher(unsigned idx, int _l1, int _l2): m_clause_index(idx), l1(_l1), l2(_l2) {}
+        clause_literal_watcher(unsigned idx, int _l1, int _l2): m_clause_index(idx), l1(_l1), l2(_l2), updated(false), deleted(false) {}
         ~clause_literal_watcher() {}
 
         int get_another_literal_index_using_abs(unsigned l) const {

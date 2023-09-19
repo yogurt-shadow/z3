@@ -390,7 +390,7 @@ namespace nlsat {
             return m_am.eval_sign_at(polynomial_ref(p, m_pm), m_assignment);
         }
         
-        bool satisfied(int sign, atom::kind k) {
+        bool satisfied(int sign, atom::kind k) const {
             return 
                 (sign == 0 && (k == atom::EQ || k == atom::ROOT_EQ || k == atom::ROOT_LE || k == atom::ROOT_GE)) ||
                 (sign <  0 && (k == atom::LT || k == atom::ROOT_LT || k == atom::ROOT_LE)) ||

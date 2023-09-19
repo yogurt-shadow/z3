@@ -27,8 +27,13 @@ Revision History:
 #include "nlsat_advanced_types.h"
 
 namespace nlsat {
-#define DTRACE(CODE) TRACE("dnlsat", CODE)
-#define DCTRACE(COND, CODE) CTRACE("dnlsat", COND, CODE)
+// #define NLSAT_DEBUG
+
+#ifdef NLSAT_DEBUG
+   #define DTRACE(CODE) { CODE } ((void) 0)
+#else
+   #define DTRACE(CODE) ((void) 0)
+#endif
 
     class evaluator;
     class explain;

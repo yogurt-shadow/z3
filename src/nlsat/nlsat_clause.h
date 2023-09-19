@@ -22,7 +22,6 @@ Revision History:
 #include "util/vector.h"
 
 namespace nlsat {
-
     class clause {
         friend class solver;
         unsigned         m_id;
@@ -40,6 +39,7 @@ namespace nlsat {
         clause(unsigned id, unsigned sz, literal const * lits, bool learned, assumption_set as);
     public:
         unsigned size() const { return m_size; }
+        bool is_unit() const { return size() == 1; }
         unsigned id() const { return m_id; }
         literal & operator[](unsigned idx) { SASSERT(idx < m_size); return m_lits[idx]; }
         literal const & operator[](unsigned idx) const { SASSERT(idx < m_size); return m_lits[idx]; }
@@ -50,12 +50,8 @@ namespace nlsat {
         literal const * end() const { return m_lits + m_size; }
         literal const * data() const { return m_lits; }
         void inc_activity() { m_activity++; }
-        // wzh dynamic
-        // void set_activity(unsigned v) { m_activity = v; }
-        // unsigned get_activity() const { return m_activity; }
         void set_activity(double v) {m_activity = v; }
         double get_activity() const { return m_activity; }
-        // hzw dynamic
         bool contains(literal l) const;
         bool contains(bool_var v) const;
         void shrink(unsigned num_lits) { SASSERT(num_lits <= m_size); if (num_lits < m_size) { m_size = num_lits; } }
