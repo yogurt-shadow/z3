@@ -517,6 +517,7 @@ namespace nlsat {
             m_explain.reset();
             m_lemma.reset();
             m_lazy_clause.reset();
+            m_deleted_clauses.clear();
             undo_until_size(0);
             del_clauses();
             del_unref_atoms();
@@ -529,6 +530,7 @@ namespace nlsat {
             m_explain.reset();
             m_lemma.reset();
             m_lazy_clause.reset();
+            m_deleted_clauses.clear();
             undo_until_size(0);
             del_clauses();
             del_unref_atoms();
@@ -857,8 +859,14 @@ namespace nlsat {
             cls->~clause();
             m_allocator.deallocate(obj_sz, cls);
         }
+
+        unsigned_vector        m_deleted_clauses;
         
         void del_clause(clause * cls) {
+            DTRACE(std::cout << "delete clause: ";
+                display(std::cout, cls) << std::endl;
+            );
+            m_deleted_clauses.push_back(cls->id());
             if(cls->is_learned()) {
                 del_nlsat_learned(cls->id());
             } else {
@@ -1949,11 +1957,16 @@ namespace nlsat {
                 var curr_var = m_arith_trail[m_arith_atom_prop++];
                 vector<atom_var_watcher*> &watches = m_var_watching_atoms[curr_var];
                 int i, j = 0, size = watches.size();
+                std::cout << "var: " << curr_var << std::endl;
+                std::cout << "size: " << size << std::endl;
                 for(i = 0; i < size; i++) {
                     var another_var = watches[i]->get_another_var(curr_var);
                     SASSERT(another_var != null_var); // unit atom shall not be watched
+                    std::cout << "ano: " << another_var << std::endl;
                     int idx = watches[i]->m_atom_index;
+                    std::cout << "atom idx: " << idx << std::endl;
                     if (m_assignment.is_assigned(another_var)) { // totally assigned
+                        std::cout << "assigned" << std::endl;
                         if(!m_valued_atom_table.contains(idx)) { // the atom may be assigned previously by unit propagation
                             m_valued_atom_trail.push_back(idx);
                             m_valued_atom_table.insert(idx);
@@ -1961,7 +1974,11 @@ namespace nlsat {
                         m_arith_unit_atom[curr_var].erase(watches[i]->m_atom_index); // not unit to curr anymore
                         watches[j++] = watches[i];
                     } else { // try to find another watched var
+                        std::cout << "not assigned" << std::endl;
                         var new_watched_var = null_var;
+                        if(m_nlsat_atoms[idx] == nullptr) {
+                            std::cout << "nullptr" << std::endl;
+                        }
                         for (var v : m_nlsat_atoms[idx]->m_vars) {
                             if (!m_assignment.is_assigned(v) && v != curr_var && v != another_var) {
                                 new_watched_var = v;
@@ -1969,9 +1986,11 @@ namespace nlsat {
                             }
                         }
                         if(new_watched_var != null_var) { // change watches
+                            std::cout << "not found" << std::endl;
                             watches[i]->replace_var(curr_var, new_watched_var);
                             m_var_watching_atoms[new_watched_var].push_back(watches[i]);
                         } else { // still watch, unit literal to another var
+                            std::cout << "found" << std::endl;
                             watches[j++] = watches[i];
                             if(m_atoms[idx]->is_ineq_atom() || to_root_atom(m_atoms[idx])->x() == another_var) {
                                 insert_unit_atom(idx, another_var);
@@ -2796,7 +2815,7 @@ namespace nlsat {
            \brief main procedure
         */
         lbool solve() {
-            DTRACE(display_clauses(std::cout););
+            DTRACE(display_clauses(std::cout) << std::endl;);
             DTRACE(std::cout << "start solving..." << std::endl;);
             while(true) {
                 DTRACE(display_status(std::cout););
@@ -3309,6 +3328,7 @@ namespace nlsat {
         }
 
         void del_nlsat_atom(bool_var b) {
+            DTRACE(std::cout << "delete atom: " << b << std::endl;);
             SASSERT(b < m_nlsat_atoms.size());
             m_atom_unit_clauses[b] = null_var;
             m_atom_unit_learned[b] = null_var;
@@ -3319,7 +3339,11 @@ namespace nlsat {
             int j;
             if(m_nlsat_atoms[b]->m_var_watcher != nullptr) {
                 var v1 = m_nlsat_atoms[b]->m_var_watcher->v1, v2 = m_nlsat_atoms[b]->m_var_watcher->v2;
-                for(var v: var_vector{v1, v2}) {
+                std::cout << "v1: " << v1 << " , v2: " << v2 << std::endl;
+                var_vector vec;
+                vec.push_back(v1); vec.push_back(v2);
+                for(var v: vec) {
+                    std::cout << "v: " << v << std::endl;
                     j = 0;
                     for(int i = 0; i < m_var_watching_atoms[v].size(); i++) {
                         if(m_var_watching_atoms[v][i]->m_atom_index != b) {
@@ -3354,7 +3378,9 @@ namespace nlsat {
             int j;
             if(m_nlsat_clauses[id]->m_var_watcher != nullptr) { // chaneg clause var watcher
                 hybrid_var v1 = m_nlsat_clauses[id]->m_var_watcher->v1, v2 = m_nlsat_clauses[id]->m_var_watcher->v2;
-                for(hybrid_var v: var_vector{v1, v2}) {
+                var_vector vec;
+                vec.push_back(v1); vec.push_back(v2);
+                for(hybrid_var v: vec) {
                     j = 0;
                     for(int i = 0; i < m_var_watching_clauses[v1].size(); i++) {
                         if(m_var_watching_clauses[v][i]->m_clause_index != id) {
@@ -3424,7 +3450,10 @@ namespace nlsat {
             int j;
             if(m_nlsat_learned[id]->m_var_watcher != nullptr) { // change learned var watcher
                 hybrid_var v1 = m_nlsat_learned[id]->m_var_watcher->v1, v2 = m_nlsat_learned[id]->m_var_watcher->v2;
-                for(hybrid_var v: var_vector{v1, v2}) {
+                var_vector vec;
+                vec.push_back(v1);
+                vec.push_back(v2);
+                for(hybrid_var v: vec) {
                     j = 0;
                     for(int i = 0; i < m_var_watching_learned[v].size(); i++) {
                         if(m_var_watching_learned[v][i]->m_clause_index != id) {
@@ -5996,7 +6025,9 @@ namespace nlsat {
         std::ostream & display_clauses(std::ostream & out) const {
             out << "display clauses\n";
             for(unsigned i = 0; i < m_clauses.size(); i++){
-                display(out, *m_clauses[i]); out << std::endl;
+                if(!m_deleted_clauses.contains(i)) {
+                    display(out, *m_clauses[i]); out << std::endl;
+                }
             }
             return out;
         }
