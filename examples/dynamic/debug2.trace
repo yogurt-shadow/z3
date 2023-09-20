@@ -1,0 +1,624 @@
+solver init
+solver done
+make var
+make var done
+make ineq atom
+make ineq atom done
+make clause
+make clause done
+make ineq atom
+make ineq atom done
+make clause
+make clause done
+make var
+make var done
+make ineq atom
+make ineq atom done
+make clause
+make clause done
+make ineq atom
+make ineq atom done
+make clause
+make clause done
+make ineq atom
+make ineq atom done
+make clause
+make clause done
+make var
+make var done
+make ineq atom
+make ineq atom done
+make clause
+make clause done
+make ineq atom
+make ineq atom done
+make clause
+make clause done
+start check...
+register vars done
+register atoms done
+frontend propagate literal true
+frontend propagate literal skoY^6 - 30 skoY^4 + 360 skoY^2 - 720 > 0
+frontend propagate literal skoY^6 - 30 skoY^4 + 360 skoY^2 - 720 > 0
+frontend propagate literal skoY^2 - 2 > 0
+frontend propagate literal skoY^2 - 2 > 0
+frontend propagate literal 5000000 pi - 15707963 > 0
+frontend propagate literal 5000000 pi - 15707963 > 0
+frontend propagate literal 10000000 pi - 31415927 < 0
+frontend propagate literal 10000000 pi - 31415927 < 0
+frontend propagate literal !(pi - 2 skoY < 0)
+frontend propagate literal !(20 skoX - 1 < 0)
+frontend propagate literal !(20 skoX - 1 < 0)
+frontend propagate literal skoX - skoY < 0
+register clauses done
+register nlsat structures done
+assign literal: true
+[unit propagate]
+assign literal: skoY^6 - 30 skoY^4 + 360 skoY^2 - 720 > 0
+[unit propagate]
+assign literal: skoY^2 - 2 > 0
+[unit propagate]
+assign literal: 5000000 pi - 15707963 > 0
+[unit propagate]
+assign literal: 10000000 pi - 31415927 < 0
+[unit propagate]
+assign literal: !(20 skoX - 1 < 0)
+[unit propagate]
+display clauses
+true
+skoY^6 - 30 skoY^4 + 360 skoY^2 - 720 > 0
+skoY^2 - 2 > 0
+5000000 pi - 15707963 > 0
+10000000 pi - 31415927 < 0
+!(pi - 2 skoY < 0)
+!(20 skoX - 1 < 0)
+skoX - skoY < 0
+start solving...
+Display Status
+m_hk: 4294967295
+stage: 0
+level: 0
+Display Assignment
+b0 -> true
+b1 skoY^6 - 30 skoY^4 + 360 skoY^2 - 720 > 0 -> true
+b2 skoY^2 - 2 > 0 -> true
+b3 5000000 pi - 15707963 > 0 -> true
+b4 10000000 pi - 31415927 < 0 -> true
+b6 20 skoX - 1 < 0 -> false
+================== Display Trails ==================
+[BVAR ASSIGNMENT]: true -> bool_var 0
+[BVAR ASSIGNMENT]: skoY^6 - 30 skoY^4 + 360 skoY^2 - 720 > 0
+[BVAR ASSIGNMENT]: skoY^2 - 2 > 0
+[BVAR ASSIGNMENT]: 5000000 pi - 15707963 > 0
+[BVAR ASSIGNMENT]: 10000000 pi - 31415927 < 0
+[BVAR ASSIGNMENT]: 20 skoX - 1 < 0
+[INFEASIBLE UPDT]: {}
+[INFEASIBLE UPDT]: {}
+[INFEASIBLE UPDT]: {}
+================== Trails Done ==================
+skoY -> {[-1.5699058251?, p1, 1.5699058251?]}
+pi -> {(-oo, p3, 3.1415926], [3.1415927, p4, oo)}
+skoX -> {(-oo, ~p6, 0.05)}
+skoY -> unit clause: 1 2 
+ -> unit learned: 
+pi -> unit clause: 3 4 
+ -> unit learned: 
+skoX -> unit clause: 6 
+ -> unit learned: 
+skoY -> unit atom: 1 2 
+pi -> unit atom: 3 4 
+skoX -> unit atom: 6 
+use arith assignment to check atom
+use infeasible to propagate atom
+unit propagate
+rp clauses
+rp learned
+consistent
+decide
+curr m_hk: 4294967295
+pick branching var: 1
+new stage
+Display Status
+m_hk: 1
+stage: 1
+level: 0
+Display Assignment
+b0 -> true
+b1 skoY^6 - 30 skoY^4 + 360 skoY^2 - 720 > 0 -> true
+b2 skoY^2 - 2 > 0 -> true
+b3 5000000 pi - 15707963 > 0 -> true
+b4 10000000 pi - 31415927 < 0 -> true
+b6 20 skoX - 1 < 0 -> false
+skoY -> -2
+================== Display Trails ==================
+[BVAR ASSIGNMENT]: true -> bool_var 0
+[BVAR ASSIGNMENT]: skoY^6 - 30 skoY^4 + 360 skoY^2 - 720 > 0
+[BVAR ASSIGNMENT]: skoY^2 - 2 > 0
+[BVAR ASSIGNMENT]: 5000000 pi - 15707963 > 0
+[BVAR ASSIGNMENT]: 10000000 pi - 31415927 < 0
+[BVAR ASSIGNMENT]: 20 skoX - 1 < 0
+[INFEASIBLE UPDT]: {}
+[INFEASIBLE UPDT]: {}
+[INFEASIBLE UPDT]: {}
+[NEW STAGE]
+[BRANCH] old m_hk: 4294967295  new m_hk: 1
+[ARITH ASSIGNMENT]: skoY -> -2
+================== Trails Done ==================
+skoY -> {[-1.5699058251?, p1, 1.5699058251?]}
+pi -> {(-oo, p3, 3.1415926], [3.1415927, p4, oo)}
+skoX -> {(-oo, ~p6, 0.05)}
+pi -> unit clause: 3 4 
+ -> unit learned: 
+skoX -> unit clause: 6 
+ -> unit learned: 
+pi -> unit atom: 3 4 
+skoX -> unit atom: 6 
+use arith assignment to check atom
+assign literal: !(pi - 2 skoY < 0)
+[lazy propagate]
+assign literal: !(skoX - skoY < 0)
+[lazy propagate]
+use infeasible to propagate atom
+unit propagate
+new stage
+conflict clause: skoX - skoY < 0
+m_hk: 3 skoY
+resolve clause
+process antecedent for literal: skoX - skoY < 0
+same stage and same level, increase mark 1
+resolve clause done
+16
+top: 16
+16
+top: 16
+16
+top: 15
+16
+top: 14
+show trail bool: skoX - skoY < 0
+real propagate case, resolve lazy
+enter explain
+make ineq atom
+make ineq atom done
+exit explain
+resolve clause
+process antecedent for literal: !(20 skoY - 1 < 0)
+case 1, push back lemma: !(20 skoY - 1 < 0)
+process antecedent for literal: 20 skoX - 1 < 0
+same stage and same level, increase mark 1
+resolve clause done
+resolve lazy done
+resolve lazy done
+16
+top: 13
+show trail bool: pi - 2 skoY < 0
+16
+top: 12
+16
+top: 11
+16
+top: 10
+16
+top: 9
+16
+top: 8
+16
+top: 7
+16
+top: 6
+show trail bool: 20 skoX - 1 < 0
+unit propagate case, resolve clause
+resolve clause
+resolve clause done
+resolve clause done
+bump hybrid vars
+frontend propagate literal !(20 skoY - 1 < 0)
+frontend propagate literal !(20 skoY - 1 < 0)
+use infeasible to propagate atom
+assign literal: !(20 skoY - 1 < 0)
+[unit propagate]
+new lemma: !(20 skoY - 1 < 0)
+Display Status
+m_hk: 1
+stage: 1
+level: 0
+Display Assignment
+b0 -> true
+b1 skoY^6 - 30 skoY^4 + 360 skoY^2 - 720 > 0 -> true
+b2 skoY^2 - 2 > 0 -> true
+b3 5000000 pi - 15707963 > 0 -> true
+b4 10000000 pi - 31415927 < 0 -> true
+b6 20 skoX - 1 < 0 -> false
+b8 20 skoY - 1 < 0 -> false
+================== Display Trails ==================
+[BVAR ASSIGNMENT]: true -> bool_var 0
+[BVAR ASSIGNMENT]: skoY^6 - 30 skoY^4 + 360 skoY^2 - 720 > 0
+[BVAR ASSIGNMENT]: skoY^2 - 2 > 0
+[BVAR ASSIGNMENT]: 5000000 pi - 15707963 > 0
+[BVAR ASSIGNMENT]: 10000000 pi - 31415927 < 0
+[BVAR ASSIGNMENT]: 20 skoX - 1 < 0
+[INFEASIBLE UPDT]: {}
+[INFEASIBLE UPDT]: {}
+[INFEASIBLE UPDT]: {}
+[NEW STAGE]
+[BRANCH] old m_hk: 4294967295  new m_hk: 1
+[INFEASIBLE UPDT]: {[-1.5699058251?, p1, 1.5699058251?]}
+[BVAR ASSIGNMENT]: 20 skoY - 1 < 0
+================== Trails Done ==================
+skoY -> {(-oo, ~p8, -1.5699058251?), [-1.5699058251?, p1, 1.5699058251?]}
+pi -> {(-oo, p3, 3.1415926], [3.1415927, p4, oo)}
+skoX -> {(-oo, ~p6, 0.05)}
+skoY -> unit clause: 
+ -> unit learned: 0 
+pi -> unit clause: 3 4 
+ -> unit learned: 
+skoX -> unit clause: 6 
+ -> unit learned: 
+pi -> unit atom: 3 4 
+skoX -> unit atom: 6 
+use arith assignment to check atom
+use infeasible to propagate atom
+unit propagate
+rp clauses
+rp learned
+consistent
+decide
+curr m_hk: 1
+current m_hk is not assigned, choose value
+Display Status
+m_hk: 1
+stage: 1
+level: 0
+Display Assignment
+b0 -> true
+b1 skoY^6 - 30 skoY^4 + 360 skoY^2 - 720 > 0 -> true
+b2 skoY^2 - 2 > 0 -> true
+b3 5000000 pi - 15707963 > 0 -> true
+b4 10000000 pi - 31415927 < 0 -> true
+b6 20 skoX - 1 < 0 -> false
+b8 20 skoY - 1 < 0 -> false
+skoY -> 2
+================== Display Trails ==================
+[BVAR ASSIGNMENT]: true -> bool_var 0
+[BVAR ASSIGNMENT]: skoY^6 - 30 skoY^4 + 360 skoY^2 - 720 > 0
+[BVAR ASSIGNMENT]: skoY^2 - 2 > 0
+[BVAR ASSIGNMENT]: 5000000 pi - 15707963 > 0
+[BVAR ASSIGNMENT]: 10000000 pi - 31415927 < 0
+[BVAR ASSIGNMENT]: 20 skoX - 1 < 0
+[INFEASIBLE UPDT]: {}
+[INFEASIBLE UPDT]: {}
+[INFEASIBLE UPDT]: {}
+[NEW STAGE]
+[BRANCH] old m_hk: 4294967295  new m_hk: 1
+[INFEASIBLE UPDT]: {[-1.5699058251?, p1, 1.5699058251?]}
+[BVAR ASSIGNMENT]: 20 skoY - 1 < 0
+[ARITH ASSIGNMENT]: skoY -> 2
+================== Trails Done ==================
+skoY -> {(-oo, ~p8, -1.5699058251?), [-1.5699058251?, p1, 1.5699058251?]}
+pi -> {(-oo, p3, 3.1415926], [3.1415927, p4, oo)}
+skoX -> {(-oo, ~p6, 0.05)}
+pi -> unit clause: 3 4 
+ -> unit learned: 
+skoX -> unit clause: 6 
+ -> unit learned: 
+pi -> unit atom: 3 4 
+skoX -> unit atom: 6 
+use arith assignment to check atom
+assign literal: pi - 2 skoY < 0
+[lazy propagate]
+use infeasible to propagate atom
+unit propagate
+new stage
+conflict clause: !(pi - 2 skoY < 0)
+m_hk: 2 skoX
+resolve clause
+process antecedent for literal: !(pi - 2 skoY < 0)
+same stage and same level, increase mark 1
+resolve clause done
+17
+top: 17
+17
+top: 17
+17
+top: 16
+17
+top: 15
+show trail bool: pi - 2 skoY < 0
+real propagate case, resolve lazy
+enter explain
+make ineq atom
+make ineq atom done
+exit explain
+resolve clause
+process antecedent for literal: !(20000000 skoY - 31415927 > 0)
+case 1, push back lemma: !(20000000 skoY - 31415927 > 0)
+process antecedent for literal: !(5000000 pi - 15707963 > 0)
+same stage and same level, increase mark 1
+process antecedent for literal: !(10000000 pi - 31415927 < 0)
+same stage and same level, increase mark 2
+resolve clause done
+resolve lazy done
+resolve lazy done
+17
+top: 14
+17
+top: 13
+show trail bool: 20 skoY - 1 < 0
+17
+top: 12
+17
+top: 11
+17
+top: 10
+17
+top: 9
+17
+top: 8
+17
+top: 7
+17
+top: 6
+show trail bool: 20 skoX - 1 < 0
+17
+top: 5
+show trail bool: 10000000 pi - 31415927 < 0
+unit propagate case, resolve clause
+resolve clause
+resolve clause done
+resolve clause done
+17
+top: 4
+show trail bool: 5000000 pi - 15707963 > 0
+unit propagate case, resolve clause
+resolve clause
+resolve clause done
+resolve clause done
+bump hybrid vars
+frontend propagate literal !(20000000 skoY - 31415927 > 0)
+frontend propagate literal !(20000000 skoY - 31415927 > 0)
+use infeasible to propagate atom
+assign literal: !(20000000 skoY - 31415927 > 0)
+[unit propagate]
+new lemma: !(20000000 skoY - 31415927 > 0)
+Display Status
+m_hk: 1
+stage: 1
+level: 0
+Display Assignment
+b0 -> true
+b1 skoY^6 - 30 skoY^4 + 360 skoY^2 - 720 > 0 -> true
+b2 skoY^2 - 2 > 0 -> true
+b3 5000000 pi - 15707963 > 0 -> true
+b4 10000000 pi - 31415927 < 0 -> true
+b6 20 skoX - 1 < 0 -> false
+b8 20 skoY - 1 < 0 -> false
+b9 20000000 skoY - 31415927 > 0 -> false
+================== Display Trails ==================
+[BVAR ASSIGNMENT]: true -> bool_var 0
+[BVAR ASSIGNMENT]: skoY^6 - 30 skoY^4 + 360 skoY^2 - 720 > 0
+[BVAR ASSIGNMENT]: skoY^2 - 2 > 0
+[BVAR ASSIGNMENT]: 5000000 pi - 15707963 > 0
+[BVAR ASSIGNMENT]: 10000000 pi - 31415927 < 0
+[BVAR ASSIGNMENT]: 20 skoX - 1 < 0
+[INFEASIBLE UPDT]: {}
+[INFEASIBLE UPDT]: {}
+[INFEASIBLE UPDT]: {}
+[NEW STAGE]
+[BRANCH] old m_hk: 4294967295  new m_hk: 1
+[INFEASIBLE UPDT]: {[-1.5699058251?, p1, 1.5699058251?]}
+[BVAR ASSIGNMENT]: 20 skoY - 1 < 0
+[INFEASIBLE UPDT]: {(-oo, ~p8, -1.5699058251?), [-1.5699058251?, p1, 1.5699058251?]}
+[BVAR ASSIGNMENT]: 20000000 skoY - 31415927 > 0
+================== Trails Done ==================
+skoY -> {(-oo, ~p8, -1.5699058251?), [-1.5699058251?, p1, 1.5699058251?], (1.57079635, ~p9, oo)}
+pi -> {(-oo, p3, 3.1415926], [3.1415927, p4, oo)}
+skoX -> {(-oo, ~p6, 0.05)}
+skoY -> unit clause: 
+ -> unit learned: 1 
+pi -> unit clause: 3 4 
+ -> unit learned: 
+skoX -> unit clause: 6 
+ -> unit learned: 
+pi -> unit atom: 3 4 
+skoX -> unit atom: 6 
+use arith assignment to check atom
+use infeasible to propagate atom
+unit propagate
+rp clauses
+rp learned
+consistent
+decide
+curr m_hk: 1
+current m_hk is not assigned, choose value
+Display Status
+m_hk: 1
+stage: 1
+level: 0
+Display Assignment
+b0 -> true
+b1 skoY^6 - 30 skoY^4 + 360 skoY^2 - 720 > 0 -> true
+b2 skoY^2 - 2 > 0 -> true
+b3 5000000 pi - 15707963 > 0 -> true
+b4 10000000 pi - 31415927 < 0 -> true
+b6 20 skoX - 1 < 0 -> false
+b8 20 skoY - 1 < 0 -> false
+b9 20000000 skoY - 31415927 > 0 -> false
+skoY -> 1.5703125
+================== Display Trails ==================
+[BVAR ASSIGNMENT]: true -> bool_var 0
+[BVAR ASSIGNMENT]: skoY^6 - 30 skoY^4 + 360 skoY^2 - 720 > 0
+[BVAR ASSIGNMENT]: skoY^2 - 2 > 0
+[BVAR ASSIGNMENT]: 5000000 pi - 15707963 > 0
+[BVAR ASSIGNMENT]: 10000000 pi - 31415927 < 0
+[BVAR ASSIGNMENT]: 20 skoX - 1 < 0
+[INFEASIBLE UPDT]: {}
+[INFEASIBLE UPDT]: {}
+[INFEASIBLE UPDT]: {}
+[NEW STAGE]
+[BRANCH] old m_hk: 4294967295  new m_hk: 1
+[INFEASIBLE UPDT]: {[-1.5699058251?, p1, 1.5699058251?]}
+[BVAR ASSIGNMENT]: 20 skoY - 1 < 0
+[INFEASIBLE UPDT]: {(-oo, ~p8, -1.5699058251?), [-1.5699058251?, p1, 1.5699058251?]}
+[BVAR ASSIGNMENT]: 20000000 skoY - 31415927 > 0
+[ARITH ASSIGNMENT]: skoY -> 1.5703125
+================== Trails Done ==================
+skoY -> {(-oo, ~p8, -1.5699058251?), [-1.5699058251?, p1, 1.5699058251?], (1.57079635, ~p9, oo)}
+pi -> {(-oo, p3, 3.1415926], [3.1415927, p4, oo)}
+skoX -> {(-oo, ~p6, 0.05)}
+pi -> unit clause: 3 4 
+ -> unit learned: 
+skoX -> unit clause: 6 
+ -> unit learned: 
+pi -> unit atom: 3 4 
+skoX -> unit atom: 6 
+use arith assignment to check atom
+assign literal: !(pi - 2 skoY < 0)
+[lazy propagate]
+use infeasible to propagate atom
+unit propagate
+rp clauses
+use infeasible to propagate atom
+use infeasible to propagate atom
+assign literal: skoX - skoY < 0
+[lazy propagate]
+rp learned
+use arith assignment to check atom
+use infeasible to propagate atom
+unit propagate
+rp clauses
+rp learned
+consistent
+decide
+curr m_hk: 1
+pick branching var: 2
+new stage
+Display Status
+m_hk: 2
+stage: 2
+level: 0
+Display Assignment
+b0 -> true
+b1 skoY^6 - 30 skoY^4 + 360 skoY^2 - 720 > 0 -> true
+b2 skoY^2 - 2 > 0 -> true
+b3 5000000 pi - 15707963 > 0 -> true
+b4 10000000 pi - 31415927 < 0 -> true
+b5 pi - 2 skoY < 0 -> false
+b6 20 skoX - 1 < 0 -> false
+b7 skoX - skoY < 0 -> true
+b8 20 skoY - 1 < 0 -> false
+b9 20000000 skoY - 31415927 > 0 -> false
+skoY -> 1.5703125
+pi -> 3.1415926218?
+================== Display Trails ==================
+[BVAR ASSIGNMENT]: true -> bool_var 0
+[BVAR ASSIGNMENT]: skoY^6 - 30 skoY^4 + 360 skoY^2 - 720 > 0
+[BVAR ASSIGNMENT]: skoY^2 - 2 > 0
+[BVAR ASSIGNMENT]: 5000000 pi - 15707963 > 0
+[BVAR ASSIGNMENT]: 10000000 pi - 31415927 < 0
+[BVAR ASSIGNMENT]: 20 skoX - 1 < 0
+[INFEASIBLE UPDT]: {}
+[INFEASIBLE UPDT]: {}
+[INFEASIBLE UPDT]: {}
+[NEW STAGE]
+[BRANCH] old m_hk: 4294967295  new m_hk: 1
+[INFEASIBLE UPDT]: {[-1.5699058251?, p1, 1.5699058251?]}
+[BVAR ASSIGNMENT]: 20 skoY - 1 < 0
+[INFEASIBLE UPDT]: {(-oo, ~p8, -1.5699058251?), [-1.5699058251?, p1, 1.5699058251?]}
+[BVAR ASSIGNMENT]: 20000000 skoY - 31415927 > 0
+[ARITH ASSIGNMENT]: skoY -> 1.5703125
+[BVAR ASSIGNMENT]: pi - 2 skoY < 0
+[INFEASIBLE UPDT]: {(-oo, p3, 3.1415926], [3.1415927, p4, oo)}
+[INFEASIBLE UPDT]: {(-oo, ~p6, 0.05)}
+[BVAR ASSIGNMENT]: skoX - skoY < 0
+[NEW STAGE]
+[BRANCH] old m_hk: 1  new m_hk: 2
+[ARITH ASSIGNMENT]: pi -> 3.1415926218?
+================== Trails Done ==================
+skoY -> {(-oo, ~p8, -1.5699058251?), [-1.5699058251?, p1, 1.5699058251?], (1.57079635, ~p9, oo)}
+pi -> {(-oo, p3, 3.1415926], [3.1415927, p4, oo)}
+skoX -> {(-oo, ~p6, 0.05), [1.5703125, p7, oo)}
+skoX -> unit clause: 6 7 
+ -> unit learned: 
+skoX -> unit atom: 6 7 
+use arith assignment to check atom
+use infeasible to propagate atom
+unit propagate
+rp clauses
+rp learned
+consistent
+decide
+curr m_hk: 2
+pick branching var: 3
+new stage
+Display Status
+m_hk: 3
+stage: 3
+level: 0
+Display Assignment
+b0 -> true
+b1 skoY^6 - 30 skoY^4 + 360 skoY^2 - 720 > 0 -> true
+b2 skoY^2 - 2 > 0 -> true
+b3 5000000 pi - 15707963 > 0 -> true
+b4 10000000 pi - 31415927 < 0 -> true
+b5 pi - 2 skoY < 0 -> false
+b6 20 skoX - 1 < 0 -> false
+b7 skoX - skoY < 0 -> true
+b8 20 skoY - 1 < 0 -> false
+b9 20000000 skoY - 31415927 > 0 -> false
+skoY -> 1.5703125
+pi -> 3.1415926218?
+skoX -> 1
+================== Display Trails ==================
+[BVAR ASSIGNMENT]: true -> bool_var 0
+[BVAR ASSIGNMENT]: skoY^6 - 30 skoY^4 + 360 skoY^2 - 720 > 0
+[BVAR ASSIGNMENT]: skoY^2 - 2 > 0
+[BVAR ASSIGNMENT]: 5000000 pi - 15707963 > 0
+[BVAR ASSIGNMENT]: 10000000 pi - 31415927 < 0
+[BVAR ASSIGNMENT]: 20 skoX - 1 < 0
+[INFEASIBLE UPDT]: {}
+[INFEASIBLE UPDT]: {}
+[INFEASIBLE UPDT]: {}
+[NEW STAGE]
+[BRANCH] old m_hk: 4294967295  new m_hk: 1
+[INFEASIBLE UPDT]: {[-1.5699058251?, p1, 1.5699058251?]}
+[BVAR ASSIGNMENT]: 20 skoY - 1 < 0
+[INFEASIBLE UPDT]: {(-oo, ~p8, -1.5699058251?), [-1.5699058251?, p1, 1.5699058251?]}
+[BVAR ASSIGNMENT]: 20000000 skoY - 31415927 > 0
+[ARITH ASSIGNMENT]: skoY -> 1.5703125
+[BVAR ASSIGNMENT]: pi - 2 skoY < 0
+[INFEASIBLE UPDT]: {(-oo, p3, 3.1415926], [3.1415927, p4, oo)}
+[INFEASIBLE UPDT]: {(-oo, ~p6, 0.05)}
+[BVAR ASSIGNMENT]: skoX - skoY < 0
+[NEW STAGE]
+[BRANCH] old m_hk: 1  new m_hk: 2
+[ARITH ASSIGNMENT]: pi -> 3.1415926218?
+[NEW STAGE]
+[BRANCH] old m_hk: 2  new m_hk: 3
+[ARITH ASSIGNMENT]: skoX -> 1
+================== Trails Done ==================
+skoY -> {(-oo, ~p8, -1.5699058251?), [-1.5699058251?, p1, 1.5699058251?], (1.57079635, ~p9, oo)}
+pi -> {(-oo, p3, 3.1415926], [3.1415927, p4, oo)}
+skoX -> {(-oo, ~p6, 0.05), [1.5703125, p7, oo)}
+use arith assignment to check atom
+use infeasible to propagate atom
+unit propagate
+rp clauses
+rp learned
+consistent
+decide
+curr m_hk: 3
+pick branching var: 4294967295
+sat
+(:max-memory           18.10
+ :memory               18.00
+ :nlsat-arith-vars     3
+ :nlsat-bool-vars      1
+ :nlsat-conflicts      2
+ :nlsat-learned-added  2
+ :nlsat-real-propagate 5
+ :nlsat-total-vars     4
+ :nlsat-unit-propagate 8
+ :num-allocs           38194
+ :rlimit-count         4359
+ :time                 0.12
+ :total-time           0.04)

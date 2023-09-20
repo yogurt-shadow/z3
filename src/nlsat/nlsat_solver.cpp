@@ -89,6 +89,19 @@ Revision History:
  * @brief set watcher pointer in watched structures, useful when deleting
  * @brief literal negation when making complement for interval sets
  * @brief unit checker for root atom, propagate newly added atoms when registering new lemma
+ * 
+ * @date 2023/09/20
+ * @brief Unit Propagate rather than using lazy propagate
+ * @example x >= 3
+ *          previous: update x: [3, +oo], then we propagate the literal
+ *          current: if the atom's updated infeasible set does not trigger conflict, assign it with unit propagate
+ *          Remember when we update infeasible set each time, propagate unit arith atom as soon as possible
+ * 
+ * @brief Special case when we face a conflict
+ * @example x >= 3, y <= 4, x = -12 \/ y = 8
+ *          When we update infeasible set in first two clauses, infeasible set propagates
+ *          atoms in clause 3 to be false, and this is a conflict clause detected by unit propagate part.
+ *          However, we found no decision and not all vars are assigned, in this case we just return unsat.
  * ---------------------------------------------------------------------------------------------------------------
  **/
 
@@ -1142,9 +1155,13 @@ namespace nlsat {
                     // we do nothing, since this will be assigned by up
                 } else {
                     var av = hybrid2arith(v);
-                    if(OPTIONS::learned_arith_frontend && !update_learned_frontend_infeasible_set(idx, av)) {
-                        frontend_conflict = true;
-                        return;
+                    if(OPTIONS::learned_arith_frontend) {
+                        if(!update_learned_frontend_infeasible_set(idx, av)) {
+                            frontend_conflict = true;
+                            return;
+                        } else {
+                            frontend_propagate((*m_learned[idx])[0], idx, true, true);
+                        }
                     }
                     if(!m_assignment.is_assigned(av)) {
                         m_arith_unit_learned[av].push_back(idx);
@@ -1154,6 +1171,10 @@ namespace nlsat {
                         if(!update_learned_infeasible_set(idx, av)) {
                             conflict_clause = m_learned[idx];
                             return;
+                        } else {
+                            if(m_learned[idx]->size() == 1) {
+                                assign_literal((*m_learned[idx])[0], mk_clause_jst(m_learned[idx]));
+                            }
                         }
                     }
                 }
@@ -1197,6 +1218,10 @@ namespace nlsat {
                         if(!update_learned_infeasible_set(idx, av)) {
                             conflict_clause = m_learned[idx];
                             return;
+                        } else {
+                            if(m_learned[idx]->size() == 1) {
+                                assign_literal((*m_learned[idx])[0], mk_clause_jst(m_learned[idx]));
+                            }
                         }
                     }
                 } else if(!hybrid_var_assigned(v1) && hybrid_var_assigned(v2)) { // unit to v1
@@ -1209,6 +1234,10 @@ namespace nlsat {
                         if (!update_learned_infeasible_set(idx, av)) {
                             conflict_clause = m_learned[idx];
                             return;
+                        } else {
+                            if(m_learned[idx]->size() == 1) {
+                                assign_literal((*m_learned[idx])[0], mk_clause_jst(m_learned[idx]));
+                            }
                         }
                     }
                 }
@@ -1228,7 +1257,7 @@ namespace nlsat {
                         frontend_conflict = true;
                         return;
                     }
-                    frontend_propagate(l, idx, true);
+                    frontend_propagate(l, idx, true, is_bool_literal(l));
                 }
                 m_atom_unit_learned[l.var()] = idx;
                 if(value(l) == l_false) {
@@ -1703,6 +1732,7 @@ namespace nlsat {
                     m_hybrid_find_stage[pure_b] = m_scope_stage;
                 }
             }
+            DTRACE(std::cout << "assign literal done" << std::endl;);
         }
 
         void decide_literal(literal l) {
@@ -1762,19 +1792,50 @@ namespace nlsat {
             if (a == nullptr || a->get_kind() != atom::EQ || to_ineq_atom(a)->size() > 1 || to_ineq_atom(a)->is_even(0))
                 return;
             switch (j.get_kind()) {
-            case justification::CLAUSE:
-                if (j.get_clause()->assumptions() != nullptr) return;
-                break;            
-            case justification::LAZY:
-                if (j.get_lazy()->num_clauses() > 0) return;
-                if (j.get_lazy()->num_lits() > 0) return;
-                break;
-            default:
-                break;
+                case justification::CLAUSE:
+                    if (j.get_clause()->assumptions() != nullptr) return;
+                    break;            
+                case justification::LAZY:
+                    if (j.get_lazy()->num_clauses() > 0) return;
+                    if (j.get_lazy()->num_lits() > 0) return;
+                    break;
+                default:
+                    break;
             }
-            var x = hybrid2arith(m_hk);
-            save_updt_eq_trail(x, m_var2eq[x]);
-            m_var2eq[x] = a;
+            // Static order: save equality for max var
+            // Dynamic order: 
+            // 1. for ineq atom: save each var
+            // 2. for root atom: save root var
+            if(a->is_ineq_atom()) {
+                for(var v: m_nlsat_atoms[b]->m_vars) {
+                    if(m_var2eq[v] != nullptr && degree_atom(m_var2eq[v], v) < degree_atom(a, v)) {
+                        continue;
+                    }
+                    save_updt_eq_trail(v, m_var2eq[v]);
+                    m_var2eq[v] = a;
+                }
+            } else if(a->is_root_atom()) {
+                var v = to_root_atom(a)->x();
+                if(m_var2eq[v] != nullptr && degree_atom(m_var2eq[v], v) < degree_atom(a, v)) {
+                    return;
+                }
+                save_updt_eq_trail(v, m_var2eq[v]);
+                m_var2eq[v] = a;
+            } else {
+                UNREACHABLE();
+            }
+        }
+
+        unsigned degree_atom(atom const * a, var x) const {
+            if(a == nullptr) return 0;
+            if(a->is_root_atom()) return m_pm.degree(to_root_atom(a)->p(), x);
+            SASSERT(a->is_ineq_atom());
+            ineq_atom const *aa = to_ineq_atom(a);
+            unsigned res = 0;
+            for(unsigned i = 0; i < aa->size(); i++) {
+                res += m_pm.degree(aa->p(i), x);
+            }
+            return res;
         }
 
         void check_overall_satisfied() {
@@ -1809,7 +1870,7 @@ namespace nlsat {
         }
 
         bool process_hybrid_clause(clause const & cls){
-            unsigned first_undef = 0, num_undef = 0;
+            unsigned first_undef = UINT_MAX, num_undef = 0;
             interval_set_ref first_undef_set(m_ism);
             interval_set_ref curr_st(m_ism);
             for(unsigned idx = 0; idx < cls.size(); idx++) {
@@ -1920,6 +1981,7 @@ namespace nlsat {
                 }
                 watches.shrink(j);
             }
+            DTRACE(std::cout << "check atom done" << std::endl;);
         }
 
         bool is_hybrid_assigned(hybrid_var x) const {
@@ -1940,6 +2002,7 @@ namespace nlsat {
            \else unit to another var, update infeasible information
         */
         clause* real_propagate_clauses() {
+            DTRACE(std::cout << "rp clauses" << std::endl;);
             while (m_hybrid_var_clause_prop < m_hybrid_trail.size()) {
                 hybrid_var curr_hybrid_var = m_hybrid_trail[m_hybrid_var_clause_prop++];
                 vector<clause_var_watcher*> &watches = m_var_watching_clauses[curr_hybrid_var];
@@ -1995,9 +2058,8 @@ namespace nlsat {
                                         direct_stage_to_conflict(another_var);
                                         return m_arith_unit_clauses_more_lits[v].empty() ? m_clauses[idx] : process_and_decide_literals_while_conflict();
                                     } else {
-                                        if(m_clauses[idx]->is_unit()) { // assign consistent unit clause here
-                                            literal l = (*m_clauses[idx])[0];
-                                            assign_literal(l, mk_clause_jst(m_clauses[idx]));
+                                        if(m_clauses[idx]->size() == 1) {
+                                            assign_literal((*m_clauses[idx])[0], mk_clause_jst(m_clauses[idx]));
                                         }
                                     }
                                 } else { // bool var
@@ -2016,6 +2078,7 @@ namespace nlsat {
            \brief using hybrid variable to check learned real-unit status
         */
         clause* real_propagate_learned() {
+            DTRACE(std::cout << "rp learned" << std::endl;);
             while(m_hybrid_var_learned_prop < m_hybrid_trail.size()) {
                 hybrid_var curr_hybrid_var = m_hybrid_trail[m_hybrid_var_learned_prop++];
                 vector<clause_var_watcher*> &watches = m_var_watching_learned[curr_hybrid_var];
@@ -2062,11 +2125,6 @@ namespace nlsat {
                                         if(!update_learned_infeasible_set(idx, arith_var)) { // conflict clause
                                             direct_stage_to_conflict(another_var);
                                             return m_arith_unit_clauses_more_lits[arith_var].empty() ? m_learned[idx] : process_and_decide_literals_while_conflict();
-                                        } else {
-                                            if(m_learned[idx]->is_unit()) {
-                                                literal l = (*m_learned[idx])[0];
-                                                assign_literal(l, mk_clause_jst(m_learned[idx]));
-                                            }
                                         }
                                     }
                                 } else { // bool var, unit propagate, just skip
@@ -2101,6 +2159,10 @@ namespace nlsat {
         clause* process_and_decide_literals_while_conflict() {
             DTRACE(std::cout << "clause level conflict, semantics decision" << std::endl;);
             var v = hybrid2arith(m_hk);
+            DTRACE(std::cout << "v: " << v << std::endl; m_display_var(std::cout, v) << std::endl;);
+            DTRACE(display_clause_vector(std::cout, m_arith_unit_clauses[v]););
+            DTRACE(display_clause_vector(std::cout, m_arith_unit_learned[v]););
+            DTRACE(display_assignment(std::cout););
             SASSERT(m_arith_unit_clauses_more_lits[v].size() + m_arith_unit_learned_more_lits.size() > 0);
             save_semantics_decision_trail(v);
             save_set_updt_trail(v, m_infeasible[v]);
@@ -2128,6 +2190,7 @@ namespace nlsat {
         }
 
         void update_infeasible_set(var v, interval_set const *s) {
+            DTRACE(std::cout << "interval set s: "; m_ism.display(std::cout, s) << std::endl;);
             interval_set_ref union_st(m_ism);
             union_st = m_ism.mk_union(s, m_infeasible[v]);
             SASSERT(!m_ism.is_full(union_st));
@@ -2192,6 +2255,7 @@ namespace nlsat {
                     m_ism.inc_ref(union_st);
                 }
                 m_infeasible[arith_var] = union_st;
+                propagate_literal_using_infeasible();
                 return true;
             }
         }
@@ -2212,6 +2276,7 @@ namespace nlsat {
                     m_ism.inc_ref(union_st);
                 }
                 m_infeasible[arith_var] = union_st;
+                propagate_literal_using_infeasible();
                 return true;
             }
         }
@@ -2245,6 +2310,7 @@ namespace nlsat {
         }
 
         clause* propagate_unit_clause_using_atom(unsigned idx) {
+            DTRACE(std::cout << "propagate unit clauses" << std::endl;);
             if(m_atom_unit_clauses[idx] != null_var) {
                 clause const &cls = *m_clauses[m_atom_unit_clauses[idx]];
                 literal l = cls[0];
@@ -2257,6 +2323,7 @@ namespace nlsat {
         }
 
         clause* propagate_unit_learned_using_atom(unsigned idx) {
+            DTRACE(std::cout << "propagate unit learned" << std::endl;);
             if(m_atom_unit_learned[idx] != null_var) {
                 clause const &cls = *m_learned[m_atom_unit_learned[idx]];
                 literal l = cls[0];
@@ -2269,11 +2336,18 @@ namespace nlsat {
         }
 
         clause* propagate_clause_using_atom_watcher(unsigned idx) {
+            DTRACE(std::cout << "propagate more clauses" << std::endl;);
+            std::cout << idx << std::endl;
+            std::cout << m_pos_literal_watching_clauses.size() << std::endl;
+            std::cout << m_neg_literal_watching_clauses.size() << std::endl;
             vector<clause_literal_watcher *> &watches = value_atom(idx) == l_true ? // assign positive, scan negative; assign negative, scan positive
                             m_neg_literal_watching_clauses[idx] : m_pos_literal_watching_clauses[idx];
             int i, j = 0, size = watches.size();
             for(i = 0; i < size; i++) {
                 int c_idx = watches[i]->m_clause_index;
+                std::cout << c_idx << std::endl;
+                std::cout << m_clauses.size() << std::endl;
+                DTRACE(display(std::cout, *m_clauses[c_idx]) << std::endl;);
                 int l1 = watches[i]->l1, l2 = watches[i]->l2;
                 // the watches have already been changed (this may happen after the loop of first watcher)
                 // this case only happens for SMT, 
@@ -2284,9 +2358,11 @@ namespace nlsat {
                 lbool v1 = get_literal_value(l1), v2 = get_literal_value(l2);
                 SASSERT(v1 == l_false || v2 == l_false); // must have a false literal, since we assign one of the literals
                 if(v1 == l_true || v2 == l_true) { // the clause is already satisfied, keep watch and loop next
+                    DTRACE(std::cout << "exit true literal" << std::endl;);
                     watches[j++] = watches[i];
                     continue;
                 } else if(v1 == l_false && v2 == l_false) { // both are false, this is caused by arith assignment
+                    DTRACE(std::cout << "both false" << std::endl;);
                     int new_l1 = 0, new_l2 = 0;
                     int unit_index = -1;
                     clause const &cls = *m_clauses[c_idx]; 
@@ -2343,6 +2419,7 @@ namespace nlsat {
                         }
                     }
                 } else { // current literal is false, the other is undef
+                    DTRACE(std::cout << "one false, one undef" << std::endl;);
                     int new_l = 0, another_idx = watches[i]->get_another_literal_index_using_abs(idx);
                     clause const &cls = *m_clauses[c_idx];
                     bool sat = false;
@@ -2371,7 +2448,7 @@ namespace nlsat {
                         if(new_l > 0) {
                             m_neg_literal_watching_clauses[new_l].push_back(watches[i]);
                         } else {
-                            m_pos_literal_watching_clauses[new_l].push_back(watches[i]);
+                            m_pos_literal_watching_clauses[-new_l].push_back(watches[i]);
                         }
                     } else { // unit to another literal, still watch
                         if(is_bool_literal(cls[another_idx])) {
@@ -2386,6 +2463,7 @@ namespace nlsat {
         }
 
         clause* propagate_learned_using_atom_watcher(unsigned idx) {
+            DTRACE(std::cout << "propagate more learned" << std::endl;);
             vector<clause_literal_watcher *> &watches = value_atom(idx) == l_true ? // assign positive, scan negative; assign negative, scan positive
                         m_neg_literal_watching_learned[idx] : m_pos_literal_watching_learned[idx];
             int j = 0, size = watches.size();
@@ -2488,7 +2566,7 @@ namespace nlsat {
                         if(new_l > 0) {
                             m_neg_literal_watching_learned[new_l].push_back(watches[i]);
                         } else {
-                            m_pos_literal_watching_learned[new_l].push_back(watches[i]);
+                            m_pos_literal_watching_learned[-new_l].push_back(watches[i]);
                         }
                     } else { // unit to another literal, still watch
                         if(is_bool_literal(cls[another_idx])) {
@@ -3045,6 +3123,7 @@ namespace nlsat {
             m_hybrid_activity.setx(b, 0, 0);
             m_frontend_bvalues.enlarge(b, l_undef);
             m_frontend_unit_indices.enlarge(b, null_var);
+            m_frontend_used.enlarge(b, false);
             m_atom_unit_clauses.enlarge(b, null_var);
             m_atom_unit_learned.enlarge(b, null_var);
             m_nlsat_atoms.enlarge(b, nullptr);
@@ -3075,6 +3154,7 @@ namespace nlsat {
             m_neg_literal_watching_learned.enlarge(b, vector<clause_literal_watcher*>(0));
             m_frontend_bvalues.enlarge(b, l_undef);
             m_frontend_unit_indices.enlarge(b, null_var);
+            m_frontend_used.enlarge(b, null_var);
             for(var v: vars) {
                 m_var_atoms.enlarge(v, unsigned_vector(0));
                 m_var_atoms[v].push_back(b);
@@ -3628,14 +3708,17 @@ namespace nlsat {
 
         svector<lbool>         m_frontend_bvalues;
         unsigned_vector        m_frontend_unit_indices;
+        bool_vector            m_frontend_used;
 
         inline static unsigned encode_unit_indices(unsigned idx, bool learned) {
             return 2 * idx + learned;
         }
 
-        void frontend_propagate(literal l, unsigned idx, bool learned) {
+        void frontend_propagate(literal l, unsigned idx, bool learned, bool used_in_search) {
+            DTRACE(std::cout << "frontend propagate literal "; display(std::cout, l) << std::endl;);
             m_frontend_bvalues[l.var()] = l.sign() ? l_false : l_true;
             m_frontend_unit_indices[l.var()] = encode_unit_indices(idx, learned);
+            m_frontend_used[l.var()] = used_in_search;
         }
 
         lbool frontend_value(literal l) const {
@@ -3659,7 +3742,7 @@ namespace nlsat {
                     frontend_conflict = true;
                     return;
                 }
-                frontend_propagate(l, idx, false);
+                frontend_propagate(l, idx, false, is_bool_literal(l));
                 m_atom_unit_clauses[l.var()] = idx;
             } else {
                 bool is_sat = false; unsigned id1 = null_var, id2 = null_var;
@@ -3687,7 +3770,7 @@ namespace nlsat {
                     frontend_conflict = true;
                 }
                 else if(id1 != null_var && id2 == null_var) { // unit clause
-                    frontend_propagate(curr_clause[id1], idx, false);
+                    frontend_propagate(curr_clause[id1], idx, false, is_bool_literal(curr_clause[id1]));
                 } else if(id1 != null_var && id2 != null_var) { // set watches
                     literal l1 = curr_clause[id1], l2 = curr_clause[id2];
                     int i1 = l1.sign() ? -l1.var() : l1.var();
@@ -3723,6 +3806,10 @@ namespace nlsat {
                     if(!update_clause_frontend_infeasible_set(idx, v)) { // conflict
                         frontend_conflict = true;
                         return;
+                    } else {
+                        if(m_clauses[idx]->size() == 1) {
+                            frontend_propagate((*m_clauses[idx])[0], idx, false, true);
+                        }
                     }
                 } else { // more arith vars
                     var v1 = *it;
@@ -3812,8 +3899,11 @@ namespace nlsat {
         }
 
         void build_frontend_assignment() {
+            std::cout << "atom size: " << m_atoms.size() << std::endl;
             for(bool_var b = 0; b < m_atoms.size(); b++) {
-                if(m_atoms[b] == nullptr && frontend_value(b) != l_undef && m_frontend_unit_indices[b] != null_var) {
+                std::cout << b << std::endl;
+                std::cout << m_frontend_used.size() << std::endl;
+                if(frontend_value(b) != l_undef && m_frontend_unit_indices[b] != null_var && m_frontend_used[b]) {
                     assign_literal(
                         literal(b, frontend_value(b) == l_false), 
                         mk_clause_jst(m_frontend_unit_indices[b] % 2 == 0 ? 
@@ -3821,6 +3911,7 @@ namespace nlsat {
                     );
                 }
             }
+            DTRACE(std::cout << "build frontend assignment done" << std::endl;);
         }
 
         void build_frontend_infeasible_set() {
@@ -3831,6 +3922,7 @@ namespace nlsat {
                     m_infeasible[v] = m_frontend_infeasible[v];
                 }
             }
+            DTRACE(std::cout << "build frontend infeasible done" << std::endl;);
         }
 
         lbool check(literal_vector& assumptions) {
@@ -3959,6 +4051,7 @@ namespace nlsat {
         }
 
         void process_antecedent(literal antecedent) {
+            DTRACE(std::cout << "process antecedent for literal: "; display(std::cout, antecedent) << std::endl;);
             checkpoint();
             bool_var b  = antecedent.var();
             insert_conflict_from_atom(b);
@@ -3970,6 +4063,7 @@ namespace nlsat {
                     SASSERT(is_arith_atom(b) && all_assigned(a)); // must be in a previous stage
                     mark(b);
                     m_lemma.push_back(antecedent);
+                    DTRACE(std::cout << "case 1, push back lemma: "; display(std::cout, antecedent) << std::endl;);
                 }
                 return;
             }
@@ -3978,19 +4072,23 @@ namespace nlsat {
                 mark(b);
                 if(b_lvl == scope_lvl() && same_stage_atom(b, m_scope_stage)){
                     m_num_marks++;
+                    DTRACE(std::cout << "same stage and same level, increase mark " << m_num_marks << std::endl;);
                 }
                 else {
                     m_lemma.push_back(antecedent);
+                    DTRACE(std::cout << "case 2, push back lemma: "; display(std::cout, antecedent) << std::endl;);
                 }
             }
         }
 
         void resolve_clause(bool_var b, unsigned sz, literal const * c) {
+            DTRACE(std::cout << "resolve clause" << std::endl;);
             insert_conflict_from_literals(sz, c);
             for (unsigned i = 0; i < sz; i++) {
                 if (c[i].var() != b)
                     process_antecedent(c[i]);
             }
+            DTRACE(std::cout << "resolve clause done" << std::endl;);
         }
 
         // remember here we delete const clause
@@ -4022,7 +4120,9 @@ namespace nlsat {
         void resolve_lazy_justification(bool_var b, lazy_justification const & jst) {
             unsigned sz = jst.num_lits();
             m_lazy_clause.reset();
+            DTRACE(std::cout << "enter explain" << std::endl;);
             m_explain(jst.num_lits(), jst.lits(), m_lazy_clause);
+            DTRACE(std::cout << "exit explain" << std::endl;);
             for (unsigned i = 0; i < sz; i++)
                 m_lazy_clause.push_back(~jst.lit(i));
             insert_conflict_vars_from_literals(m_lazy_clause.size(), m_lazy_clause.data());
@@ -4051,6 +4151,7 @@ namespace nlsat {
                 clause const& c = jst.clause(i);
                 m_lemma_assumptions = m_asm.mk_join(static_cast<_assumption_set>(c.assumptions()), m_lemma_assumptions);
             }
+            DTRACE(std::cout << "resolve lazy done" << std::endl;);
         }
 
         /**
@@ -4235,6 +4336,24 @@ namespace nlsat {
             }
         }
 
+        bool all_assigned(unsigned sz, literal const * ls) const {
+            var_table curr_vars;
+            bool_var_table curr_bools;
+            get_vars_literals(sz, ls, curr_vars);
+            get_bool_vars_literals(sz, ls, curr_bools);
+            for(var v: curr_vars) {
+                if(!m_assignment.is_assigned(v)) {
+                    return false;
+                }
+            }
+            for(bool_var b: curr_bools) {
+                if(m_bvalues[m_pure_bool_vars[b]] == l_undef) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
         hybrid_var max_assigned_var(unsigned sz, literal const * ls, bool & is_bool, unsigned & max_stage) const {
             hybrid_var res = null_var;
             var_table curr_vars;
@@ -4245,7 +4364,7 @@ namespace nlsat {
             for(var v: curr_vars){
                 var index = find_assigned_index(arith2hybrid(v));
                 if(index == null_var){
-                    UNREACHABLE();
+                    continue;
                 }
                 else {
                     if(index >= max_index){
@@ -4429,20 +4548,27 @@ namespace nlsat {
             m_lemma.reset();
             m_lemma_assumptions = nullptr;
             scoped_reset_marks _sr(*this);
-            DTRACE(std::cout << "resolve conflict clause: "; display(std::cout, conflict) << std::endl;);
+            DTRACE(std::cout << "conflict clause: "; 
+                display(std::cout, conflict) << std::endl;
+                std::cout << "m_hk: " << m_hk <<" "; m_display_var(std::cout, m_hk) << std::endl;
+            );
             resolve_clause(null_bool_var, *conflict_clause);
-            DTRACE(std::cout << "resolve clause done" << std::endl;);
             unsigned top = m_trail.size();
+            std::cout << m_trail.size() << std::endl;
+            std::cout << "top: " << top << std::endl;
             bool found_decision;
             while (true) {
                 found_decision = false;
                 while (m_num_marks > 0) {
                     checkpoint();
                     SASSERT(top > 0);
+                    std::cout << m_trail.size() << std::endl;
+                    std::cout << "top: " << top << std::endl;
                     trail & t = m_trail[top-1];
                     SASSERT(t.m_kind != trail::NEW_STAGE); // we only mark literals that are in the same stage
                     if (t.m_kind == trail::BVAR_ASSIGNMENT) {
                         bool_var b = t.m_x;
+                        DTRACE(std::cout << "show trail bool: "; display_atom(std::cout, b) << std::endl;);
                         insert_conflict_vars_from_atom(b);
                         if (is_marked(b)) {
                             m_num_marks--;
@@ -4450,15 +4576,21 @@ namespace nlsat {
                             justification jst = m_justifications[b];
                             switch (jst.get_kind()) {
                             case justification::CLAUSE:
+                                std::cout << "unit propagate case, resolve clause" << std::endl;
                                 resolve_clause(b, *(jst.get_clause()));
+                                std::cout << "resolve clause done" << std::endl;
                                 break;
                             case justification::LAZY:
+                                std::cout << "real propagate case, resolve lazy" << std::endl;
                                 resolve_lazy_justification(b, *(jst.get_lazy()));
+                                std::cout << "resolve lazy done" << std::endl;
                                 break;
                             case justification::DECISION:
                                 SASSERT(m_num_marks == 0);
+                                std::cout << "decision case, push literal into lemma" << std::endl;
                                 found_decision = true;
                                 m_lemma.push_back(literal(b, m_bvalues[b] == l_true));
+                                std::cout << "push literal done" << std::endl;
                                 break;
                             default:
                                 UNREACHABLE();
@@ -4468,6 +4600,7 @@ namespace nlsat {
                     }
                     top--;
                 }
+                DTRACE(std::cout << "bump hybrid vars" << std::endl;);
                 bump_conflict_hybrid_vars();
                 // m_lemma is an implicating clause after backtracking current scope level.
                 if (found_decision){
@@ -4518,6 +4651,15 @@ namespace nlsat {
             clause * new_cls = nullptr;
             conflict_clause = nullptr; // clear conflict this time
             if (!found_decision) {
+                // special case:
+                // all vars in m_lemma is unassigned and we found no decision
+                if(!all_assigned(sz, m_lemma.data())) {
+                    DTRACE(std::cout << "found no decision, and current lemma is not all assigned";
+                        std::cout << "we return to unsat" << std::endl;
+                    );
+                    return false;
+                }
+
                 // Case 1)
                 // We just have to find the maximal variable in m_lemma, and return to that stage
                 // previous: Remark: the lemma may contain only boolean literals, in this case new_max_var == null_var;
@@ -4536,6 +4678,7 @@ namespace nlsat {
                 else {
                     undo_until_unassigned(new_max_hybrid_var, false);
                 }
+
                 // generate new clause based on lemma's contained literals
                 new_cls = mk_clause(sz, m_lemma.data(), true, m_lemma_assumptions.get());
             }
@@ -5843,9 +5986,9 @@ namespace nlsat {
             return out;
         }
 
-        std::ostream & display_clause_vector(std::ostream & out, clause_vector const & vec) const {
+        std::ostream & display_clause_vector(std::ostream & out, unsigned_vector const & vec) const {
             for(unsigned i = 0; i < vec.size(); i++){
-                display(out, *vec[i]); out << std::endl;
+                display(out, *m_clauses[vec[i]]); out << std::endl;
             }
             return out;
         }
@@ -6090,7 +6233,10 @@ namespace nlsat {
     }
 
     literal solver::mk_ineq_literal(atom::kind k, unsigned sz, poly * const * ps, bool const * is_even) {
-        return m_imp->mk_ineq_literal(k, sz, ps, is_even);
+        DTRACE(std::cout << "make literal" << std::endl;);
+        auto res = m_imp->mk_ineq_literal(k, sz, ps, is_even);
+        DTRACE(std::cout << "make literal done" << std::endl;);
+        return res;
     }
 
     bool_var solver::mk_root_atom(atom::kind k, var x, unsigned i, poly * p) {

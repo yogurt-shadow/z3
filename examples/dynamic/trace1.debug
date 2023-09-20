@@ -1,0 +1,664 @@
+vec file size: 12134
+finish: file[41] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0084.smt2
+finish: file[6] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/atan-vega-3-chunk-0408.smt2
+finish: file[0] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sin/cos/sin-cos-346-b-chunk-0593.smt2
+finish: file[11] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill_simple.05.qfree_global_1.smt2
+ASSERTION VIOLATION
+File: ../src/nlsat/nlsat_solver.cpp
+Line: 2118
+UNEXPECTED CODE WAS REACHED.
+Z3 4.12.2.0
+Please file an issue with this message and more detail about how you encountered it at https://github.com/Z3Prover/z3/issues/new
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/20180501-Economics-Mulligan/MulliganEconomicsModel0053a.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/MulliganEconomicsModel0053a.txt
+sh: line 1: 216100 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/20180501-Economics-Mulligan/MulliganEconomicsModel0061c.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/MulliganEconomicsModel0061c.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/20180501-Economics-Mulligan/MulliganEconomicsModel0061c.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/MulliganEconomicsModel0061c.txt
+sh: line 1: 216086 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/1mcosq/7/sqrt-1mcosq-7-chunk-0025.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/sqrt-1mcosq-7-chunk-0025.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/1mcosq/7/sqrt-1mcosq-7-chunk-0025.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/sqrt-1mcosq-7-chunk-0025.txt
+finish: file[15] = /pub/data/wangzh/smt_benchmark/QF_NRA/20180501-Economics-Mulligan/MulliganEconomicsModel0061c.smt2
+finish: file[27] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/Chua/2/VC1/U/Chua-2-VC1-U-chunk-0018.smt2
+finish: file[19] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/Chua/1/IL/U/Chua-1-IL-U-chunk-0039.smt2
+finish: file[30] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/polypaver/bench-sqrt-3d/polypaver-bench-sqrt-3d-chunk-0229.smt2
+finish: file[14] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/1mcosq/7/sqrt-1mcosq-7-chunk-0025.smt2
+finish: file[86] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/bottom-plate-mixer/bottom-plate-mixer-chunk-0041.smt2
+finish: file[35] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/polypaver/bench-sqrt-3d/polypaver-bench-sqrt-3d-chunk-0111.smt2
+finish: file[2] = /pub/data/wangzh/smt_benchmark/QF_NRA/20180501-Economics-Mulligan/MulliganEconomicsModel0053a.smt2
+finish: file[28] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/Chua/1/VC2/L/Chua-1-VC2-L-chunk-0017.smt2
+finish: file[58] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sin/cos/sin-cos-346-b-chunk-0582.smt2
+finish: file[5] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/CMOS/CMOS-opamp-chunk-0280.smt2
+finish: file[38] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/Chua/2/VC1/U/Chua-2-VC1-U-chunk-0061.smt2
+finish: file[32] = /pub/data/wangzh/smt_benchmark/QF_NRA/20200911-Pine/1599122160834023000.smt2
+ASSERTION VIOLATION
+File: ../src/nlsat/nlsat_solver.cpp
+Line: 4248
+UNEXPECTED CODE WAS REACHED.
+Z3 4.12.2.0
+Please file an issue with this message and more detail about how you encountered it at https://github.com/Z3Prover/z3/issues/new
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sin/cos/sin-cos-346-b-chunk-0203.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/sin-cos-346-b-chunk-0203.txt
+finish: file[61] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/polypaver/sqrt43-int/4vars/polypaver-sqrt43-int-4vars-chunk-0029.smt2
+finish: file[25] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/polypaver/sqrt43-int/3vars/polypaver-sqrt43-int-3vars-chunk-0032.smt2
+sh: line 1: 216189 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/cbrt/3/weak/cbrt-problem-3-weak-chunk-0077.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/cbrt-problem-3-weak-chunk-0077.txt
+finish: file[34] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/Chua/2/VC1/L/Chua-2-VC1-L-chunk-0091.smt2
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/cbrt/3/weak/cbrt-problem-3-weak-chunk-0077.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/cbrt-problem-3-weak-chunk-0077.txt
+finish: file[68] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sin/cos/sin-cos-346-b-chunk-0267.smt2
+finish: file[117] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sin/problem/10/sin-problem-10-3-chunk-0031.smt2
+finish: file[57] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sin/cos/sin-cos-346-b-chunk-0203.smt2
+finish: file[23] = /pub/data/wangzh/smt_benchmark/QF_NRA/20220314-Uncu/Polynomial_Proof_Calls/ProveIneq_ISSAC05_Mitrinovic_5_15.smt2
+finish: file[90] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/cbrt/3/cbrt-problem-3-chunk-0026.smt2
+finish: file[4] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/atan-vega-3-chunk-0259.smt2
+finish: file[98] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sin/344/3/sin-344-3-chunk-0058.smt2
+finish: file[66] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sin/problem/7/sin-problem-7-chunk-0107.smt2
+finish: file[43] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/asin/8/vars4/asin-8-vars4-chunk-0010.smt2
+sh: line 1: 216207 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/1mcosq/7/sqrt-1mcosq-7-chunk-0027.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/sqrt-1mcosq-7-chunk-0027.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/1mcosq/7/sqrt-1mcosq-7-chunk-0027.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/sqrt-1mcosq-7-chunk-0027.txt
+finish: file[45] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/cbrt/3/weak/cbrt-problem-3-weak-chunk-0077.smt2
+sh: line 1: 216151 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/atan-vega-3-chunk-0337.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/atan-vega-3-chunk-0337.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/atan-vega-3-chunk-0337.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/atan-vega-3-chunk-0337.txt
+finish: file[128] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/cbrt/3/weak/cbrt-problem-3-weak-chunk-0033.smt2
+finish: file[75] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/1mcosq/7/sqrt-1mcosq-7-chunk-0150.smt2
+finish: file[123] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sin/problem/10/sin-problem-10-3-chunk-0026.smt2
+sh: line 1: 216105 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/atan-vega-3-chunk-0139.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/atan-vega-3-chunk-0139.txt
+finish: file[120] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/Chua/1/IL/L/Chua-1-IL-L-chunk-0126.smt2
+finish: file[78] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/Chua/2/IL/U/Chua-2-IL-U-chunk-0104.smt2
+sh: line 1: 216113 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_1d_plain.03.seq_lazy_linear_enc_lemmas_global_10.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_1d_plain.03.seq_lazy_linear_enc_lemmas_global_10.txt
+finish: file[99] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sin/cos/sin-cos-346-b-chunk-0408.smt2
+finish: file[77] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sin/problem/7/sin-problem-7-chunk-0179.smt2
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/atan-vega-3-chunk-0139.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/atan-vega-3-chunk-0139.txt
+finish: file[103] = /pub/data/wangzh/smt_benchmark/QF_NRA/20200911-Pine/1599122161444977000.smt2
+finish: file[94] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/problem/sqrt-problem-Melquiond2-chunk-0088.smt2
+finish: file[69] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/problem/2/atan-problem-2-chunk-0072.smt2
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_1d_plain.03.seq_lazy_linear_enc_lemmas_global_10.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_1d_plain.03.seq_lazy_linear_enc_lemmas_global_10.txt
+finish: file[72] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/Chua/1/VC2/U/Chua-1-VC2-U-chunk-0056.smt2
+finish: file[54] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/1mcosq/7/sqrt-1mcosq-7-chunk-0027.smt2
+finish: file[12] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_1d_plain.10.seq_lazy_lemmas_global_1.smt2
+finish: file[82] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/problem/2/weak/atan-problem-2-weak-chunk-0169.smt2
+finish: file[24] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_1d_plain.10.seq_lazy_lemmas_global_7.smt2
+finish: file[39] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/atan-vega-3-chunk-0337.smt2
+finish: file[40] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/problem/2/weak/atan-problem-2-weak-chunk-0222.smt2
+finish: file[48] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/problem/2/weak/atan-problem-2-weak-chunk-0210.smt2
+finish: file[97] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/problem/2/weak/atan-problem-2-weak-chunk-0018.smt2
+finish: file[37] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/atan-vega-3-chunk-0484.smt2
+finish: file[52] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/problem/2/atan-problem-2-chunk-0070.smt2
+finish: file[20] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/atan-vega-3-chunk-0139.smt2
+finish: file[9] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_1d_plain.03.seq_lazy_linear_enc_lemmas_global_10.smt2
+finish: file[36] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/atan-vega-3-chunk-0274.smt2
+finish: file[135] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/polypaver/bench-exp-3d/polypaver-bench-exp-3d-chunk-0140.smt2
+finish: file[140] = /pub/data/wangzh/smt_benchmark/QF_NRA/20220314-Uncu/Polynomial_Proof_Calls/ProveIneq_JSC_SUMCracker_16a.smt2
+finish: file[8] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_1d_plain.10.qfree_global_11.smt2
+finish: file[96] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/Chua/2/VC1/L/Chua-2-VC1-L-chunk-0079.smt2
+finish: file[138] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/Chua/1/VC1/L/Chua-1-VC1-L-chunk-0080.smt2
+finish: file[74] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sin/problem/7/weak/sin-problem-7-weak-chunk-0149.smt2
+sh: line 1: 216536 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/1mcosq/7/sqrt-1mcosq-7-chunk-0173.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/sqrt-1mcosq-7-chunk-0173.txt
+finish: file[63] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/Chua/2/IL/L/Chua-2-IL-L-chunk-0067.smt2
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/1mcosq/7/sqrt-1mcosq-7-chunk-0173.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/sqrt-1mcosq-7-chunk-0173.txt
+ASSERTION VIOLATION
+File: ../src/nlsat/nlsat_solver.cpp
+Line: 2118
+UNEXPECTED CODE WAS REACHED.
+Z3 4.12.2.0
+Please file an issue with this message and more detail about how you encountered it at https://github.com/Z3Prover/z3/issues/new
+finish: file[53] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/Nichols-Plot/Inverted-Pendulum/Nichols-Plot-Inverted-Pendulum-Fails-1-6-chunk-0247.smt2
+finish: file[95] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/Chua/2/IL/U/Chua-2-IL-U-chunk-0091.smt2
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/Chua/2/VC1/L/Chua-2-VC1-L-chunk-0076.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/Chua-2-VC1-L-chunk-0076.txt
+finish: file[145] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/problem/1/atan-problem-1-chunk-0011.smt2
+ASSERTION VIOLATION
+File: ../src/nlsat/nlsat_solver.cpp
+Line: 2118
+UNEXPECTED CODE WAS REACHED.
+Z3 4.12.2.0
+Please file an issue with this message and more detail about how you encountered it at https://github.com/Z3Prover/z3/issues/new
+finish: file[146] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/Lyapunov/Lyapunov1a-chunk-0005.smt2
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/20200911-Pine/1599122166437928000.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/1599122166437928000.txt
+finish: file[147] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/Chua/2/IL/U/Chua-2-IL-U-chunk-0073.smt2
+finish: file[133] = /pub/data/wangzh/smt_benchmark/QF_NRA/20180501-Economics-Mulligan/MulliganEconomicsModel0018e.smt2
+finish: file[62] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/weak/atan-vega-3-weak-chunk-0329.smt2
+finish: file[89] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/problem/13/sqrt1/sqrt-problem-13-sqrt1-chunk-0044.smt2
+finish: file[121] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sin/cos/sin-cos-346-b-chunk-0562.smt2
+finish: file[112] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sin/cos/sin-cos-346-b-chunk-0106.smt2
+sh: line 1: 216518 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/atan-vega-3-chunk-0478.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/atan-vega-3-chunk-0478.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/atan-vega-3-chunk-0478.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/atan-vega-3-chunk-0478.txt
+sh: line 1: 216533 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0536.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/sqrt-1mcosq-8-chunk-0536.txt
+finish: file[73] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/atan-vega-3-chunk-0064.smt2
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0536.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/sqrt-1mcosq-8-chunk-0536.txt
+finish: file[109] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/Chua/2/IL/L/Chua-2-IL-L-chunk-0084.smt2
+finish: file[136] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sin/cos/sin-cos-346-b-chunk-0501.smt2
+finish: file[130] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/1mcosq/7/sqrt-1mcosq-7-chunk-0173.smt2
+finish: file[132] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/Chua/2/VC1/L/Chua-2-VC1-L-chunk-0076.smt2
+finish: file[152] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sin/problem/7/weak2/sin-problem-7-weak2-chunk-0046.smt2
+finish: file[87] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/exp/problem/10/3/weak/exp-problem-10-3-weak-chunk-0101.smt2
+sh: line 1: 216163 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_plain.02.seq_lazy_global_6.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_plain.02.seq_lazy_global_6.txt
+finish: file[80] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/exp/problem/10/3/weak/exp-problem-10-3-weak-chunk-0158.smt2
+finish: file[158] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/Chua/1/VC2/U/Chua-1-VC2-U-chunk-0160.smt2
+finish: file[7] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill_simple.01.seq_lazy_lemmas_global_9.smt2
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_plain.02.seq_lazy_global_6.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_plain.02.seq_lazy_global_6.txt
+finish: file[111] = /pub/data/wangzh/smt_benchmark/QF_NRA/20200911-Pine/1599122166437928000.smt2
+finish: file[139] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/exp/problem/10/2/exp-problem-10-2-chunk-0071.smt2
+finish: file[51] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/exp/problem/10/2/exp-problem-10-2-chunk-0152.smt2
+finish: file[156] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/problem/13/vars5/sqrt-problem-13-vars5-chunk-0028.smt2
+finish: file[50] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/simple_ballistics_reach.01.seq_lazy_linear_enc_global_8.smt2
+finish: file[141] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/exp/problem/10/2/exp-problem-10-2-chunk-0020.smt2
+finish: file[18] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill.10.seq_lazy_linear_enc_lemmas_global_11.smt2
+finish: file[161] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/Chua/2/IL/L/Chua-2-IL-L-chunk-0097.smt2
+finish: file[126] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/atan-vega-3-chunk-0478.smt2
+finish: file[173] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sin/344/3/sin-344-3-chunk-0059.smt2
+finish: file[129] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0536.smt2
+finish: file[64] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/weak/atan-vega-3-weak-chunk-0324.smt2
+finish: file[170] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sin/problem/7/weak/sin-problem-7-weak-chunk-0152.smt2
+finish: file[169] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/polypaver/bench-sqrt-3d/polypaver-bench-sqrt-3d-chunk-0352.smt2
+finish: file[71] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/weak/atan-vega-3-weak-chunk-0260.smt2
+finish: file[42] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_plain.02.seq_lazy_global_6.smt2
+finish: file[168] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/atan-vega-3-chunk-0319.smt2
+finish: file[76] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/weak/atan-vega-3-weak-chunk-0623.smt2
+finish: file[177] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sin/cos/sin-cos-346-b-chunk-0278.smt2
+finish: file[115] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/weak/atan-vega-3-weak-chunk-0507.smt2
+sh: line 1: 216816 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/problem/sqrt-problem-Melquiond2-chunk-0099.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/sqrt-problem-Melquiond2-chunk-0099.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/problem/sqrt-problem-Melquiond2-chunk-0099.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/sqrt-problem-Melquiond2-chunk-0099.txt
+sh: line 1: 216820 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/1mcosq/7/sqrt-1mcosq-7-chunk-0076.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/sqrt-1mcosq-7-chunk-0076.txt
+sh: line 1: 216772 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0508.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/sqrt-1mcosq-8-chunk-0508.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/1mcosq/7/sqrt-1mcosq-7-chunk-0076.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/sqrt-1mcosq-7-chunk-0076.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0508.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/sqrt-1mcosq-8-chunk-0508.txt
+finish: file[163] = /pub/data/wangzh/smt_benchmark/QF_NRA/20200911-Pine/1599122162465867000.smt2
+finish: file[149] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/exp/problem/10/3/exp-problem-10-3-chunk-0161.smt2
+sh: line 1: 216790 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0552.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/sqrt-1mcosq-8-chunk-0552.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0552.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/sqrt-1mcosq-8-chunk-0552.txt
+finish: file[179] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/atan-vega-3-chunk-0177.smt2
+sh: line 1: 216896 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/zankl/matrix-1-all-43.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/matrix-1-all-43.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/zankl/matrix-1-all-43.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/matrix-1-all-43.txt
+finish: file[59] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_slope.03.seq_lazy_linear_enc_lemmas_global_12.smt2
+finish: file[183] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/polypaver/sqrt43-int/3vars/polypaver-sqrt43-int-3vars-chunk-0043.smt2
+sh: line 1: 216262 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill_simple.01.qfree_global_12.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_hill_simple.01.qfree_global_12.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill_simple.01.qfree_global_12.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_hill_simple.01.qfree_global_12.txt
+finish: file[174] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/problem/sqrt-problem-Melquiond2-chunk-0099.smt2
+finish: file[175] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/1mcosq/7/sqrt-1mcosq-7-chunk-0076.smt2
+finish: file[165] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0508.smt2
+finish: file[190] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/exp/problem/10/3/weak/exp-problem-10-3-weak-chunk-0143.smt2
+finish: file[104] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/weak/atan-vega-3-weak-chunk-0187.smt2
+finish: file[167] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0552.smt2
+finish: file[199] = /pub/data/wangzh/smt_benchmark/QF_NRA/20200911-Pine/1599122161297140000.smt2
+finish: file[198] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/atan-vega-3-chunk-0264.smt2
+sh: line 1: 216830 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0541.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/sqrt-1mcosq-8-chunk-0541.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0541.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/sqrt-1mcosq-8-chunk-0541.txt
+finish: file[184] = /pub/data/wangzh/smt_benchmark/QF_NRA/zankl/matrix-1-all-43.smt2
+finish: file[85] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill_simple.01.qfree_global_12.smt2
+sh: line 1: 216940 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/1mcosq/7/sqrt-1mcosq-7-chunk-0177.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/sqrt-1mcosq-7-chunk-0177.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/1mcosq/7/sqrt-1mcosq-7-chunk-0177.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/sqrt-1mcosq-7-chunk-0177.txt
+sh: line 1: 216222 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_1d_plain.04.seq_lazy_lemmas_global_10.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_1d_plain.04.seq_lazy_lemmas_global_10.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_1d_plain.04.seq_lazy_lemmas_global_10.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_1d_plain.04.seq_lazy_lemmas_global_10.txt
+finish: file[210] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sin/cos/sin-cos-346-b-chunk-0103.smt2
+sh: line 1: 216906 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/atan-vega-3-chunk-0374.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/atan-vega-3-chunk-0374.txt
+finish: file[188] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/atan-vega-3-chunk-0606.smt2
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/atan-vega-3-chunk-0374.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/atan-vega-3-chunk-0374.txt
+finish: file[208] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/exp/problem/10/3/exp-problem-10-3-chunk-0042.smt2
+finish: file[203] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/weak/atan-vega-3-weak-chunk-0166.smt2
+finish: file[176] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0541.smt2
+finish: file[195] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/CMOS/CMOS-opamp-chunk-0302.smt2
+sh: line 1: 216897 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/weak/atan-vega-3-weak-chunk-0665.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/atan-vega-3-weak-chunk-0665.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/weak/atan-vega-3-weak-chunk-0665.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/atan-vega-3-weak-chunk-0665.txt
+finish: file[181] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0453.smt2
+finish: file[70] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_1d_plain.04.seq_lazy_lemmas_global_10.smt2
+finish: file[222] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/atan-vega-3-chunk-0523.smt2
+finish: file[200] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sin/cos/sin-cos-346-b-chunk-0087.smt2
+finish: file[191] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/1mcosq/7/sqrt-1mcosq-7-chunk-0177.smt2
+finish: file[187] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/atan-vega-3-chunk-0374.smt2
+sh: line 1: 216277 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill.04.seq_lazy_linear_enc_global_8.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_hill.04.seq_lazy_linear_enc_global_8.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill.04.seq_lazy_linear_enc_global_8.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_hill.04.seq_lazy_linear_enc_global_8.txt
+sh: line 1: 217037 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/exp/problem/10/3/exp-problem-10-3-chunk-0120.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/exp-problem-10-3-chunk-0120.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/exp/problem/10/3/exp-problem-10-3-chunk-0120.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/exp-problem-10-3-chunk-0120.txt
+sh: line 1: 217019 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/atan-vega-3-chunk-0111.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/atan-vega-3-chunk-0111.txt
+finish: file[185] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/weak/atan-vega-3-weak-chunk-0665.smt2
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/atan-vega-3-chunk-0111.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/atan-vega-3-chunk-0111.txt
+sh: line 1: 216268 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill.05.seq_lazy_linear_enc_lemmas_global_10.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_hill.05.seq_lazy_linear_enc_lemmas_global_10.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill.05.seq_lazy_linear_enc_lemmas_global_10.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_hill.05.seq_lazy_linear_enc_lemmas_global_10.txt
+finish: file[88] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill.04.seq_lazy_linear_enc_global_8.smt2
+finish: file[216] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/exp/problem/10/3/exp-problem-10-3-chunk-0120.smt2
+finish: file[233] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sin/cos/sin-cos-346-b-chunk-0077.smt2
+finish: file[213] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/atan-vega-3-chunk-0111.smt2
+finish: file[221] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/polypaver/bench-sqrt-3d/polypaver-bench-sqrt-3d-chunk-0348.smt2
+finish: file[204] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sin/problem/7/weak2/sin-problem-7-weak2-chunk-0023.smt2
+finish: file[197] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/exp/problem/10/3/weak/exp-problem-10-3-weak-chunk-0231.smt2
+finish: file[84] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill.05.seq_lazy_linear_enc_lemmas_global_10.smt2
+finish: file[209] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/Chua/2/VC2/U/Chua-2-VC2-U-chunk-0118.smt2
+finish: file[224] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0164.smt2
+finish: file[160] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/weak/atan-vega-3-weak-chunk-0384.smt2
+finish: file[234] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/Lyapunov/Lyapunov1a-chunk-0010.smt2
+finish: file[227] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/exp/problem/10/2/exp-problem-10-2-chunk-0067.smt2
+finish: file[211] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/polypaver/bench-sqrt-3d/polypaver-bench-sqrt-3d-chunk-0020.smt2
+sh: line 1: 216332 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill.04.seq_lazy_linear_enc_global_5.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_hill.04.seq_lazy_linear_enc_global_5.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill.04.seq_lazy_linear_enc_global_5.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_hill.04.seq_lazy_linear_enc_global_5.txt
+sh: line 1: 216274 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill.05.redlog_global_3.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_hill.05.redlog_global_3.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill.05.redlog_global_3.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_hill.05.redlog_global_3.txt
+finish: file[248] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sin/cos/sin-cos-346-b-chunk-0029.smt2
+finish: file[113] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill.04.seq_lazy_linear_enc_global_5.smt2
+finish: file[83] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill.05.redlog_global_3.smt2
+finish: file[225] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/weak/atan-vega-3-weak-chunk-0125.smt2
+finish: file[239] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/problem/1/weak/atan-problem-1-weak-chunk-0026.smt2
+sh: line 1: 217160 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0088.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/sqrt-1mcosq-8-chunk-0088.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0088.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/sqrt-1mcosq-8-chunk-0088.txt
+sh: line 1: 216311 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_1d_plain.05.seq_lazy_lemmas_global_8.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_1d_plain.05.seq_lazy_lemmas_global_8.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_1d_plain.05.seq_lazy_lemmas_global_8.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_1d_plain.05.seq_lazy_lemmas_global_8.txt
+finish: file[114] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_1d_plain.10.seq_lazy_lemmas_global_5.smt2
+finish: file[252] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/atan-vega-3-chunk-0260.smt2
+finish: file[253] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/Chua/2/VC2/U/Chua-2-VC2-U-chunk-0025.smt2
+finish: file[245] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0137.smt2
+finish: file[108] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_1d_plain.05.seq_lazy_lemmas_global_8.smt2
+finish: file[238] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0088.smt2
+sh: line 1: 217209 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0583.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/sqrt-1mcosq-8-chunk-0583.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0583.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/sqrt-1mcosq-8-chunk-0583.txt
+finish: file[246] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/exp/problem/10/2/exp-problem-10-2-chunk-0059.smt2
+sh: line 1: 216627 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/CMOS/CMOS-opamp-chunk-0340.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/CMOS-opamp-chunk-0340.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/CMOS/CMOS-opamp-chunk-0340.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/CMOS-opamp-chunk-0340.txt
+finish: file[261] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sin/cos/sin-cos-346-b-chunk-0044.smt2
+finish: file[247] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0583.smt2
+sh: line 1: 216333 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_plain.04.seq_lazy_global_12.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_plain.04.seq_lazy_global_12.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_plain.04.seq_lazy_global_12.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_plain.04.seq_lazy_global_12.txt
+finish: file[143] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/CMOS/CMOS-opamp-chunk-0340.smt2
+ASSERTION VIOLATION
+File: ../src/nlsat/nlsat_solver.cpp
+Line: 2118
+UNEXPECTED CODE WAS REACHED.
+Z3 4.12.2.0
+Please file an issue with this message and more detail about how you encountered it at https://github.com/Z3Prover/z3/issues/new
+finish: file[264] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sin/problem/7/sin-problem-7-chunk-0106.smt2
+finish: file[260] = /pub/data/wangzh/smt_benchmark/QF_NRA/20220314-Uncu/Rational_Function_Proof_Calls_With_Basic_Denominator_Simplifications/BDC_ProveIneq_ISSAC10_ex4h.smt2
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/20170501-Heizmann-UltimateInvariantSynthesis/sum60.i_5_6_5.bpl_3.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/sum60.i_5_6_5.bpl_3.txt
+finish: file[118] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_plain.04.seq_lazy_global_12.smt2
+finish: file[263] = /pub/data/wangzh/smt_benchmark/QF_NRA/20180501-Economics-Mulligan/MulliganEconomicsModel0066a.smt2
+finish: file[230] = /pub/data/wangzh/smt_benchmark/QF_NRA/20170501-Heizmann-UltimateInvariantSynthesis/sum60.i_5_6_5.bpl_3.smt2
+finish: file[134] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill_simple.05.seq_lazy_lemmas_global_13.smt2
+finish: file[124] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill_simple.10.seq_lazy_global_7.smt2
+finish: file[273] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/weak/atan-vega-3-weak-chunk-0274.smt2
+sh: line 1: 217354 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/Nichols-Plot/Inverted-Pendulum/Nichols-Plot-Inverted-Pendulum-Fails-1-6-chunk-0227.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/Nichols-Plot-Inverted-Pendulum-Fails-1-6-chunk-0227.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/Nichols-Plot/Inverted-Pendulum/Nichols-Plot-Inverted-Pendulum-Fails-1-6-chunk-0227.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/Nichols-Plot-Inverted-Pendulum-Fails-1-6-chunk-0227.txt
+finish: file[271] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/CMOS/CMOS-opamp-chunk-0040.smt2
+finish: file[270] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/Nichols-Plot/Inverted-Pendulum/Nichols-Plot-Inverted-Pendulum-Fails-1-6-chunk-0227.smt2
+sh: line 1: 217366 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/1mcosq/7/sqrt-1mcosq-7-chunk-0055.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/sqrt-1mcosq-7-chunk-0055.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/1mcosq/7/sqrt-1mcosq-7-chunk-0055.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/sqrt-1mcosq-7-chunk-0055.txt
+sh: line 1: 217394 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/20220314-Uncu/Rational_Function_Proof_Calls_With_Disjunctive_Denominator_Simplifications/DDC_ProveIneq_JSC_SUMCracker_14b.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/DDC_ProveIneq_JSC_SUMCracker_14b.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/20220314-Uncu/Rational_Function_Proof_Calls_With_Disjunctive_Denominator_Simplifications/DDC_ProveIneq_JSC_SUMCracker_14b.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/DDC_ProveIneq_JSC_SUMCracker_14b.txt
+finish: file[148] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_slope.04.seq_lazy_lemmas_global_3.smt2
+finish: file[151] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_plain.10.seq_lazy_lemmas_global_2.smt2
+finish: file[274] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/1mcosq/7/sqrt-1mcosq-7-chunk-0055.smt2
+finish: file[279] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/weak/atan-vega-3-weak-chunk-0293.smt2
+finish: file[154] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_plain.10.seq_lazy_global_0.smt2
+finish: file[278] = /pub/data/wangzh/smt_benchmark/QF_NRA/20220314-Uncu/Rational_Function_Proof_Calls_With_Disjunctive_Denominator_Simplifications/DDC_ProveIneq_JSC_SUMCracker_14b.smt2
+finish: file[283] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/weak/atan-vega-3-weak-chunk-0703.smt2
+finish: file[155] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_plain.10.seq_lazy_lemmas_global_7.smt2
+sh: line 1: 216540 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_1d_plain.02.seq_lazy_lemmas_global_10.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_1d_plain.02.seq_lazy_lemmas_global_10.txt
+sh: line 1: 217426 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/20211101-Geogebra/IsoRightTriangle-Bottema1_3a.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/IsoRightTriangle-Bottema1_3a.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/20211101-Geogebra/IsoRightTriangle-Bottema1_3a.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/IsoRightTriangle-Bottema1_3a.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_1d_plain.02.seq_lazy_lemmas_global_10.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_1d_plain.02.seq_lazy_lemmas_global_10.txt
+finish: file[172] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill.01.seq_lazy_linear_enc_global_7.smt2
+finish: file[281] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/atan-vega-3-chunk-0283.smt2
+finish: file[285] = /pub/data/wangzh/smt_benchmark/QF_NRA/20211101-Geogebra/IsoRightTriangle-Bottema1_3a.smt2
+finish: file[131] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_1d_plain.02.seq_lazy_lemmas_global_10.smt2
+finish: file[277] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0433.smt2
+finish: file[288] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/Chua/2/IL/U/Chua-2-IL-U-chunk-0057.smt2
+finish: file[272] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/polypaver/bench-sqrt-3d/polypaver-bench-sqrt-3d-chunk-0384.smt2
+finish: file[290] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/atan-vega-3-chunk-0391.smt2
+finish: file[266] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/polypaver/bench-sqrt-3d/polypaver-bench-sqrt-3d-chunk-0458.smt2
+finish: file[294] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/CMOS/CMOS-opamp-chunk-0126.smt2
+sh: line 1: 216742 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_plain.03.qfree_global_8.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_plain.03.qfree_global_8.txt
+finish: file[292] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sin/cos/sin-cos-346-b-chunk-0308.smt2
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_plain.03.qfree_global_8.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_plain.03.qfree_global_8.txt
+finish: file[157] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_plain.03.qfree_global_8.smt2
+finish: file[297] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/atan-vega-3-chunk-0351.smt2
+finish: file[162] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_plain.01.seq_lazy_global_13.smt2
+finish: file[300] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/weak/atan-vega-3-weak-chunk-0583.smt2
+sh: line 1: 216605 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill.04.seq_lazy_linear_enc_global_11.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_hill.04.seq_lazy_linear_enc_global_11.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill.04.seq_lazy_linear_enc_global_11.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_hill.04.seq_lazy_linear_enc_global_11.txt
+finish: file[202] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_1d_plain.10.seq_lazy_lemmas_global_0.smt2
+finish: file[142] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill.04.seq_lazy_linear_enc_global_11.smt2
+ASSERTION VIOLATION
+File: ../src/nlsat/nlsat_solver.cpp
+Line: 4248
+UNEXPECTED CODE WAS REACHED.
+Z3 4.12.2.0
+Please file an issue with this message and more detail about how you encountered it at https://github.com/Z3Prover/z3/issues/new
+finish: file[194] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill_simple.10.seq_lazy_lemmas_global_13.smt2
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_slope.04.seq_lazy_linear_enc_global_2.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_slope.04.seq_lazy_linear_enc_global_2.txt
+sh: line 1: 216962 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill_simple.10.seq_lazy_linear_enc_global_4.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_hill_simple.10.seq_lazy_linear_enc_global_4.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill_simple.10.seq_lazy_linear_enc_global_4.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_hill_simple.10.seq_lazy_linear_enc_global_4.txt
+finish: file[193] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_slope.04.seq_lazy_linear_enc_global_2.smt2
+sh: line 1: 217558 Segmentation fault      /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/CMOS/CMOS-opamp-chunk-0055.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/CMOS-opamp-chunk-0055.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/CMOS/CMOS-opamp-chunk-0055.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/CMOS-opamp-chunk-0055.txt
+sh: line 1: 216773 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_plain.03.redlog_global_3.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_plain.03.redlog_global_3.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_plain.03.redlog_global_3.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_plain.03.redlog_global_3.txt
+sh: line 1: 217507 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/polypaver/bench-sqrt-3d/polypaver-bench-sqrt-3d-chunk-0433.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/polypaver-bench-sqrt-3d-chunk-0433.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/polypaver/bench-sqrt-3d/polypaver-bench-sqrt-3d-chunk-0433.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/polypaver-bench-sqrt-3d-chunk-0433.txt
+finish: file[196] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill_simple.10.seq_lazy_linear_enc_global_4.smt2
+finish: file[308] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/CMOS/CMOS-opamp-chunk-0055.smt2
+finish: file[164] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_plain.03.redlog_global_3.smt2
+sh: line 1: 216864 Segmentation fault      /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_plain.03.redlog_global_12.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_plain.03.redlog_global_12.txt
+finish: file[219] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_slope.02.seq_lazy_linear_enc_global_3.smt2
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_plain.03.redlog_global_12.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_plain.03.redlog_global_12.txt
+finish: file[298] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/polypaver/bench-sqrt-3d/polypaver-bench-sqrt-3d-chunk-0433.smt2
+sh: line 1: 217261 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_1d_plain.04.redlog_global_2.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_1d_plain.04.redlog_global_2.txt
+sh: line 1: 216780 Segmentation fault      /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_1d_plain.03.qfree_global_9.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_1d_plain.03.qfree_global_9.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_1d_plain.04.redlog_global_2.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_1d_plain.04.redlog_global_2.txt
+finish: file[306] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sin/cos/sin-cos-346-b-chunk-0620.smt2
+finish: file[304] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/problem/12vars3/sqrt-problem-12vars3-chunk-0100.smt2
+sh: line 1: 216713 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/etcs_braking_2.01.redlog_global_9.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/etcs_braking_2.01.redlog_global_9.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_1d_plain.03.qfree_global_9.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_1d_plain.03.qfree_global_9.txt
+sh: line 1: 217185 Segmentation fault      /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill.04.seq_lazy_linear_enc_global_6.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_hill.04.seq_lazy_linear_enc_global_6.txt
+sh: line 1: 216952 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_plain.04.seq_lazy_lemmas_global_14.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_plain.04.seq_lazy_lemmas_global_14.txt
+sh: line 1: 217127 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/etcs_braking_2.01.seq_lazy_linear_enc_lemmas_global_3.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/etcs_braking_2.01.seq_lazy_linear_enc_lemmas_global_3.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/etcs_braking_2.01.seq_lazy_linear_enc_lemmas_global_3.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/etcs_braking_2.01.seq_lazy_linear_enc_lemmas_global_3.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill.04.seq_lazy_linear_enc_global_6.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_hill.04.seq_lazy_linear_enc_global_6.txt
+finish: file[180] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_plain.03.redlog_global_12.smt2
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_plain.04.seq_lazy_lemmas_global_14.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_plain.04.seq_lazy_lemmas_global_14.txt
+finish: file[312] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/atan-vega-3-chunk-0190.smt2
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/etcs_braking_2.01.redlog_global_9.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/etcs_braking_2.01.redlog_global_9.txt
+finish: file[310] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sin/cos/sin-cos-346-b-chunk-0017.smt2
+finish: file[255] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_1d_plain.04.redlog_global_2.smt2
+finish: file[166] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_1d_plain.03.qfree_global_9.smt2
+finish: file[265] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_plain.03.seq_lazy_lemmas_global_1.smt2
+finish: file[311] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/atan-vega-3-chunk-0437.smt2
+finish: file[240] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill.04.seq_lazy_linear_enc_global_6.smt2
+finish: file[207] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_plain.04.seq_lazy_lemmas_global_14.smt2
+finish: file[231] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/etcs_braking_2.01.seq_lazy_linear_enc_lemmas_global_3.smt2
+finish: file[159] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/etcs_braking_2.01.redlog_global_9.smt2
+sh: line 1: 217096 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill_simple.03.seq_lazy_global_15.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_hill_simple.03.seq_lazy_global_15.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill_simple.03.seq_lazy_global_15.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_hill_simple.03.seq_lazy_global_15.txt
+sh: line 1: 217244 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill_simple.03.redlog_global_7.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_hill_simple.03.redlog_global_7.txt
+finish: file[307] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0610.smt2
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill_simple.03.redlog_global_7.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_hill_simple.03.redlog_global_7.txt
+finish: file[267] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill_simple.05.redlog_global_7.smt2
+finish: file[314] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/weak/atan-vega-3-weak-chunk-0364.smt2
+sh: line 1: 217592 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/polypaver/bench-sqrt-3d/polypaver-bench-sqrt-3d-chunk-0497.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/polypaver-bench-sqrt-3d-chunk-0497.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/polypaver/bench-sqrt-3d/polypaver-bench-sqrt-3d-chunk-0497.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/polypaver-bench-sqrt-3d-chunk-0497.txt
+finish: file[303] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill_simple.01.seq_lazy_linear_enc_global_9.smt2
+finish: file[280] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/simple_ballistics_reach.01.seq_lazy_lemmas_global_1.smt2
+finish: file[223] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill_simple.03.seq_lazy_global_15.smt2
+finish: file[251] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill_simple.03.redlog_global_7.smt2
+finish: file[316] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sin/problem/8/weak/sin-problem-8-weak-chunk-0013.smt2
+finish: file[317] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/Chua/2/IL/U/Chua-2-IL-U-chunk-0029.smt2
+finish: file[313] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/polypaver/bench-sqrt-3d/polypaver-bench-sqrt-3d-chunk-0497.smt2
+finish: file[293] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_slope.04.seq_lazy_linear_enc_lemmas_global_8.smt2
+sh: line 1: 217529 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill_simple.03.seq_lazy_linear_enc_global_7.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_hill_simple.03.seq_lazy_linear_enc_global_7.txt
+finish: file[326] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/1mcosq/7/sqrt-1mcosq-7-chunk-0156.smt2
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill_simple.03.seq_lazy_linear_enc_global_7.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_hill_simple.03.seq_lazy_linear_enc_global_7.txt
+sh: line 1: 217158 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_1d_plain.05.seq_lazy_linear_enc_global_12.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_1d_plain.05.seq_lazy_linear_enc_global_12.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_1d_plain.05.seq_lazy_linear_enc_global_12.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_1d_plain.05.seq_lazy_linear_enc_global_12.txt
+sh: line 1: 217643 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_plain.03.seq_lazy_linear_enc_global_3.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_plain.03.seq_lazy_linear_enc_global_3.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_plain.03.seq_lazy_linear_enc_global_3.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_plain.03.seq_lazy_linear_enc_global_3.txt
+finish: file[320] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/problem/2/weakT/atan-problem-2-weakT-chunk-0029.smt2
+finish: file[302] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill_simple.03.seq_lazy_linear_enc_global_7.smt2
+finish: file[235] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_1d_plain.05.seq_lazy_linear_enc_global_12.smt2
+finish: file[319] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_plain.03.seq_lazy_linear_enc_global_3.smt2
+finish: file[286] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill.05.seq_lazy_linear_enc_lemmas_global_9.smt2
+sh: line 1: 217682 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/weak/atan-vega-3-weak-chunk-0374.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/atan-vega-3-weak-chunk-0374.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/weak/atan-vega-3-weak-chunk-0374.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/atan-vega-3-weak-chunk-0374.txt
+finish: file[337] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/polypaver/bench-sqrt-3d/polypaver-bench-sqrt-3d-chunk-0327.smt2
+sh: line 1: 217659 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_1d_plain.05.seq_lazy_linear_enc_global_3.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_1d_plain.05.seq_lazy_linear_enc_global_3.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_1d_plain.05.seq_lazy_linear_enc_global_3.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_1d_plain.05.seq_lazy_linear_enc_global_3.txt
+finish: file[325] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/weak/atan-vega-3-weak-chunk-0374.smt2
+finish: file[331] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/simple_ballistics_reach.01.seq_lazy_lemmas_global_6.smt2
+finish: file[343] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/exp/problem/10/3/weak/exp-problem-10-3-weak-chunk-0111.smt2
+finish: file[330] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/Chua/1/IL/L/Chua-1-IL-L-chunk-0050.smt2
+sh: line 1: 217732 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_1d_plain.01.seq_lazy_lemmas_global_6.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_1d_plain.01.seq_lazy_lemmas_global_6.txt
+sh: line 1: 217719 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/problem/12vars3/sqrt-problem-12vars3-chunk-0052.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/sqrt-problem-12vars3-chunk-0052.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_1d_plain.01.seq_lazy_lemmas_global_6.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_1d_plain.01.seq_lazy_lemmas_global_6.txt
+finish: file[321] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_1d_plain.05.seq_lazy_linear_enc_global_3.smt2
+finish: file[348] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/atan-vega-3-chunk-0278.smt2
+finish: file[327] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/simple_ballistics_reach.01.seq_lazy_lemmas_global_7.smt2
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/problem/12vars3/sqrt-problem-12vars3-chunk-0052.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/sqrt-problem-12vars3-chunk-0052.txt
+sh: line 1: 216873 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_1d_plain.03.seq_lazy_linear_enc_lemmas_global_12.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_1d_plain.03.seq_lazy_linear_enc_lemmas_global_12.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_1d_plain.03.seq_lazy_linear_enc_lemmas_global_12.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_1d_plain.03.seq_lazy_linear_enc_lemmas_global_12.txt
+finish: file[347] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/Chua/1/IL/L/Chua-1-IL-L-chunk-0103.smt2
+sh: line 1: 217729 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0235.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/sqrt-1mcosq-8-chunk-0235.txt
+sh: line 1: 217746 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0376.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/sqrt-1mcosq-8-chunk-0376.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0235.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/sqrt-1mcosq-8-chunk-0235.txt
+finish: file[335] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_1d_plain.01.seq_lazy_lemmas_global_6.smt2
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0376.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/sqrt-1mcosq-8-chunk-0376.txt
+finish: file[333] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/problem/12vars3/sqrt-problem-12vars3-chunk-0052.smt2
+finish: file[345] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/weak/atan-vega-3-weak-chunk-0715.smt2
+finish: file[349] = /pub/data/wangzh/smt_benchmark/QF_NRA/20220314-Uncu/Rational_Function_Proof_Calls_With_Disjunctive_Denominator_Simplifications/DDC_ProveIneq_Mitrinovic_3_27.smt2
+finish: file[346] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/exp/problem/10/2/exp-problem-10-2-chunk-0139.smt2
+finish: file[342] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sin/cos/sin-cos-346-b-chunk-0013.smt2
+finish: file[334] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0235.smt2
+finish: file[182] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_1d_plain.03.seq_lazy_linear_enc_lemmas_global_12.smt2
+finish: file[338] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0376.smt2
+sh: line 1: 217737 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_plain.04.seq_lazy_lemmas_global_11.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_plain.04.seq_lazy_lemmas_global_11.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_plain.04.seq_lazy_lemmas_global_11.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_plain.04.seq_lazy_lemmas_global_11.txt
+finish: file[350] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/problem/2/weak/atan-problem-2-weak-chunk-0212.smt2
+finish: file[336] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_plain.04.seq_lazy_lemmas_global_11.smt2
+finish: file[352] = /pub/data/wangzh/smt_benchmark/QF_NRA/20200911-Pine/1599122160908580000.smt2
+finish: file[355] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/Chua/1/VC2/U/Chua-1-VC2-U-chunk-0145.smt2
+finish: file[353] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/Chua/2/VC1/L/Chua-2-VC1-L-chunk-0034.smt2
+finish: file[357] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/problem/2/weak/atan-problem-2-weak-chunk-0205.smt2
+sh: line 1: 217830 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/20211101-Geogebra/IsoRightTriangle-Bottema1_2a.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/IsoRightTriangle-Bottema1_2a.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/20211101-Geogebra/IsoRightTriangle-Bottema1_2a.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/IsoRightTriangle-Bottema1_2a.txt
+finish: file[351] = /pub/data/wangzh/smt_benchmark/QF_NRA/20211101-Geogebra/IsoRightTriangle-Bottema1_2a.smt2
+ASSERTION VIOLATION
+File: ../src/nlsat/nlsat_solver.cpp
+Line: 2118
+UNEXPECTED CODE WAS REACHED.
+Z3 4.12.2.0
+Please file an issue with this message and more detail about how you encountered it at https://github.com/Z3Prover/z3/issues/new
+ASSERTION VIOLATION
+File: ../src/nlsat/nlsat_solver.cpp
+Line: 4248
+UNEXPECTED CODE WAS REACHED.
+Z3 4.12.2.0
+Please file an issue with this message and more detail about how you encountered it at https://github.com/Z3Prover/z3/issues/new
+finish: file[364] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/weak/atan-vega-3-weak-chunk-0404.smt2
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/Chua/2/VC1/L/Chua-2-VC1-L-chunk-0075.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/Chua-2-VC1-L-chunk-0075.txt
+finish: file[362] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/problem/sqrt-problem-Melquiond2-chunk-0087.smt2
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill.02.seq_lazy_global_2.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_hill.02.seq_lazy_global_2.txt
+finish: file[368] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/Chua/1/IL/L/Chua-1-IL-L-chunk-0067.smt2
+finish: file[359] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/Chua/2/VC1/L/Chua-2-VC1-L-chunk-0075.smt2
+finish: file[365] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill.02.seq_lazy_global_2.smt2
+sh: line 1: 217850 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/CMOS/CMOS-opamp-chunk-0192.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/CMOS-opamp-chunk-0192.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/CMOS/CMOS-opamp-chunk-0192.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/CMOS-opamp-chunk-0192.txt
+finish: file[363] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/polypaver/bench-sqrt-3d/polypaver-bench-sqrt-3d-chunk-0206.smt2
+finish: file[354] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/CMOS/CMOS-opamp-chunk-0192.smt2
+finish: file[371] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/exp/problem/10/3/exp-problem-10-3-chunk-0064.smt2
+sh: line 1: 217887 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0575.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/sqrt-1mcosq-8-chunk-0575.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0575.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/sqrt-1mcosq-8-chunk-0575.txt
+finish: file[373] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill_simple.02.redlog_global_3.smt2
+finish: file[374] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/Chua/2/IL/L/Chua-2-IL-L-chunk-0022.smt2
+finish: file[361] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0575.smt2
+ASSERTION VIOLATION
+File: sh: line 1: 217923 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill_simple.04.qfree_global_2.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_hill_simple.04.qfree_global_2.txt
+../src/nlsat/nlsat_solver.cpp
+Line: 2118
+UNEXPECTED CODE WAS REACHED.
+Z3 4.12.2.0
+Please file an issue with this message and more detail about how you encountered it at https://github.com/Z3Prover/z3/issues/new
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill_simple.04.qfree_global_2.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_hill_simple.04.qfree_global_2.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/20170501-Heizmann-UltimateInvariantSynthesis/avg60.i_5_5_4.bpl_3.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/avg60.i_5_5_4.bpl_3.txt
+finish: file[375] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/problem/2/weak/atan-problem-2-weak-chunk-0130.smt2
+finish: file[377] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_1d_plain.01.seq_lazy_linear_enc_lemmas_global_7.smt2
+finish: file[378] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sin/cos/sin-cos-346-b-chunk-0230.smt2
+finish: file[356] = /pub/data/wangzh/smt_benchmark/QF_NRA/20170501-Heizmann-UltimateInvariantSynthesis/avg60.i_5_5_4.bpl_3.smt2
+finish: file[369] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill_simple.04.qfree_global_2.smt2
+sh: line 1: 217201 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill.05.seq_lazy_lemmas_global_14.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_hill.05.seq_lazy_lemmas_global_14.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill.05.seq_lazy_lemmas_global_14.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_hill.05.seq_lazy_lemmas_global_14.txt
+sh: line 1: 217873 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_plain.03.redlog_global_14.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_plain.03.redlog_global_14.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_plain.03.redlog_global_14.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_plain.03.redlog_global_14.txt
+finish: file[380] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/weak/atan-vega-3-weak-chunk-0668.smt2
+sh: line 1: 217688 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill.03.seq_lazy_lemmas_global_11.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_hill.03.seq_lazy_lemmas_global_11.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill.03.seq_lazy_lemmas_global_11.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_hill.03.seq_lazy_lemmas_global_11.txt
+finish: file[358] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_plain.03.redlog_global_14.smt2
+finish: file[381] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/Chua/2/IL/U/Chua-2-IL-U-chunk-0038.smt2
+finish: file[244] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill.05.seq_lazy_lemmas_global_14.smt2
+finish: file[328] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill.03.seq_lazy_lemmas_global_11.smt2
+finish: file[372] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill.05.seq_lazy_lemmas_global_7.smt2
+finish: file[382] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill_simple.10.qfree_global_2.smt2
+finish: file[383] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/exp/problem/10/2/exp-problem-10-2-chunk-0329.smt2
+finish: file[385] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/polypaver/bench-sqrt-3d/polypaver-bench-sqrt-3d-chunk-0466.smt2
+ASSERTION VIOLATION
+File: ../src/nlsat/nlsat_solver.cpp
+Line: 2118
+UNEXPECTED CODE WAS REACHED.
+Z3 4.12.2.0
+Please file an issue with this message and more detail about how you encountered it at https://github.com/Z3Prover/z3/issues/new
+sh: line 1: 218006 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/20211101-Geogebra/IsoRightTriangle-Bottema1_1a.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/IsoRightTriangle-Bottema1_1a.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/Chua/2/VC1/U/Chua-2-VC1-U-chunk-0123.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/Chua-2-VC1-U-chunk-0123.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/20211101-Geogebra/IsoRightTriangle-Bottema1_1a.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/IsoRightTriangle-Bottema1_1a.txt
+finish: file[387] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/Chua/2/VC1/U/Chua-2-VC1-U-chunk-0123.smt2
+finish: file[384] = /pub/data/wangzh/smt_benchmark/QF_NRA/20211101-Geogebra/IsoRightTriangle-Bottema1_1a.smt2
+ASSERTION VIOLATION
+File: ../src/nlsat/nlsat_explain.cpp
+Line: 1576
+Failed to verify: simplify(C, eq_p, max)
+
+Z3 4.12.2.0
+Please file an issue with this message and more detail about how you encountered it at https://github.com/Z3Prover/z3/issues/new
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/problem/1/weak/atan-problem-1-weak-chunk-0036.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/atan-problem-1-weak-chunk-0036.txt
+sh: line 1: 218020 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/polypaver/bench-sqrt-3d/polypaver-bench-sqrt-3d-chunk-0289.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/polypaver-bench-sqrt-3d-chunk-0289.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/polypaver/bench-sqrt-3d/polypaver-bench-sqrt-3d-chunk-0289.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/polypaver-bench-sqrt-3d-chunk-0289.txt
+finish: file[392] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/problem/1/weak/atan-problem-1-weak-chunk-0036.smt2
+finish: file[386] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/polypaver/bench-sqrt-3d/polypaver-bench-sqrt-3d-chunk-0289.smt2
+finish: file[398] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/exp/problem/10/3/weak/exp-problem-10-3-weak-chunk-0011.smt2
+finish: file[400] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sin/problem/8/weak/sin-problem-8-weak-chunk-0058.smt2
+sh: line 1: 218059 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_plain.04.qfree_global_8.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_plain.04.qfree_global_8.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_plain.04.qfree_global_8.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_plain.04.qfree_global_8.txt
+sh: line 1: 218065 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/CMOS/CMOS-opamp-chunk-0275.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/CMOS-opamp-chunk-0275.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/CMOS/CMOS-opamp-chunk-0275.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/CMOS-opamp-chunk-0275.txt
+sh: line 1: 218074 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill_simple.01.qfree_global_2.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_hill_simple.01.qfree_global_2.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill_simple.01.qfree_global_2.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_hill_simple.01.qfree_global_2.txt
+finish: file[393] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_plain.04.qfree_global_8.smt2
+finish: file[397] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill_simple.01.qfree_global_2.smt2
+finish: file[395] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/CMOS/CMOS-opamp-chunk-0275.smt2
+sh: line 1: 218066 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_plain.03.qfree_global_10.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_plain.03.qfree_global_10.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_plain.03.qfree_global_10.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_plain.03.qfree_global_10.txt
+finish: file[402] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sin/problem/7/sin-problem-7-chunk-0144.smt2
+sh: line 1: 217898 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill.02.seq_lazy_lemmas_global_12.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_hill.02.seq_lazy_lemmas_global_12.txt
+finish: file[403] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/Chua/2/VC1/U/Chua-2-VC1-U-chunk-0118.smt2
+finish: file[396] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_plain.03.qfree_global_10.smt2
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill.02.seq_lazy_lemmas_global_12.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_hill.02.seq_lazy_lemmas_global_12.txt
+sh: line 1: 218040 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill.10.redlog_global_4.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_hill.10.redlog_global_4.txt
+finish: file[401] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill_simple.02.seq_lazy_global_3.smt2
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill.10.redlog_global_4.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_hill.10.redlog_global_4.txt
+sh: line 1: 218031 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_1d_plain.02.qfree_global_12.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_1d_plain.02.qfree_global_12.txt
+finish: file[404] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/problem/2/weak2/atan-problem-2-weak2-chunk-0008.smt2
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_1d_plain.02.qfree_global_12.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_1d_plain.02.qfree_global_12.txt
+finish: file[367] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill.02.seq_lazy_lemmas_global_12.smt2
+finish: file[405] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_1d_plain.02.seq_lazy_linear_enc_global_7.smt2
+finish: file[389] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill.10.redlog_global_4.smt2
+finish: file[390] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_1d_plain.02.qfree_global_12.smt2
+finish: file[407] = /pub/data/wangzh/smt_benchmark/QF_NRA/20220314-Uncu/Rational_Function_Proof_Calls_With_Basic_Denominator_Simplifications/BDC_ProveIneq_ISSAC10_ex4e.smt2
+finish: file[409] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/simple_ballistics_reach.01.seq_lazy_lemmas_global_2.smt2
+finish: file[411] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/problem/sqrt-problem-Melquiond2-chunk-0079.smt2
+finish: file[413] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill_simple.02.qfree_global_15.smt2
+finish: file[414] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/problem/2/weak/atan-problem-2-weak-chunk-0215.smt2
+finish: file[416] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/Chua/1/IL/U/Chua-1-IL-U-chunk-0032.smt2
+ASSERTION VIOLATION
+File: ../src/nlsat/nlsat_solver.cpp
+Line: 2118
+UNEXPECTED CODE WAS REACHED.
+Z3 4.12.2.0
+Please file an issue with this message and more detail about how you encountered it at https://github.com/Z3Prover/z3/issues/new
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/20200911-Pine/1599121979540482000.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/1599121979540482000.txt
+finish: file[418] = /pub/data/wangzh/smt_benchmark/QF_NRA/20200911-Pine/1599121979540482000.smt2
+finish: file[419] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sin/cos/sin-cos-346-b-chunk-0114.smt2
+finish: file[422] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/problem/2/atan-problem-2-chunk-0065.smt2
+finish: file[421] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/atan-vega-3-chunk-0058.smt2
+sh: line 1: 218189 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill_simple.10.seq_lazy_lemmas_global_8.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_hill_simple.10.seq_lazy_lemmas_global_8.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill_simple.10.seq_lazy_lemmas_global_8.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_hill_simple.10.seq_lazy_lemmas_global_8.txt
+finish: file[425] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sin/problem/7/weak/sin-problem-7-weak-chunk-0120.smt2
+finish: file[424] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/1mcosq/7/sqrt-1mcosq-7-chunk-0145.smt2
+finish: file[417] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill_simple.10.seq_lazy_lemmas_global_8.smt2
+finish: file[427] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill_simple.02.qfree_global_9.smt2
+sh: line 1: 218240 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sin/problem/7/weak2/sin-problem-7-weak2-chunk-0124.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/sin-problem-7-weak2-chunk-0124.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sin/problem/7/weak2/sin-problem-7-weak2-chunk-0124.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/sin-problem-7-weak2-chunk-0124.txt
+finish: file[426] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sin/problem/7/weak2/sin-problem-7-weak2-chunk-0124.smt2
+finish: file[429] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sin/cos/sin-cos-346-b-chunk-0381.smt2
+ASSERTION VIOLATION
+File: ../src/nlsat/nlsat_solver.cpp
+Line: 2118
+UNEXPECTED CODE WAS REACHED.
+Z3 4.12.2.0
+Please file an issue with this message and more detail about how you encountered it at https://github.com/Z3Prover/z3/issues/new
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/problem/2/weak2/atan-problem-2-weak2-chunk-0128.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/atan-problem-2-weak2-chunk-0128.txt
+finish: file[431] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/problem/2/weak2/atan-problem-2-weak2-chunk-0128.smt2
+finish: file[434] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_1d_plain.01.redlog_global_11.smt2
+sh: line 1: 218275 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill_simple.03.seq_lazy_linear_enc_lemmas_global_3.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_hill_simple.03.seq_lazy_linear_enc_lemmas_global_3.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill_simple.03.seq_lazy_linear_enc_lemmas_global_3.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_hill_simple.03.seq_lazy_linear_enc_lemmas_global_3.txt
+finish: file[432] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill_simple.03.seq_lazy_linear_enc_lemmas_global_3.smt2
+sh: line 1: 218277 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill.01.redlog_global_10.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_hill.01.redlog_global_10.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill.01.redlog_global_10.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_hill.01.redlog_global_10.txt
+finish: file[433] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill.01.redlog_global_10.smt2
+finish: file[415] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/weak/atan-vega-3-weak-chunk-0328.smt2
+finish: file[436] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/problem/2/weakT/atan-problem-2-weakT-chunk-0009.smt2
+finish: file[438] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/exp/problem/10/2/exp-problem-10-2-chunk-0216.smt2
+sh: line 1: 218322 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/1mcosq/7/sqrt-1mcosq-7-chunk-0151.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/sqrt-1mcosq-7-chunk-0151.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/1mcosq/7/sqrt-1mcosq-7-chunk-0151.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/sqrt-1mcosq-7-chunk-0151.txt
+finish: file[440] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/1mcosq/7/sqrt-1mcosq-7-chunk-0151.smt2
+sh: line 1: 217120 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/2019-ezsmt/reverseFolding/48-reverse_folding-0-0.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/48-reverse_folding-0-0.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/2019-ezsmt/reverseFolding/48-reverse_folding-0-0.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/48-reverse_folding-0-0.txt
+finish: file[229] = /pub/data/wangzh/smt_benchmark/QF_NRA/2019-ezsmt/reverseFolding/48-reverse_folding-0-0.smt2
+finish: file[441] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_slope.04.seq_lazy_lemmas_global_10.smt2
+sh: line 1: 218341 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill.03.seq_lazy_lemmas_global_4.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_hill.03.seq_lazy_lemmas_global_4.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill.03.seq_lazy_lemmas_global_4.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_hill.03.seq_lazy_lemmas_global_4.txt
+finish: file[443] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill.03.seq_lazy_lemmas_global_4.smt2
+sh: line 1: 218336 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/atan-vega-3-chunk-0551.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/atan-vega-3-chunk-0551.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/atan-vega-3-chunk-0551.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/atan-vega-3-chunk-0551.txt
+finish: file[442] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/atan-vega-3-chunk-0551.smt2
+finish: file[445] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/problem/1/atan-problem-1-chunk-0047.smt2
+finish: file[446] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_1d_plain.10.seq_lazy_lemmas_global_3.smt2
+finish: file[447] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/weak/atan-vega-3-weak-chunk-0325.smt2
+sh: line 1: 218370 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill_simple.04.seq_lazy_global_6.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_hill_simple.04.seq_lazy_global_6.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill_simple.04.seq_lazy_global_6.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_hill_simple.04.seq_lazy_global_6.txt
+finish: file[448] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill_simple.04.seq_lazy_global_6.smt2
+finish: file[449] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/Nichols-Plot/Inverted-Pendulum/Nichols-Plot-Inverted-Pendulum-Fails-1-6-chunk-0088.smt2
+sh: line 1: 218307 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/2019-ezsmt/reverseFolding/47-reverse_folding-0-0.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/47-reverse_folding-0-0.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/2019-ezsmt/reverseFolding/47-reverse_folding-0-0.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/47-reverse_folding-0-0.txt
+finish: file[437] = /pub/data/wangzh/smt_benchmark/QF_NRA/2019-ezsmt/reverseFolding/47-reverse_folding-0-0.smt2
+finish: file[217] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_slope.05.seq_lazy_lemmas_global_11.smt2
+finish: file[452] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/atan-vega-3-chunk-0444.smt2
+sh: line 1: 218399 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0726.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/sqrt-1mcosq-8-chunk-0726.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0726.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/sqrt-1mcosq-8-chunk-0726.txt
+finish: file[453] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0726.smt2
+finish: file[454] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/weak/atan-vega-3-weak-chunk-0307.smt2
+sh: line 1: 218411 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill.01.seq_lazy_global_8.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_hill.01.seq_lazy_global_8.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill.01.seq_lazy_global_8.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_hill.01.seq_lazy_global_8.txt
+finish: file[455] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill.01.seq_lazy_global_8.smt2
+finish: file[305] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_slope.10.seq_lazy_lemmas_global_12.smt2
+finish: file[456] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/Chua/1/IL/U/Chua-1-IL-U-chunk-0033.smt2
+sh: line 1: 218423 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_plain.01.seq_lazy_linear_enc_global_6.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_plain.01.seq_lazy_linear_enc_global_6.txt
+finish: file[458] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sin/cos/sin-cos-346-b-chunk-0528.smt2
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_plain.01.seq_lazy_linear_enc_global_6.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_plain.01.seq_lazy_linear_enc_global_6.txt
+finish: file[457] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_plain.01.seq_lazy_linear_enc_global_6.smt2
+ASSERTION VIOLATION
+File: ../src/nlsat/nlsat_solver.cpp
+Line: 2118
+UNEXPECTED CODE WAS REACHED.
+Z3 4.12.2.0
+Please file an issue with this message and more detail about how you encountered it at https://github.com/Z3Prover/z3/issues/new
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/Chua/2/VC1/L/Chua-2-VC1-L-chunk-0066.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/Chua-2-VC1-L-chunk-0066.txt
+finish: file[459] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/Chua/2/VC1/L/Chua-2-VC1-L-chunk-0066.smt2
+finish: file[461] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sin/cos/sin-cos-346-b-chunk-0064.smt2
+finish: file[462] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/atan-vega-3-chunk-0310.smt2
+sh: line 1: 216296 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_slope.04.seq_lazy_linear_enc_global_11.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_slope.04.seq_lazy_linear_enc_global_11.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_slope.04.seq_lazy_linear_enc_global_11.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_slope.04.seq_lazy_linear_enc_global_11.txt
+finish: file[102] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_slope.04.seq_lazy_linear_enc_global_11.smt2
+finish: file[463] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/exp/problem/10/2/exp-problem-10-2-chunk-0058.smt2
+finish: file[410] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_slope.02.seq_lazy_lemmas_global_12.smt2
+sh: line 1: 218468 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_1d_plain.02.qfree_global_14.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_1d_plain.02.qfree_global_14.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_1d_plain.02.qfree_global_14.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_1d_plain.02.qfree_global_14.txt
+finish: file[465] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_1d_plain.02.qfree_global_14.smt2
+sh: line 1: 218480 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sin/problem/7/sin-problem-7-chunk-0147.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/sin-problem-7-chunk-0147.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sin/problem/7/sin-problem-7-chunk-0147.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/sin-problem-7-chunk-0147.txt
+finish: file[467] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sin/problem/7/sin-problem-7-chunk-0147.smt2
+finish: file[468] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/etcs_braking_2.01.seq_lazy_linear_enc_global_0.smt2
+finish: file[469] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/problem/13/sqrt1/sqrt-problem-13-sqrt1-chunk-0075.smt2
+sh: line 1: 218497 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_1d_plain.05.seq_lazy_linear_enc_global_10.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_1d_plain.05.seq_lazy_linear_enc_global_10.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_1d_plain.05.seq_lazy_linear_enc_global_10.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_1d_plain.05.seq_lazy_linear_enc_global_10.txt
+finish: file[470] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_1d_plain.05.seq_lazy_linear_enc_global_10.smt2
+finish: file[471] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sin/cos/sin-cos-346-b-chunk-0553.smt2
+finish: file[472] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/asin/8/vars4/asin-8-vars4-chunk-0052.smt2
+sh: line 1: 218474 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_1d_plain.04.qfree_global_15.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_1d_plain.04.qfree_global_15.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_1d_plain.04.qfree_global_15.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_1d_plain.04.qfree_global_15.txt
+finish: file[466] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_1d_plain.04.qfree_global_15.smt2
+sh: line 1: 218514 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/CMOS/CMOS-opamp-chunk-0334.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/CMOS-opamp-chunk-0334.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/CMOS/CMOS-opamp-chunk-0334.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/CMOS-opamp-chunk-0334.txt
+finish: file[473] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/CMOS/CMOS-opamp-chunk-0334.smt2
+finish: file[474] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_slope.03.seq_lazy_linear_enc_lemmas_global_13.smt2
+finish: file[475] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sin/cos/sin-cos-346-b-chunk-0286.smt2
+finish: file[477] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sin/cos/sin-cos-346-b-chunk-0509.smt2
+sh: line 1: 218543 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/atan-vega-3-chunk-0131.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/atan-vega-3-chunk-0131.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/atan-vega-3-chunk-0131.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/atan-vega-3-chunk-0131.txt
+finish: file[478] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/atan-vega-3-chunk-0131.smt2
+finish: file[479] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/Chua/2/IL/U/Chua-2-IL-U-chunk-0012.smt2
+finish: file[480] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/atan-vega-3-chunk-0050.smt2
