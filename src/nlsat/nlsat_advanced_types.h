@@ -20,6 +20,7 @@ namespace nlsat {
     using var_table         = hashtable<var, var_hash, var_eq>;
     using bool_var_table    = var_table;
     using hybrid_var_table  = var_table;
+    using var_pair          = std::pair<var, var>;
     using hybrid_var_pair   = std::pair<var, var>;
     using var_vector_vector = vector<var_vector>;
     using var_table_vector  = vector<var_table>;

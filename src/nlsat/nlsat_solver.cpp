@@ -364,12 +364,16 @@ namespace nlsat {
         vector<unsigned_vector>                  m_arith_unit_learned;
         vector<unsigned_vector>                  m_arith_unit_learned_more_lits;
 
+        // new generated unit clause or learned this propagation turn
+        vector<var_pair>                         m_newly_unit_arith_clauses;
+        vector<var_pair>                         m_newly_unit_arith_learned;
+
         // decisions
         bool_var_table                           m_decision_bools;
         // vsids
-        double                 arith_var_bump = 1;
-        double                 bool_var_bump = 1;
-        double_vector          m_hybrid_activity;
+        double                                   arith_var_bump = 1;
+        double                                   bool_var_bump = 1;
+        double_vector                            m_hybrid_activity;
 #if DYNAMIC_MODE == UNIFORM_VSIDS
         heap<uniform_vsids>               m_var_heap;
 #elif DYNAMIC_MODE == BOOL_FIRST_VSIDS
@@ -1448,6 +1452,7 @@ namespace nlsat {
                     if(hybrid_is_arith(x)) {
                         var v = hybrid2arith(x);
                         m_arith_unit_clauses[v].insert(idx);
+                        m_newly_unit_arith_clauses.push_back(std::make_pair(v, idx));
                         if(m_clauses[idx]->size() > 1) {
                             m_arith_unit_clauses_more_lits[v].insert(idx);
                         }
@@ -1475,6 +1480,7 @@ namespace nlsat {
                         var v = hybrid2arith(x);
                         if(check_learned_unit(idx, v)) {
                             m_arith_unit_learned[v].insert(idx);
+                            m_newly_unit_arith_learned.push_back(std::make_pair(v, idx));
                             if(m_learned[idx]->size() > 1) {
                                 m_arith_unit_learned_more_lits[v].insert(idx);
                             }
@@ -1750,6 +1756,8 @@ namespace nlsat {
                 if(!m_decision_bools.contains(pure_b)) {
                     m_hybrid_find_stage[pure_b] = m_scope_stage;
                 }
+                check_clause_status_using_hybrid_var();
+                check_learned_status_using_hybrid_var();
             }
             DTRACE(std::cout << "assign literal done" << std::endl;);
         }
@@ -1968,28 +1976,18 @@ namespace nlsat {
                 var curr_var = m_arith_trail[m_arith_atom_prop++];
                 vector<atom_var_watcher*> &watches = m_var_watching_atoms[curr_var];
                 int i, j = 0, size = watches.size();
-                std::cout << "var: " << curr_var << std::endl;
-                std::cout << "size: " << size << std::endl;
                 for(i = 0; i < size; i++) {
                     var another_var = watches[i]->get_another_var(curr_var);
                     SASSERT(another_var != null_var); // unit atom shall not be watched
-                    std::cout << "ano: " << another_var << std::endl;
                     int idx = watches[i]->m_atom_index;
-                    std::cout << "atom idx: " << idx << std::endl;
                     if (m_assignment.is_assigned(another_var)) { // totally assigned
-                        std::cout << "assigned" << std::endl;
                         if(!m_valued_atom_table.contains(idx)) { // the atom may be assigned previously by unit propagation
                             m_valued_atom_trail.push_back(idx);
                             m_valued_atom_table.insert(idx);
                         }
-                        m_arith_unit_atom[curr_var].erase(watches[i]->m_atom_index); // not unit to curr anymore
                         watches[j++] = watches[i];
                     } else { // try to find another watched var
-                        std::cout << "not assigned" << std::endl;
                         var new_watched_var = null_var;
-                        if(m_nlsat_atoms[idx] == nullptr) {
-                            std::cout << "nullptr" << std::endl;
-                        }
                         for (var v : m_nlsat_atoms[idx]->m_vars) {
                             if (!m_assignment.is_assigned(v) && v != curr_var && v != another_var) {
                                 new_watched_var = v;
@@ -1997,11 +1995,9 @@ namespace nlsat {
                             }
                         }
                         if(new_watched_var != null_var) { // change watches
-                            std::cout << "not found" << std::endl;
                             watches[i]->replace_var(curr_var, new_watched_var);
                             m_var_watching_atoms[new_watched_var].push_back(watches[i]);
                         } else { // still watch, unit literal to another var
-                            std::cout << "found" << std::endl;
                             watches[j++] = watches[i];
                             if(m_atoms[idx]->is_ineq_atom() || to_root_atom(m_atoms[idx])->x() == another_var) {
                                 insert_unit_atom(idx, another_var);
@@ -2033,74 +2029,19 @@ namespace nlsat {
         */
         clause* real_propagate_clauses() {
             DTRACE(std::cout << "rp clauses" << std::endl;);
-            while (m_hybrid_var_clause_prop < m_hybrid_trail.size()) {
-                hybrid_var curr_hybrid_var = m_hybrid_trail[m_hybrid_var_clause_prop++];
-                vector<clause_var_watcher*> &watches = m_var_watching_clauses[curr_hybrid_var];
-                int j = 0, size = watches.size();
-                for(int i = 0; i < size; i++) {
-                    hybrid_var another_var = watches[i]->get_another_var(curr_hybrid_var);
-                    SASSERT(another_var != null_var);
-                    unsigned idx = watches[i]->m_clause_index;
-                    clause const& cls = *m_clauses[idx];
-                    if(is_hybrid_assigned(another_var)) { // clause is all assigned
-                        bool is_sat = false;
-                        for(literal l: cls) {
-                            SASSERT(value(l) != l_undef);
-                            if(value(l) == l_true) {
-                                is_sat = true;
-                                break;
-                            }
-                        }
-                        watches[j++] = watches[i];
-                        if(!is_sat) { // conflict clause
-                            return m_clauses[idx];
-                        }
-                    } else { // try to find another unassigned hybrid var
-                        nlsat_clause const* cls = m_nlsat_clauses[watches[i]->m_clause_index];
-                        bool found_replace = false;;
-                        for(bool_var b: cls->m_bool_vars) { // loop bool vars first
-                            if(b != another_var && b != curr_hybrid_var && !is_hybrid_assigned(b)) {
-                                found_replace = true;
-                                watches[i]->replace_var(curr_hybrid_var, b);
-                                m_var_watching_clauses[b].push_back(watches[i]);
-                                break;
-                            }
-                        }
-                        if(!found_replace) { // not found, loop arith vars
-                            for(var v: cls->m_vars) {
-                                if(arith2hybrid(v) != another_var && arith2hybrid(v) != curr_hybrid_var && !m_assignment.is_assigned(v)) {
-                                    found_replace = true;
-                                    watches[i]->replace_var(curr_hybrid_var, arith2hybrid(v));
-                                    m_var_watching_clauses[arith2hybrid(v)].push_back(watches[i]);
-                                    break;
-                                }
-                            }
-                            if(!found_replace) { // unit to another var
-                                watches[j++] = watches[i];
-                                if(hybrid_is_arith(another_var)) { // arith var
-                                    var v = hybrid2arith(another_var);
-                                    unsigned idx = watches[i]->m_clause_index;
-                                    m_arith_unit_clauses[v].push_back(idx);
-                                    if(m_clauses[idx]->size() > 1) {
-                                        m_arith_unit_clauses_more_lits[v].push_back(idx);
-                                    }
-                                    if(!update_clause_infeasible_set(idx, v)) { // conflict
-                                        direct_stage_to_conflict_var(another_var);
-                                        return m_arith_unit_clauses_more_lits[v].empty() ? m_clauses[idx] : process_and_decide_literals_while_conflict();
-                                    } else {
-                                        if(m_clauses[idx]->size() == 1) {
-                                            assign_literal((*m_clauses[idx])[0], mk_clause_jst(m_clauses[idx]));
-                                        }
-                                    }
-                                } else { // bool var
-                                    // do nothing, since unit to bool var is considered when unit propagating
-                                }
-                            }
-                        }
+            for(auto ele: m_newly_unit_arith_clauses) {
+                var v = ele.first, idx = ele.second;
+                if (!update_clause_infeasible_set(idx, v)) { // conflict
+                    m_newly_unit_arith_clauses.clear();
+                    direct_stage_to_conflict_var(arith2hybrid(v));
+                    return m_arith_unit_clauses_more_lits[v].empty() ? m_clauses[idx] : process_and_decide_literals_while_conflict();
+                } else {
+                    if (m_clauses[idx]->is_unit()) {
+                        assign_literal((*m_clauses[idx])[0], mk_clause_jst(m_clauses[idx]));
                     }
                 }
-                watches.shrink(j);
             }
+            m_newly_unit_arith_clauses.clear();
             return nullptr;
         }
 
@@ -2109,63 +2050,19 @@ namespace nlsat {
         */
         clause* real_propagate_learned() {
             DTRACE(std::cout << "rp learned" << std::endl;);
-            while(m_hybrid_var_learned_prop < m_hybrid_trail.size()) {
-                hybrid_var curr_hybrid_var = m_hybrid_trail[m_hybrid_var_learned_prop++];
-                vector<clause_var_watcher*> &watches = m_var_watching_learned[curr_hybrid_var];
-                int j = 0, size = watches.size();
-                for(int i = 0; i < size; i++) {
-                    hybrid_var another_var = watches[i]->get_another_var(curr_hybrid_var);
-                    clause const& cls = *m_clauses[watches[i]->m_clause_index];
-                    // this clause is totally assigned
-                    // note: this situation will take place since current var may not be unit previously
-                    // and this may cause a conflict, but we skip
-                    if(another_var == null_var || is_hybrid_assigned(another_var)) {
-                        watches[j++] = watches[i];
-                        continue;
-                    } else { // try to find another unassigned hybrid var
-                        nlsat_learned const* cls = m_nlsat_learned[watches[i]->m_clause_index];
-                        bool found_replace = false;
-                        for(bool_var b: cls->m_bool_vars) { // loop bool vars first
-                            if(b != another_var && b != curr_hybrid_var && !is_hybrid_assigned(b)) {
-                                found_replace = true;
-                                watches[i]->replace_var(curr_hybrid_var, b);
-                                m_var_watching_learned[b].push_back(watches[i]);
-                                break;
-                            }
-                        }
-                        if(!found_replace) { // not found, loop arith vars
-                            for(var v: cls->m_arith_vars) {
-                                if(arith2hybrid(v) != another_var && arith2hybrid(v) != curr_hybrid_var && !m_assignment.is_assigned(v)) {
-                                    found_replace = true;
-                                    watches[i]->replace_var(curr_hybrid_var, arith2hybrid(v));
-                                    m_var_watching_learned[arith2hybrid(v)].push_back(watches[i]);
-                                    break;
-                                }
-                            }
-                            if(!found_replace) { // unit to another var
-                                watches[j++] = watches[i];
-                                if(hybrid_is_arith(another_var)) { // arith var
-                                    var arith_var = hybrid2arith(another_var);
-                                    int idx = watches[i]->m_clause_index;
-                                    if(check_learned_unit(idx, arith_var)) {
-                                        m_arith_unit_learned[arith_var].push_back(idx);
-                                        if(m_learned[idx]->size() > 1) {
-                                            m_arith_unit_learned_more_lits[arith_var].push_back(idx);
-                                        }
-                                        if(!update_learned_infeasible_set(idx, arith_var)) { // conflict clause
-                                            direct_stage_to_conflict_var(another_var);
-                                            return m_arith_unit_clauses_more_lits[arith_var].empty() ? m_learned[idx] : process_and_decide_literals_while_conflict();
-                                        }
-                                    }
-                                } else { // bool var, unit propagate, just skip
-                                    // do nothing
-                                }
-                            }
-                        }
+            for(auto ele: m_newly_unit_arith_learned) {
+                var v = ele.first, idx = ele.second;
+                if(!update_learned_infeasible_set(idx, v)) { // conflict
+                    m_newly_unit_arith_learned.clear();
+                    direct_stage_to_conflict_var(arith2hybrid(v));
+                    return m_arith_unit_learned_more_lits[v].empty() ? m_learned[idx] : process_and_decide_literals_while_conflict();
+                } else {
+                    if(m_learned[idx]->is_unit()) {
+                        assign_literal((*m_learned[idx])[0], mk_clause_jst(m_learned[idx]));
                     }
                 }
-                watches.shrink(j);
             }
+            m_newly_unit_arith_learned.clear();
             return nullptr;
         }
 
@@ -2725,6 +2622,9 @@ namespace nlsat {
             while(m_infeasible_prop < m_infeasible_var_trail.size()) {
                 var v = m_infeasible_var_trail[m_infeasible_prop++];
                 for(int idx: m_arith_unit_atom[v]) {
+                    if(m_valued_atom_table.contains(idx)) { // Ignore propagated atoms
+                        continue;
+                    }
                     interval_set_ref curr_st(m_ism);
                     curr_st = get_atom_infeasible_set(idx, v, false);
                     if(m_ism.is_empty(curr_st)) {
@@ -2755,8 +2655,6 @@ namespace nlsat {
         clause * overall_propagate() {
             clause *conf;
             while(check_propagate_counter()) {
-                // using variable to check literal assigned or unit
-                check_atom_status_using_arith();
                 // using infeasible set to theory propagate literal's value
                 propagate_literal_using_infeasible();
                 // using valued and assigned literal to check unit clause
@@ -2845,6 +2743,131 @@ namespace nlsat {
             m_arith_unit_clauses_more_lits[x].clear();
             m_arith_unit_learned[x].clear();
             m_arith_unit_learned_more_lits[x].clear();
+            check_atom_status_using_arith();
+            check_clause_status_using_hybrid_var();
+        }
+
+        void check_clause_status_using_hybrid_var() {
+            while (m_hybrid_var_clause_prop < m_hybrid_trail.size()) {
+                hybrid_var curr_hybrid_var = m_hybrid_trail[m_hybrid_var_clause_prop++];
+                vector<clause_var_watcher *> &watches = m_var_watching_clauses[curr_hybrid_var];
+                int j = 0, size = watches.size();
+                for (int i = 0; i < size; i++) {
+                    hybrid_var another_var = watches[i]->get_another_var(curr_hybrid_var);
+                    SASSERT(another_var != null_var);
+                    unsigned idx = watches[i]->m_clause_index;
+                    clause const &cls = *m_clauses[idx];
+                    if (is_hybrid_assigned(another_var)) { // clause is all assigned
+                        bool is_sat = false;
+                        for (literal l : cls) {
+                            SASSERT(value(l) != l_undef);
+                            if (value(l) == l_true) {
+                                is_sat = true;
+                                break;
+                            }
+                        }
+                        watches[j++] = watches[i];
+                        if (!is_sat) { // conflict clause, this situation should be found when updating the last unassigned var
+                            UNREACHABLE();
+                        }
+                    }
+                    else { // try to find another unassigned hybrid var
+                        nlsat_clause const *cls = m_nlsat_clauses[watches[i]->m_clause_index];
+                        bool found_replace = false;
+                        for (bool_var b : cls->m_bool_vars) { // loop bool vars first
+                            if (b != another_var && b != curr_hybrid_var && !is_hybrid_assigned(b)) {
+                                found_replace = true;
+                                watches[i]->replace_var(curr_hybrid_var, b);
+                                m_var_watching_clauses[b].push_back(watches[i]);
+                                break;
+                            }
+                        }
+                        if (!found_replace) { // not found, loop arith vars
+                            for (var v : cls->m_vars) {
+                                if (arith2hybrid(v) != another_var && arith2hybrid(v) != curr_hybrid_var && !m_assignment.is_assigned(v)) {
+                                    found_replace = true;
+                                    watches[i]->replace_var(curr_hybrid_var, arith2hybrid(v));
+                                    m_var_watching_clauses[arith2hybrid(v)].push_back(watches[i]);
+                                    break;
+                                }
+                            }
+                            if (!found_replace) { // unit to another var
+                                watches[j++] = watches[i];
+                                if (hybrid_is_arith(another_var)) { // arith var
+                                    var v = hybrid2arith(another_var);
+                                    unsigned idx = watches[i]->m_clause_index;
+                                    m_arith_unit_clauses[v].push_back(idx);
+                                    m_newly_unit_arith_clauses.push_back(std::make_pair(v, idx));
+                                    if (m_clauses[idx]->size() > 1) {
+                                        m_arith_unit_clauses_more_lits[v].push_back(idx);
+                                    }
+                                }
+                                else { // bool var
+                                    // do nothing, since unit to bool var is considered when unit propagating
+                                }
+                            }
+                        }
+                    }
+                }
+                watches.shrink(j);
+            }
+        }
+
+        void check_learned_status_using_hybrid_var() {
+            while(m_hybrid_var_learned_prop < m_hybrid_trail.size()) {
+                hybrid_var curr_hybrid_var = m_hybrid_trail[m_hybrid_var_learned_prop++];
+                vector<clause_var_watcher*> &watches = m_var_watching_learned[curr_hybrid_var];
+                int j = 0, size = watches.size();
+                for(int i = 0; i < size; i++) {
+                    hybrid_var another_var = watches[i]->get_another_var(curr_hybrid_var);
+                    clause const& cls = *m_clauses[watches[i]->m_clause_index];
+                    // this clause is totally assigned
+                    // note: this situation will take place since current var may not be unit previously
+                    // and this may cause a conflict, but we skip
+                    if(another_var == null_var || is_hybrid_assigned(another_var)) {
+                        watches[j++] = watches[i];
+                        continue;
+                    } else { // try to find another unassigned hybrid var
+                        nlsat_learned const* cls = m_nlsat_learned[watches[i]->m_clause_index];
+                        bool found_replace = false;
+                        for(bool_var b: cls->m_bool_vars) { // loop bool vars first
+                            if(b != another_var && b != curr_hybrid_var && !is_hybrid_assigned(b)) {
+                                found_replace = true;
+                                watches[i]->replace_var(curr_hybrid_var, b);
+                                m_var_watching_learned[b].push_back(watches[i]);
+                                break;
+                            }
+                        }
+                        if(!found_replace) { // not found, loop arith vars
+                            for(var v: cls->m_arith_vars) {
+                                if(arith2hybrid(v) != another_var && arith2hybrid(v) != curr_hybrid_var && !m_assignment.is_assigned(v)) {
+                                    found_replace = true;
+                                    watches[i]->replace_var(curr_hybrid_var, arith2hybrid(v));
+                                    m_var_watching_learned[arith2hybrid(v)].push_back(watches[i]);
+                                    break;
+                                }
+                            }
+                            if(!found_replace) { // unit to another var
+                                watches[j++] = watches[i];
+                                if(hybrid_is_arith(another_var)) { // arith var
+                                    var arith_var = hybrid2arith(another_var);
+                                    int idx = watches[i]->m_clause_index;
+                                    if(check_learned_unit(idx, arith_var)) {
+                                        m_arith_unit_learned[arith_var].push_back(idx);
+                                        m_newly_unit_arith_learned.push_back(std::make_pair(arith_var, idx));
+                                        if(m_learned[idx]->size() > 1) {
+                                            m_arith_unit_learned_more_lits[arith_var].push_back(idx);
+                                        }
+                                    }
+                                } else { // bool var, unit propagate, just skip
+                                    // do nothing
+                                }
+                            }
+                        }
+                    }
+                }
+                watches.shrink(j);
+            }
         }
 
         inline bool satisfy_reduce_situation() const {
