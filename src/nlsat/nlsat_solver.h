@@ -27,7 +27,8 @@ Revision History:
 #include "nlsat_advanced_types.h"
 
 namespace nlsat {
-#define NLSAT_DEBUG
+// macro used for debug
+// #define NLSAT_DEBUG
 
 #ifdef NLSAT_DEBUG
    #define DTRACE(CODE) { CODE } ((void) 0)
