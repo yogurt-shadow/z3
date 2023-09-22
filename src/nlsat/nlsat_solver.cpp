@@ -444,6 +444,7 @@ namespace nlsat {
         */
         var_table              m_valued_atom_table;
         var_vector             m_valued_atom_trail;
+        unsigned_vector        m_assigned_atom_indices;
         unsigned               m_atom_prop;
         // infeasible set
         var_vector             m_infeasible_var_trail;
@@ -872,6 +873,9 @@ namespace nlsat {
                 return false_literal;
             }
             literal res = literal(mk_ineq_atom(k, sz, ps, is_even), false);
+            std::cout << "we are here" << std::endl;
+            std::cout << m_nlsat_atoms[res.var()]->m_var_watcher->v1 << " ";
+            std::cout << m_nlsat_atoms[res.var()]->m_var_watcher->v2 << std::endl;
             return res;
         }
 
@@ -1201,6 +1205,106 @@ namespace nlsat {
             }
         }
 
+        void get_learned_last_assigned_one_hybrid_var(unsigned idx, hybrid_var &v) const {
+            unsigned max_i = null_var;
+            for(bool_var b: m_nlsat_learned[idx]->m_bool_vars) {
+                unsigned index = m_hybrid_assigned_indices[b];
+                if(index == null_var) {
+                    continue;
+                }
+                if(max_i == null_var) {
+                    max_i = index;
+                    v = b;
+                } else if(index > max_i) {
+                    max_i = index;
+                    v = b;
+                }
+            }
+            for(var x: m_nlsat_learned[idx]->m_arith_vars) {
+                hybrid_var b = hybrid2arith(x);
+                unsigned index = m_hybrid_assigned_indices[b];
+                if(index == null_var) {
+                    continue;
+                }
+                if(max_i == null_var) {
+                    max_i = index;
+                    v = b;
+                } else if(index > max_i) {
+                    max_i = index;
+                    v = b;
+                }
+            }
+        }
+
+        void get_learned_last_assigned_two_hybrid_vars(unsigned idx, hybrid_var &v1, hybrid_var &v2) const {
+            unsigned max1 = null_var, max2 = null_var;
+            for(bool_var b: m_nlsat_learned[idx]->m_bool_vars) {
+                unsigned index = m_hybrid_assigned_indices[b];
+                if(index == null_var) {
+                    continue;
+                }
+                if(max1 == null_var) {
+                    max1 = index;
+                    v1 = b;
+                } else if(max2 == null_var) {
+                    if(index >= max1) {
+                        max2 = max1;
+                        v2 = v1;
+                        max1 = index;
+                        v1 = b;
+                    } else {
+                        max2 = index;
+                        v2 = b;
+                    }
+                } else {
+                    if(index >= max1) {
+                        max2 = max1;
+                        v2 = v1;
+                        max1 = index;
+                        v1 = b;
+                    } else if(index >= max2 && index < max1) {
+                        max2 = index;
+                        v2 = b;
+                    } else {
+
+                    }
+                }
+            }
+            for(var v: m_nlsat_learned[idx]->m_arith_vars) {
+                hybrid_var b = arith2hybrid(v);
+                unsigned index = m_hybrid_assigned_indices[b];
+                if(index == null_var) {
+                    continue;
+                }
+                if(max1 == null_var) {
+                    max1 = index;
+                    v1 = b;
+                } else if(max2 == null_var) {
+                    if(index >= max1) {
+                        max2 = max1;
+                        v2 = v1;
+                        max1 = index;
+                        v1 = b;
+                    } else {
+                        max2 = index;
+                        v2 = b;
+                    }
+                } else {
+                    if(index >= max1) {
+                        max2 = max1;
+                        v2 = v1;
+                        max1 = index;
+                        v1 = b;
+                    } else if(index >= max2 && index < max1) {
+                        max2 = index;
+                        v2 = b;
+                    } else {
+
+                    }
+                }
+            }
+        }
+
         void set_learned_var_watcher(unsigned idx) {
             nlsat_learned const *cls = m_nlsat_learned[idx];
             clause_var_watcher *new_watcher;
@@ -1249,17 +1353,9 @@ namespace nlsat {
                 if(v1 != null_var && v2 != null_var) { // two unassigned
                     // do nothing
                 } else if(v1 != null_var && v2 == null_var) { // one unassigned
-                    for (auto const &tv : m_vars) {
-                        if(type2hybrid(tv) != v1) {
-                            v2 = type2hybrid(tv);
-                            break;
-                        }
-                    }
-                } else { // no unassigned
-                    auto it = m_vars.begin();
-                    v1 = type2hybrid(*it);
-                    it++;
-                    v2 = type2hybrid(*it);
+                    get_learned_last_assigned_one_hybrid_var(idx, v2);
+                } else { // all assigned
+                    get_learned_last_assigned_two_hybrid_vars(idx, v1, v2);
                 }
                 new_watcher = new clause_var_watcher(idx, v1, v2);
                 m_var_watching_learned[v1].push_back(new_watcher);
@@ -1295,6 +1391,61 @@ namespace nlsat {
             }
         }
 
+        void get_learned_last_assigned_two_literal_indices(unsigned idx, unsigned &id1, unsigned &id2) {
+            unsigned max1 = null_var, max2 = null_var;
+            for(int i = 0; i < m_learned[idx]->size(); i++) {
+                literal l = (*m_learned[idx])[i];
+                unsigned index = m_assigned_atom_indices[l.var()];
+                if(index == null_var) {
+                    continue;
+                }
+                if(max1 == null_var) {
+                    max1 = index;
+                    id1 = i;
+                } else if(max2 == null_var) {
+                    if(index >= max1) {
+                        max2 = max1;
+                        id2 = id1;
+                        max1 = index;
+                        id1 = i;
+                    } else {
+                        max2 = index;
+                        id2 = i;
+                    }
+                } else {
+                    if(index >= max1) { // largest
+                        max2 = max1;
+                        id2 = id1;
+                        max1 = index;
+                        id1 = i;
+                    } else if(index >= max2 && index < max1) { // second largest
+                        max2 = index;
+                        id2 = i;
+                    } else {
+                        // do nothing
+                    }
+                }
+            }
+        }
+
+        void get_learned_last_assigned_one_literal_indices(unsigned idx, unsigned &id) {
+            unsigned max_i = null_var;
+            for(int i = 0; i < m_learned[idx]->size(); i++) {
+                literal l = (*m_learned[idx])[i];
+                unsigned index = m_assigned_atom_indices[l.var()];
+                if(index == null_var) {
+                    continue;
+                }
+                if(max_i == null_var) {
+                    max_i = index;
+                    id = i;
+                } else if(index > max_i) {
+                    max_i = index;
+                    id = i;
+                }
+            }
+        }
+
         /**
          \brief Set Literal Watcher for learned clauses
         */
@@ -1318,7 +1469,7 @@ namespace nlsat {
                 if(is_bool_literal(l)) {
                     assign_literal(l, mk_clause_jst(&curr_clause));
                 }
-            } else {
+            } else { // more literals
                 bool is_sat = false; unsigned id1 = null_var, id2 = null_var;
                 for(int idx2 = 0; idx2 < curr_clause.size(); idx2++) {
                     literal l = curr_clause[idx2];
@@ -1337,13 +1488,13 @@ namespace nlsat {
                 }
                 if(id1 == null_var && id2 == null_var) { // conflict
                     conflict_clause = is_sat ? nullptr : m_learned[idx];
-                    id1 = 0; id2 = 1;
+                    get_learned_last_assigned_two_literal_indices(idx, id1, id2);
                 }
                 else if(id1 != null_var && id2 == null_var) { // one unassigned clause
                     if(is_bool_literal(curr_clause[id1])) {
                         assign_literal(curr_clause[id1], mk_clause_jst(&curr_clause));
                     }
-                    for(id2 = 0; id2 < curr_clause.size() && id2 == id1; id2++);
+                    get_learned_last_assigned_one_literal_indices(idx, id2);
                 } else if(id1 != null_var && id2 != null_var) { // two unassigned
                     // do nothing
                 }
@@ -1473,6 +1624,7 @@ namespace nlsat {
             DTRACE(std::cout << "insert unit atom: "; display_atom(std::cout, idx) << std::endl;);
             m_arith_unit_atom[x].push_back(idx);
             propagate_atom(idx, x);
+            DTRACE(std::cout << "insert unit atom done " << std::endl;);
         }
 
         void update_unit_clause_after_var_unassigned(hybrid_var x) {
@@ -1605,6 +1757,7 @@ namespace nlsat {
             del_jst(m_allocator, m_justifications[b]);
             m_justifications[b] = null_justification;
             m_valued_atom_table.erase(b);
+            m_assigned_atom_indices[b] = null_var;
             m_valued_atom_trail.pop_back();
             m_atom_prop--;
             if(m_atoms[b] == nullptr){ // fresh bool var
@@ -1824,6 +1977,7 @@ namespace nlsat {
             m_justifications[b] = j;
             save_bool_assign_trail(b);
             updt_eq(b, j);
+            m_assigned_atom_indices[l.var()] = m_valued_atom_trail.size();
             m_valued_atom_trail.push_back(l.var());
             m_valued_atom_table.insert(l.var());
             if(m_atoms[b] == nullptr) { // in case the assigned literal is boolean
@@ -2061,6 +2215,7 @@ namespace nlsat {
                     int idx = watches[i]->m_atom_index;
                     if (m_assignment.is_assigned(another_var)) { // totally assigned
                         if(!m_valued_atom_table.contains(idx)) { // the atom may be assigned previously by unit propagation
+                            m_assigned_atom_indices[idx] = m_valued_atom_trail.size();
                             m_valued_atom_trail.push_back(idx);
                             m_valued_atom_table.insert(idx);
                         }
@@ -3346,6 +3501,7 @@ namespace nlsat {
 
         void register_nlsat_bvar(bool_var b) {
             m_num_hybrid_vars++;
+            m_assigned_atom_indices.setx(b, null_var, null_var);
             m_hybrid_assigned_indices.setx(b, null_var, null_var);
             m_hybrid_find_stage.setx(b, null_var, null_var);
             m_hybrid_activity.setx(b, 0, 0);
@@ -3373,6 +3529,7 @@ namespace nlsat {
 
          void register_nlsat_atom(bool_var b) {
             m_nlsat_atoms.enlarge(b, nullptr);
+            m_assigned_atom_indices.enlarge(b, null_var);
             var_table vars;
             collect_atom_vars(m_atoms[b], vars);
             m_nlsat_atoms[b] = new nlsat_atom(b, m_atoms[b], vars);
@@ -3518,6 +3675,7 @@ namespace nlsat {
 
         void clear_nlsat_atoms() {
             m_nlsat_atoms.clear();
+            m_assigned_atom_indices.clear();
             m_atom_unit_clauses.clear();
             m_atom_unit_learned.clear();
             m_neg_literal_watching_clauses.clear();
@@ -3831,6 +3989,59 @@ namespace nlsat {
             }
         }
 
+        void get_atom_last_assigned_two_vars(unsigned idx, var &v1, var &v2) {
+            unsigned max1 = null_var, max2 = null_var;
+            for(var x: m_nlsat_atoms[idx]->m_vars) {
+                unsigned index = m_hybrid_assigned_indices[arith2hybrid(x)];
+                if(index == null_var) {
+                    continue;
+                }
+                if(max1 == null_var) {
+                    max1 = index;
+                    v1 = x;
+                } else if(max2 == null_var) {
+                    if(index >= max1) {
+                        max2 = max1;
+                        v2 = v1;
+                        max1 = index;
+                        v1 = x;
+                    } else {
+                        max2 = index;
+                        v2 = x;
+                    }
+                } else {
+                    if(index >= max1) {
+                        max2 = max1;
+                        v2 = v1;
+                        max1 = index;
+                        v1 = x;
+                    } else if(index >= max2 && index < max1) {
+                        max2 = index;
+                        v2 = x;
+                    } else {
+
+                    }
+                }
+            }
+        }
+
+        void get_atom_last_assigned_one_var(unsigned idx, var &v) {
+            unsigned max_i = null_var;
+            for(var x: m_nlsat_atoms[idx]->m_vars) {
+                unsigned index = m_hybrid_assigned_indices[arith2hybrid(x)];
+                if(index == null_var) {
+                    continue;
+                }
+                if(max_i == null_var) {
+                    max_i = index;
+                    v = x;
+                } else if(index > max_i) {
+                    max_i = index;
+                    v = x;
+                }
+            }
+        }
+
         void set_atom_arith_watcher(unsigned idx) {
             nlsat_atom const *curr_atom = m_nlsat_atoms[idx];
             if(curr_atom->m_vars.empty()) { // bool literal
@@ -3854,15 +4065,9 @@ namespace nlsat {
                 }
                 atom_var_watcher *new_watcher;
                 if(v1 == null_var && v2 == null_var) { // all assigned
-                    auto it = curr_atom->m_vars.begin(); // random choose two vars
-                    v1 = *it; it++; v2 = *it;
+                    get_atom_last_assigned_two_vars(idx, v1, v2);
                 } else if(v1 != null_var && v2 == null_var) { // only v1 unassigned
-                    for(var v: curr_atom->m_vars) { // random choose a different var for v2
-                        if(v != v1) {
-                            v2 = v;
-                            break;
-                        }
-                    }
+                    get_atom_last_assigned_one_var(idx, v2);
                     if(m_atoms[idx]->is_ineq_atom() || to_root_atom(m_atoms[idx])->x() == v1) {
                         insert_unit_atom(idx, v1);
                     }
@@ -6618,6 +6823,9 @@ namespace nlsat {
     literal solver::mk_ineq_literal(atom::kind k, unsigned sz, poly * const * ps, bool const * is_even) {
         DTRACE(std::cout << "make literal" << std::endl;);
         auto res = m_imp->mk_ineq_literal(k, sz, ps, is_even);
+        DTRACE(display(std::cout, res) << std::endl;
+            std::cout << res.var() << std::endl;
+        );
         DTRACE(std::cout << "make literal done" << std::endl;);
         return res;
     }
