@@ -872,11 +872,7 @@ namespace nlsat {
                 if (m_pm.m().is_zero(cnst) && k == atom::EQ) return true_literal;
                 return false_literal;
             }
-            literal res = literal(mk_ineq_atom(k, sz, ps, is_even), false);
-            std::cout << "we are here" << std::endl;
-            std::cout << m_nlsat_atoms[res.var()]->m_var_watcher->v1 << " ";
-            std::cout << m_nlsat_atoms[res.var()]->m_var_watcher->v2 << std::endl;
-            return res;
+            return literal(mk_ineq_atom(k, sz, ps, is_even), false);
         }
 
         bool_var mk_root_atom(atom::kind k, var x, unsigned i, poly * p) {
@@ -1221,7 +1217,7 @@ namespace nlsat {
                 }
             }
             for(var x: m_nlsat_learned[idx]->m_arith_vars) {
-                hybrid_var b = hybrid2arith(x);
+                hybrid_var b = arith2hybrid(x);
                 unsigned index = m_hybrid_assigned_indices[b];
                 if(index == null_var) {
                     continue;
@@ -1306,6 +1302,7 @@ namespace nlsat {
         }
 
         void set_learned_var_watcher(unsigned idx) {
+            display(std::cout, *m_learned[idx]) << std::endl;
             nlsat_learned const *cls = m_nlsat_learned[idx];
             clause_var_watcher *new_watcher;
             type_var_table m_vars;
@@ -1353,7 +1350,10 @@ namespace nlsat {
                 if(v1 != null_var && v2 != null_var) { // two unassigned
                     // do nothing
                 } else if(v1 != null_var && v2 == null_var) { // one unassigned
+                    std::cout << "case here" << std::endl;
+                    std::cout << "v1: " << v2 << std::endl;
                     get_learned_last_assigned_one_hybrid_var(idx, v2);
+                    std::cout << "v2: " << v2 << std::endl;
                 } else { // all assigned
                     get_learned_last_assigned_two_hybrid_vars(idx, v1, v2);
                 }
@@ -1694,6 +1694,7 @@ namespace nlsat {
             m_hybrid_var_learned_prop--;
             update_unit_after_var_unassigned(hv);
             update_infeasible_cache_using_arith(x);
+            DTRACE(std::cout << "undo avar assignment done" << std::endl;);
         }
 
         void undo_set_updt(var x, interval_set * old_set) {
@@ -1885,6 +1886,7 @@ namespace nlsat {
                 undo_until(arith_unassigned_pred(m_assignment, x));
                 SASSERT(!m_assignment.is_assigned(x));
             }
+            DTRACE(std::cout << "undo until unassigned done" << std::endl;);
         }
 
         struct true_pred {
@@ -2489,6 +2491,10 @@ namespace nlsat {
         bool update_clause_infeasible_set(int idx, var arith_var) {
             interval_set_ref curr_st(m_ism);
             curr_st = get_clause_infeasible_set(idx, arith_var);
+            DTRACE(std::cout << "[infeasible] clause ";
+                display(std::cout, *m_clauses[idx]) << std::endl;
+                m_ism.display(std::cout, curr_st) << std::endl;
+            );
             interval_set_ref union_st(m_ism);
             union_st = m_ism.mk_union(curr_st, m_infeasible[arith_var]);
             if(m_ism.is_full(union_st)) { // conflict
@@ -2877,6 +2883,9 @@ namespace nlsat {
             DTRACE(std::cout << "use infeasible to propagate atom" << std::endl;);
             while(m_infeasible_prop < m_infeasible_var_trail.size()) {
                 var v = m_infeasible_var_trail[m_infeasible_prop++];
+                DTRACE(std::cout << "show var: " << v << " "; m_display_var(std::cout, v) << std::endl;
+                    std::cout << "show infeasible: "; m_ism.display(std::cout, m_infeasible[v]) << std::endl;
+                );
                 for(int idx: m_arith_unit_atom[v]) {
                     if(m_valued_atom_table.contains(idx)) { // Ignore propagated atoms
                         continue;
@@ -3603,6 +3612,7 @@ namespace nlsat {
         }
 
         void register_nlsat_learned(unsigned idx) {
+            DTRACE(std::cout << "register learned" << std::endl;);
             m_nlsat_learned.enlarge(idx, nullptr);
             var_table avars, rpvars; bool_var_table bvars;
             collect_learned_arith_and_bool_vars(m_learned[idx], bvars, avars, rpvars);
@@ -3619,7 +3629,9 @@ namespace nlsat {
                 m_var_learned_infeasible_set[v].enlarge(idx, std::make_pair(false, nullptr));
             }
             set_learned_literal_watcher(idx);
+            DTRACE(std::cout <<  "here" << std::endl;);
             set_learned_var_watcher(idx);
+            DTRACE(std::cout << "register learned done" << std::endl;);
         }
 
         void clear_assignment() {
@@ -4076,6 +4088,7 @@ namespace nlsat {
                 } else {
                     UNREACHABLE();
                 }
+                std::cout << "v1: " << v1 << " v2: " << v2 << std::endl;
                 new_watcher = new atom_var_watcher(idx, v1, v2);
                 m_var_watching_atoms[v1].push_back(new_watcher);
                 m_var_watching_atoms[v2].push_back(new_watcher);
@@ -4111,30 +4124,26 @@ namespace nlsat {
             }
         }
 
+        // fix bug: even if a var and another var don't share an atom, we delete cache
         void update_infeasible_cache_using_arith(var v) {
+            for(unsigned idx: m_var_atoms[v]) {
+                for(var nv: m_nlsat_atoms[idx]->m_vars) {
+                    if(nv != v) {
+                        m_var_atom_infeasible_set[nv][idx].first = false;
+                    }
+                }
+            }
             for(unsigned idx: m_var_clauses[v]) {
-                clause const &curr_clause = *m_clauses[idx];
-                for(literal l: curr_clause) {
-                    if(m_nlsat_atoms[l.var()]->m_vars.contains(v)) {
-                        for(var nv: m_nlsat_atoms[l.var()]->m_vars) {
-                            if(nv != v) {
-                                m_var_atom_infeasible_set[nv][l.var()].first = false;
-                                m_var_clause_infeasible_set[nv][idx].first = false;
-                            }
-                        }
+                for(var nv: m_nlsat_clauses[idx]->m_vars) {
+                    if(nv != v) {
+                        m_var_clause_infeasible_set[nv][idx].first = false;
                     }
                 }
             }
             for(unsigned idx: m_var_learned[v]) {
-                clause const &curr_clause = *m_learned[idx];
-                for(literal l: curr_clause) {
-                    if(m_nlsat_atoms[l.var()]->m_vars.contains(v)) {
-                        for(var nv: m_nlsat_atoms[l.var()]->m_vars) {
-                            if(nv != v) {
-                                m_var_atom_infeasible_set[nv][l.var()].first = false;
-                                m_var_learned_infeasible_set[nv][idx].first = false;
-                            }
-                        }
+                for(var nv: m_nlsat_learned[idx]->m_arith_vars) {
+                    if(nv != v) {
+                        m_var_learned_infeasible_set[nv][idx].first = false;
                     }
                 }
             }
@@ -4157,8 +4166,10 @@ namespace nlsat {
         // assert unit to v
         interval_set* get_clause_infeasible_set(int idx, var v) {
             if(m_var_clause_infeasible_set[v][idx].first) { // cached before
+                std::cout << "cached" << std::endl;
                 return m_var_clause_infeasible_set[v][idx].second;
             } else {
+                std::cout << "not cached" << std::endl;
                 interval_set_ref curr_st(m_ism);
                 interval_set_ref atom_st(m_ism);
                 curr_st = m_ism.mk_full();
