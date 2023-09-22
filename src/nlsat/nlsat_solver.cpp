@@ -1647,6 +1647,7 @@ namespace nlsat {
 
         // Keep undoing until level is new_lvl
         void undo_until_level(unsigned new_lvl) {
+            DTRACE(std::cout << "undo until level " << new_lvl << " ..." << std::endl;);
             undo_until(level_pred(m_scope_lvl, new_lvl));
         }
 
@@ -1670,10 +1671,12 @@ namespace nlsat {
 
         void undo_until_unassigned(hybrid_var x, bool is_bool){
             if(is_bool){
+                DTRACE(std::cout << "undo until pure bool " << x << " unassigned..." << std::endl;);
                 undo_until(unassigned_pred(m_bvalues, m_pure_bool_vars[x]));
                 SASSERT(m_bvalues[b] == l_undef);
             }
             else {
+                DTRACE(std::cout << "undo until arith " << x << " unassigned..." << std::endl;);
                 undo_until(arith_unassigned_pred(m_assignment, x));
                 SASSERT(!m_assignment.is_assigned(x));
             }
@@ -1720,11 +1723,14 @@ namespace nlsat {
             SASSERT(j != null_justification);
             SASSERT(!j.is_null());
             if (j.is_decision()) {
-                DTRACE(std::cout << "[decision]" << std::endl;);
+                DTRACE(std::cout << "[decision] " << m_scope_lvl << std::endl;);
                 m_decisions++;
             } else if(j.is_clause()) {
                 DTRACE(std::cout << "[unit propagate]" << std::endl;);
                 m_unit_propagate++;
+                if(l.var() == 91 || l.var() == 101) {
+                    display(std::cout, *j.get_clause()) << std::endl;;
+                }
             } else if(j.is_lazy()) {
                 DTRACE(std::cout << "[lazy propagate]" << std::endl;);
                 m_real_propagate++;
@@ -2089,7 +2095,9 @@ namespace nlsat {
             );
             var_vector vec;
             get_unassigned_clause_arith_vars(idx, vec);
-            SASSERT(!vec.empty());
+            if(vec.empty()) {
+                return;
+            }
             for(unsigned i = 0; i < vec.size() - 1; i++) {
                 hybrid_var v = arith2hybrid(vec[i]);
                 new_stage();
@@ -2111,7 +2119,9 @@ namespace nlsat {
             );
             var_vector vec;
             get_unassigned_learned_arith_vars(idx, vec);
-            SASSERT(!vec.empty());
+            if(vec.empty()) {
+                return;
+            }
             for(unsigned i = 0; i < vec.size() - 1; i++) {
                 hybrid_var v = arith2hybrid(vec[i]);
                 new_stage();
@@ -2366,14 +2376,14 @@ namespace nlsat {
                         watches[i]->replace_literal(l1, new_l1);
                         watches[i]->replace_literal(l2, new_l2);
                         if(new_l1 > 0) {
-                            m_neg_literal_watching_clauses[new_l1].push_back(watches[i]);
+                            m_pos_literal_watching_clauses[new_l1].push_back(watches[i]);
                         } else {
-                            m_pos_literal_watching_clauses[-new_l1].push_back(watches[i]);
+                            m_neg_literal_watching_clauses[-new_l1].push_back(watches[i]);
                         }
                         if(new_l2 > 0) {
-                            m_neg_literal_watching_clauses[new_l2].push_back(watches[i]);
+                            m_pos_literal_watching_clauses[new_l2].push_back(watches[i]);
                         } else {
-                            m_pos_literal_watching_clauses[-new_l2].push_back(watches[i]);
+                            m_neg_literal_watching_clauses[-new_l2].push_back(watches[i]);
                         }
                     } else if(new_l1 == 0 && new_l2 == 0) { // conflict clause
                         watches[j++] = watches[i];
@@ -2383,9 +2393,9 @@ namespace nlsat {
                         SASSERT(new_l1 != 0 && new_l2 == 0);
                         watches[i]->replace_literal_using_abs(idx, new_l1);
                         if(new_l1 > 0) {
-                            m_neg_literal_watching_clauses[new_l1].push_back(watches[i]);
+                            m_pos_literal_watching_clauses[new_l1].push_back(watches[i]);
                         } else {
-                            m_pos_literal_watching_clauses[-new_l1].push_back(watches[i]);
+                            m_neg_literal_watching_clauses[-new_l1].push_back(watches[i]);
                         }
                         if(is_bool_literal(cls[unit_index])) {
                             assign_literal(cls[unit_index], mk_clause_jst(&cls));
@@ -2418,15 +2428,25 @@ namespace nlsat {
                     if(new_l != 0) { // found replacement
                         watches[i]->replace_literal_using_abs(idx, new_l);
                         if(new_l > 0) {
-                            m_neg_literal_watching_clauses[new_l].push_back(watches[i]);
+                            m_pos_literal_watching_clauses[new_l].push_back(watches[i]);
                         } else {
-                            m_pos_literal_watching_clauses[-new_l].push_back(watches[i]);
+                            m_neg_literal_watching_clauses[-new_l].push_back(watches[i]);
                         }
                     } else { // unit to another literal, still watch
                         if(is_bool_literal(cls[another_idx])) {
                             assign_literal(cls[another_idx], mk_clause_jst(&cls));
                         }
                         watches[j++] = watches[i];
+                    }
+                }
+                if(c_idx == 128) {
+                    std::cout << "l1: " << watches[i]->l1 << " l2: " << watches[i]->l2 << std::endl;
+                    std::cout << "current atom: " << idx << std::endl;
+                    for(auto ele: m_neg_literal_watching_clauses[63]) {
+                        if(ele->m_clause_index == 128) {
+                            std::cout << "contains" << std::endl;
+                            break;
+                        }
                     }
                 }
             }
@@ -2484,14 +2504,14 @@ namespace nlsat {
                         watches[i]->replace_literal(l1, new_l1);
                         watches[i]->replace_literal(l2, new_l2);
                         if(new_l1 > 0) {
-                            m_neg_literal_watching_learned[new_l1].push_back(watches[i]);
+                            m_pos_literal_watching_learned[new_l1].push_back(watches[i]);
                         } else {
-                            m_pos_literal_watching_learned[-new_l1].push_back(watches[i]);
+                            m_neg_literal_watching_learned[-new_l1].push_back(watches[i]);
                         }
                         if(new_l2 > 0) {
-                            m_neg_literal_watching_learned[new_l2].push_back(watches[i]);
+                            m_pos_literal_watching_learned[new_l2].push_back(watches[i]);
                         } else {
-                            m_pos_literal_watching_learned[-new_l2].push_back(watches[i]);
+                            m_neg_literal_watching_learned[-new_l2].push_back(watches[i]);
                         }
                     } else if(new_l1 == 0 && new_l2 == 0) { // conflict clause
                         watches[j++] = watches[i];
@@ -2501,9 +2521,9 @@ namespace nlsat {
                         SASSERT(new_l1 != 0 && new_l2 == 0);
                         watches[i]->replace_literal_using_abs(idx, new_l1);
                         if(new_l1 > 0) {
-                            m_neg_literal_watching_learned[new_l1].push_back(watches[i]);
+                            m_pos_literal_watching_learned[new_l1].push_back(watches[i]);
                         } else {
-                            m_pos_literal_watching_learned[-new_l1].push_back(watches[i]);
+                            m_neg_literal_watching_learned[-new_l1].push_back(watches[i]);
                         }
                         if(is_bool_literal(cls[unit_index])) {
                             assign_literal(cls[unit_index], mk_clause_jst(&cls));
@@ -2536,9 +2556,9 @@ namespace nlsat {
                     if(new_l != 0) { // found replacement
                         watches[i]->replace_literal_using_abs(idx, new_l);
                         if(new_l > 0) {
-                            m_neg_literal_watching_learned[new_l].push_back(watches[i]);
+                            m_pos_literal_watching_learned[new_l].push_back(watches[i]);
                         } else {
-                            m_pos_literal_watching_learned[-new_l].push_back(watches[i]);
+                            m_neg_literal_watching_learned[-new_l].push_back(watches[i]);
                         }
                     } else { // unit to another literal, still watch
                         if(is_bool_literal(cls[another_idx])) {
@@ -2681,9 +2701,12 @@ namespace nlsat {
             while(!m_var_heap.empty()) {
                 if(!is_hybrid_assigned(res = m_var_heap.erase_min())) {
                     if(hybrid_is_bool(res)) m_decision_bools.insert(res);
-                    DTRACE(std::cout << "pick branching var: " << res << " ";
+                    DTRACE(
                         if(hybrid_is_arith(res)) {
+                            std::cout << "pick branching arith var: " << hybrid2arith(res) << " ";
                             m_display_var(std::cout, hybrid2arith(res));
+                        } else {
+                            std::cout << "pick branching bool var: " << res;
                         }
                         std::cout << std::endl;
                     );
@@ -2754,6 +2777,7 @@ namespace nlsat {
         }
 
         void check_clause_status_using_hybrid_var() {
+            display_assignment(std::cout);
             while (m_hybrid_var_clause_prop < m_hybrid_trail.size()) {
                 hybrid_var curr_hybrid_var = m_hybrid_trail[m_hybrid_var_clause_prop++];
                 vector<clause_var_watcher *> &watches = m_var_watching_clauses[curr_hybrid_var];
@@ -2774,7 +2798,13 @@ namespace nlsat {
                         }
                         watches[j++] = watches[i];
                         if (!is_sat) { // conflict clause, this situation should be found when updating the last unassigned var
-                            UNREACHABLE();
+                        // @date: 2023/09/21
+                        // this situation can occur without preprocessing
+                        // b1 \/ b2, b1 \/ !b2
+                            std::cout << "idx " << idx << std::endl;
+                            display(std::cout, cls) << std::endl;
+                            conflict_clause = m_clauses[idx];
+                            return;
                         }
                     } else { // try to find another unassigned hybrid var
                         nlsat_clause const *cls = m_nlsat_clauses[watches[i]->m_clause_index];
@@ -4015,6 +4045,7 @@ namespace nlsat {
             }
             if (frontend_conflict) return l_false;
             init_search();
+            DTRACE(display_vars(std::cout););
             m_explain.set_full_dimensional(is_full_dimensional());
             if(OPTIONS::enable_reduce) init_reduce_options();
             return search_check();
@@ -4211,11 +4242,15 @@ namespace nlsat {
                     SASSERT(is_arith_atom(b) && all_assigned(a)); // must be in a previous stage
                     mark(b);
                     m_lemma.push_back(antecedent);
-                    DTRACE(std::cout << "case 1, push back lemma: "; display(std::cout, antecedent) << std::endl;);
+                    DTRACE(std::cout << "case 1 antecedent, push back lemma: "; display(std::cout, antecedent) << std::endl;);
                 }
                 return;
             }
             unsigned b_lvl = m_levels[b];
+            std::cout << "b_lvl: " << b_lvl << std::endl;
+            std::cout << "curr level: " << scope_lvl() << std::endl;
+            std::cout << "stage: " << max_stage_atom(b) << std::endl;
+            std::cout << "curr stage: " << m_scope_stage << std::endl;
             if (!is_marked(b)) {
                 mark(b);
                 if(b_lvl == scope_lvl() && same_stage_atom(b, m_scope_stage)){
@@ -4224,7 +4259,7 @@ namespace nlsat {
                 }
                 else {
                     m_lemma.push_back(antecedent);
-                    DTRACE(std::cout << "case 2, push back lemma: "; display(std::cout, antecedent) << std::endl;);
+                    DTRACE(std::cout << "case 2 antecedent, push back lemma: "; display(std::cout, antecedent) << std::endl;);
                 }
             }
         }
@@ -4705,7 +4740,10 @@ namespace nlsat {
             scoped_reset_marks _sr(*this);
             DTRACE(std::cout << "conflict clause: "; 
                 display(std::cout, conflict) << std::endl;
-                std::cout << "m_hk: " << m_hk <<" "; m_display_var(std::cout, hybrid2arith(m_hk)) << std::endl;
+                std::cout << "m_hk: " << m_hk <<" ";
+                if(hybrid_is_arith(m_hk)) {
+                    std::cout << "arith "; m_display_var(std::cout, hybrid2arith(m_hk)) << std::endl;
+                }
                 display_assignment(std::cout);
             );
             resolve_clause(null_bool_var, *conflict_clause);
@@ -4752,16 +4790,22 @@ namespace nlsat {
                     }
                     top--;
                 }
+                DTRACE(std::cout << "current lemma: ";
+                    display(std::cout, m_lemma.size(), m_lemma.data()) << std::endl;
+                );
                 DTRACE(std::cout << "bump hybrid vars" << std::endl;);
                 bump_conflict_hybrid_vars();
+                DTRACE(std::cout << "bump hybrid vars done" << std::endl;);
                 // m_lemma is an implicating clause after backtracking current scope level.
                 if (found_decision){
+                    DTRACE(std::cout << "case 1, found decision" << std::endl;);
                     break;
                 }
                 // If lemma only contains literals from previous stages, then we can stop.
                 // We make progress by returning to a previous stage with additional information (new lemma)
                 // that forces us to select a new partial interpretation
                 if (only_literals_from_previous_stages(m_lemma.size(), m_lemma.data())){
+                    DTRACE(std::cout << "case 2, all previous stages" << std::endl;);
                     break;
                 }
                 // Conflict does not depend on the current decision, and it is still in the current stage.
@@ -4771,6 +4815,7 @@ namespace nlsat {
                 //    - backtrack to this level
                 //    - and continue conflict resolution from there
                 //    - we must bump m_num_marks for literals removed from m_lemma
+                DTRACE(std::cout << "case 3, Conflict does not depend on the current decision, and it is still in the current stage" << std::endl;);
                 unsigned max_lvl = max_scope_lvl(m_lemma.size(), m_lemma.data());
                 SASSERT(max_lvl < scope_lvl());
                 remove_literals_from_lvl(m_lemma, max_lvl);
