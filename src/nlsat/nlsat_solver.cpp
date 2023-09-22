@@ -1378,9 +1378,11 @@ namespace nlsat {
                         if(m_learned[idx]->size() >= 2) {
                             m_arith_unit_learned_more_lits[av].push_back(idx);
                         }
+                        // TODO: process and decide
                         if (!update_learned_infeasible_set(idx, av)) {
-                            conflict_clause = m_learned[idx];
-                            return;
+                            direct_stage_to_conflict_var(arith2hybrid(av));
+                            conflict_clause = m_arith_unit_learned[av].empty() ? m_learned[idx] : process_and_decide_literals_while_conflict();
+                            // return;
                         } else {
                             if(m_learned[idx]->size() == 1) {
                                 assign_literal((*m_learned[idx])[0], mk_clause_jst(m_learned[idx]));
@@ -1604,6 +1606,7 @@ namespace nlsat {
                 var another_var = watcher->get_another_var(x);
                 int idx = watcher->m_atom_index;
                 if(another_var == null_var || m_assignment.is_assigned(another_var)) { // previously all assigned
+                    m_valued_atom_table.erase(idx);
                     if(m_atoms[idx]->is_ineq_atom() || to_root_atom(m_atoms[idx])->x() == x) {
                         insert_unit_atom(idx, x);
                     }
@@ -1612,6 +1615,7 @@ namespace nlsat {
                 }
             }
             for(auto idx: m_static_unit_atom[x]) {
+                m_valued_atom_table.erase(idx);
                 insert_unit_atom(idx, x);
             }
         }
@@ -1658,7 +1662,7 @@ namespace nlsat {
         void update_unit_learned_after_var_unassigned(hybrid_var x) {
             for(int i = 0; i < m_var_watching_learned[x].size(); i++) {
                 clause_var_watcher *watcher = m_var_watching_learned[x][i];
-                var another_var = watcher->get_another_var(x);
+                hybrid_var another_var = watcher->get_another_var(x);
                 int idx = watcher->m_clause_index;
                 if(another_var == null_var || m_assignment.is_assigned(another_var)) { // previously all assigned
                     if(hybrid_is_arith(x)) {
@@ -1683,7 +1687,8 @@ namespace nlsat {
         }
 
         void undo_avar_assignment(var x){
-            DTRACE(std::cout << "undo avar assignment" << std::endl;);
+            DTRACE(std::cout << "undo avar assignment for ";
+                m_display_var(std::cout, x) << std::endl;);
             hybrid_var hv = arith2hybrid(x);
             m_assignment.reset(x);
             m_hybrid_assigned_indices[hv] = null_var;
@@ -1952,6 +1957,7 @@ namespace nlsat {
            \brief Assign literal using the given justification
          */
         void assign_literal(literal l, justification j) {
+            std::cout << "l.var: " << l.var() << std::endl;
             if(m_valued_atom_table.contains(l.var())) { // assigned previously
                 return;
             }
@@ -2131,6 +2137,9 @@ namespace nlsat {
         }
 
         bool process_hybrid_clause(clause const & cls){
+            DTRACE(std::cout << "process hybrid clause: ";
+                display(std::cout, cls) << std::endl;
+            );
             unsigned first_undef = UINT_MAX, num_undef = 0;
             interval_set_ref first_undef_set(m_ism);
             interval_set_ref curr_st(m_ism);
@@ -2177,6 +2186,7 @@ namespace nlsat {
                     first_undef_set = curr_st;
                 }
             }
+            std::cout << "num undef: " << num_undef << std::endl;
             if(num_undef == 0) {
                 return false;
             } else if(num_undef == 1) { // unit propagate
@@ -2210,6 +2220,13 @@ namespace nlsat {
                 var curr_var = m_arith_trail[m_arith_atom_prop++];
                 std::cout << "curr var: " << curr_var << std::endl;
                 vector<atom_var_watcher*> &watches = m_var_watching_atoms[curr_var];
+                for(unsigned idx: m_static_unit_atom[curr_var]) {
+                    if(!m_valued_atom_table.contains(idx)) {
+                        m_assigned_atom_indices[idx] = m_valued_atom_trail.size();
+                        m_valued_atom_trail.push_back(idx);
+                        m_valued_atom_table.insert(idx);
+                    }
+                }
                 int i, j = 0, size = watches.size();
                 for(i = 0; i < size; i++) {
                     var another_var = watches[i]->get_another_var(curr_var);
@@ -2315,7 +2332,7 @@ namespace nlsat {
         */
         void direct_stage_to_conflict_var(hybrid_var v) {
             DTRACE(std::cout << "direct stage to conflict var: " << v << std::endl;);
-            if(v == null_var) {
+            if(v == null_var || m_hk == v) {
                 return;
             }
             new_stage();
@@ -2403,11 +2420,11 @@ namespace nlsat {
           \note If all clauses are unit, no need for semantics decision and won't enter this function
         */
         clause* process_and_decide_literals_while_conflict() {
-            DTRACE(std::cout << "clause level conflict, semantics decision" << std::endl;);
+            DTRACE(std::cout << "clause level conflict, enter semantics decision" << std::endl;);
             var v = hybrid2arith(m_hk);
             DTRACE(std::cout << "v: " << v << std::endl; m_display_var(std::cout, v) << std::endl;);
             DTRACE(display_clause_vector(std::cout, m_arith_unit_clauses[v]););
-            DTRACE(display_clause_vector(std::cout, m_arith_unit_learned[v]););
+            DTRACE(display_learned_vector(std::cout, m_arith_unit_learned[v]););
             DTRACE(display_assignment(std::cout););
             SASSERT(m_arith_unit_clauses_more_lits[v].size() + m_arith_unit_learned_more_lits.size() > 0);
             save_semantics_decision_trail(v);
@@ -2887,6 +2904,26 @@ namespace nlsat {
                     std::cout << "show infeasible: "; m_ism.display(std::cout, m_infeasible[v]) << std::endl;
                 );
                 for(int idx: m_arith_unit_atom[v]) {
+                    if(m_valued_atom_table.contains(idx)) { // Ignore propagated atoms
+                        continue;
+                    }
+                    interval_set_ref curr_st(m_ism);
+                    curr_st = get_atom_infeasible_set(idx, v, false);
+                    if(m_ism.is_empty(curr_st)) {
+                        R_propagate(literal(idx, false), nullptr);
+                    } else if(m_ism.is_full(curr_st)) {
+                        R_propagate(literal(idx, true), nullptr);
+                    } else if(m_ism.subset(curr_st, m_infeasible[v])) {
+                        R_propagate(literal(idx, false), m_infeasible[v]);
+                    } else {
+                        interval_set_ref tmp(m_ism);
+                        tmp = m_ism.mk_union(curr_st, m_infeasible[v]);
+                        if (m_ism.is_full(tmp)) {
+                            R_propagate(literal(idx, true), tmp, false);
+                        }
+                    }
+                }
+                for(int idx: m_static_unit_atom[v]) {
                     if(m_valued_atom_table.contains(idx)) { // Ignore propagated atoms
                         continue;
                     }
@@ -4078,6 +4115,12 @@ namespace nlsat {
                 atom_var_watcher *new_watcher;
                 if(v1 == null_var && v2 == null_var) { // all assigned
                     get_atom_last_assigned_two_vars(idx, v1, v2);
+                    DTRACE(
+                        display_atom(std::cout, idx) << std::endl;
+                        std::cout << "all assigned watcher: ";
+                        m_display_var(std::cout, v1) << " ";
+                        m_display_var(std::cout, v2) << std::endl;
+                    );
                 } else if(v1 != null_var && v2 == null_var) { // only v1 unassigned
                     get_atom_last_assigned_one_var(idx, v2);
                     if(m_atoms[idx]->is_ineq_atom() || to_root_atom(m_atoms[idx])->x() == v1) {
@@ -4665,7 +4708,7 @@ namespace nlsat {
             unsigned sz = jst.num_lits();
             m_lazy_clause.reset();
             DTRACE(std::cout << "enter explain" << std::endl;);
-            DTRACE("enter explain lits: ";
+            DTRACE(std::cout << "enter explain lits: ";
                 display(std::cout, jst.num_lits(), jst.lits()) << std::endl;
             );
             m_explain(jst.num_lits(), jst.lits(), m_lazy_clause);
@@ -5117,6 +5160,11 @@ namespace nlsat {
                 std::cout << "m_hk: " << m_hk <<" ";
                 if(hybrid_is_arith(m_hk)) {
                     std::cout << "arith "; m_display_var(std::cout, hybrid2arith(m_hk)) << std::endl;
+                    std::cout << "clause: \n";
+                    display_clause_vector(std::cout, m_arith_unit_clauses[hybrid2arith(m_hk)]);
+                    std::cout << "learned: \n";
+                    display_learned_vector(std::cout, m_arith_unit_learned[hybrid2arith(m_hk)]);
+                    std::cout << "done\n";
                 }
                 display_assignment(std::cout);
                 display_hybrid_trail(std::cout);
@@ -5231,7 +5279,7 @@ namespace nlsat {
                 // special case:
                 // all vars in m_lemma is unassigned and we found no decision
                 if(all_unassigned(sz, m_lemma.data())) {
-                    DTRACE(std::cout << "found no decision, and current lemma is all unassigned";
+                    DTRACE(std::cout << "found no decision, and current lemma is all unassigned\n";
                         std::cout << "we return to unsat" << std::endl;
                     );
                     return false;
@@ -6588,12 +6636,27 @@ namespace nlsat {
             return out;
         }
 
+        std::ostream & display_learned_vector(std::ostream & out, unsigned_vector const & vec) const {
+            for(unsigned i = 0; i < vec.size(); i++){
+                display(out, *m_learned[vec[i]]); out << std::endl;
+            }
+            return out;
+        }
+
         std::ostream & display_clauses(std::ostream & out) const {
             out << "display clauses\n";
             for(unsigned i = 0; i < m_clauses.size(); i++){
                 if(!m_deleted_clauses.contains(i)) {
                     display(out, *m_clauses[i]); out << std::endl;
                 }
+            }
+            return out;
+        }
+
+        std::ostream & display_learned(std::ostream & out) const {
+            out << "display learned\n";
+            for(unsigned i = 0; i < m_learned.size(); i++){
+                display(out, *m_learned[i]); out << std::endl;
             }
             return out;
         }
