@@ -4,9 +4,8 @@
 (declare-const y Real)
 (declare-const x Real)
 
-(assert (> x 24))
 (assert (> y 24))
-(assert (or a (> (+ x y) 12)))
+(assert (or a (< (+ (* x x) y) 12)))
 
 (check-sat)
 (get-model)
