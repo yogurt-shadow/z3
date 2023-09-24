@@ -121,6 +121,10 @@ Revision History:
  *          in this case, the literal y > 24 is the same stage, but not the same level of current status,
  *          then process antecedent won't increase mark and cause bugs
  * @note We use arith level to record semantics level for an arith var
+ * 
+ * @date 2023/09/24
+ * @brief Maintain valued atom (atom with all arith vars assigned), do not use trail
+ * If we use trail, when we register a new atom, we save valued atom trail, then the trail will be erased when undoing until unassigned
  * ---------------------------------------------------------------------------------------------------------------
  **/
 
@@ -1587,6 +1591,22 @@ namespace nlsat {
             update_unit_learned_after_var_unassigned(x);
         }
 
+        void register_valued_atom(bool_var b) {
+            if(!m_valued_atom_table.contains(b)) {
+                m_valued_atom_table.insert(b);
+                m_assigned_atom_indices[b] = m_valued_atom_trail.size();
+                m_valued_atom_trail.push_back(b);
+            }
+        }
+
+        void erase_valued_atom(bool_var b) {
+            if(m_valued_atom_table.contains(b)) {
+                m_valued_atom_table.erase(b);
+                m_valued_atom_trail.erase(b);
+                m_assigned_atom_indices[b] = null_var;
+            }
+        }
+
         /**
           \brief We only need to update those atoms watched by var x
           \note Proof: assume an atom <a> not watched by x turns unit after unassigning var <x>
@@ -1606,7 +1626,9 @@ namespace nlsat {
                 var another_var = watcher->get_another_var(x);
                 int idx = watcher->m_atom_index;
                 if(another_var == null_var || m_assignment.is_assigned(another_var)) { // previously all assigned
-                    m_valued_atom_table.erase(idx);
+                    if(m_bvalues[idx] == l_undef) { // valued atom
+                        erase_valued_atom(idx);
+                    }
                     if(m_atoms[idx]->is_ineq_atom() || to_root_atom(m_atoms[idx])->x() == x) {
                         insert_unit_atom(idx, x);
                     }
@@ -1615,7 +1637,9 @@ namespace nlsat {
                 }
             }
             for(auto idx: m_static_unit_atom[x]) {
-                m_valued_atom_table.erase(idx);
+                if(m_bvalues[idx] == l_undef) { // valued atom
+                    erase_valued_atom(idx);
+                }
                 insert_unit_atom(idx, x);
             }
         }
@@ -2221,11 +2245,7 @@ namespace nlsat {
                 std::cout << "curr var: " << curr_var << std::endl;
                 vector<atom_var_watcher*> &watches = m_var_watching_atoms[curr_var];
                 for(unsigned idx: m_static_unit_atom[curr_var]) {
-                    if(!m_valued_atom_table.contains(idx)) {
-                        m_assigned_atom_indices[idx] = m_valued_atom_trail.size();
-                        m_valued_atom_trail.push_back(idx);
-                        m_valued_atom_table.insert(idx);
-                    }
+                    register_valued_atom(idx);
                 }
                 int i, j = 0, size = watches.size();
                 for(i = 0; i < size; i++) {
@@ -2233,11 +2253,7 @@ namespace nlsat {
                     SASSERT(another_var != null_var); // unit atom shall not be watched
                     int idx = watches[i]->m_atom_index;
                     if (m_assignment.is_assigned(another_var)) { // totally assigned
-                        if(!m_valued_atom_table.contains(idx)) { // the atom may be assigned previously by unit propagation
-                            m_assigned_atom_indices[idx] = m_valued_atom_trail.size();
-                            m_valued_atom_trail.push_back(idx);
-                            m_valued_atom_table.insert(idx);
-                        }
+                        register_valued_atom(idx);
                         watches[j++] = watches[i];
                     } else { // try to find another watched var
                         var new_watched_var = null_var;
@@ -4101,6 +4117,8 @@ namespace nlsat {
                 m_static_unit_atom[v].push_back(idx);
                 if(!m_assignment.is_assigned(v)) {
                     insert_unit_atom(idx, v);
+                } else {
+                    register_valued_atom(idx);
                 }
             } else { // atom with arith vars >= 2
                 SASSERT(curr_atom->m_vars.size() >= 2);
@@ -4114,6 +4132,7 @@ namespace nlsat {
                 }
                 atom_var_watcher *new_watcher;
                 if(v1 == null_var && v2 == null_var) { // all assigned
+                    register_valued_atom(idx);
                     get_atom_last_assigned_two_vars(idx, v1, v2);
                     DTRACE(
                         display_atom(std::cout, idx) << std::endl;
@@ -4928,31 +4947,9 @@ namespace nlsat {
         }
 
         /**
-          \brief Given literals' vars are all unassigned
-        */
-        bool all_unassigned(unsigned sz, literal const *ls) const {
-            var_table curr_vars;
-            bool_var_table curr_bools;
-            get_vars_literals(sz, ls, curr_vars);
-            get_bool_vars_literals(sz, ls, curr_bools);
-            for(var v: curr_vars) {
-                if(m_assignment.is_assigned(v)) {
-                    return false;
-                }
-            }
-            for(bool_var b: curr_bools) {
-                if(m_bvalues[m_pure_bool_vars[b]] != l_undef) {
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        /**
           \brief Find max assigned var, ignore unassigned var
         */
         hybrid_var max_assigned_var(unsigned sz, literal const * ls, bool & is_bool, unsigned & max_stage) const {
-            SASSERT(!all_unassigned(sz, ls));
             hybrid_var res = null_var;
             var_table curr_vars;
             bool_var_table curr_bools;
@@ -5276,15 +5273,6 @@ namespace nlsat {
                 display(std::cout, sz, m_lemma.data()) << std::endl;
             );
             if (!found_decision) {
-                // special case:
-                // all vars in m_lemma is unassigned and we found no decision
-                if(all_unassigned(sz, m_lemma.data())) {
-                    DTRACE(std::cout << "found no decision, and current lemma is all unassigned\n";
-                        std::cout << "we return to unsat" << std::endl;
-                    );
-                    return false;
-                }
-
                 // Case 1)
                 // We just have to find the maximal variable in m_lemma, and return to that stage
                 // previous: Remark: the lemma may contain only boolean literals, in this case new_max_var == null_var;
