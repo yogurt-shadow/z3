@@ -2976,8 +2976,6 @@ namespace nlsat {
         */
         void propagate_literal_using_infeasible() {
             DTRACE(std::cout << "use infeasible to propagate atom" << std::endl;);
-            std::cout << "prop: " << m_infeasible_prop << " ";
-            std::cout << "size: " << m_infeasible_var_trail.size() << std::endl;
             while(m_infeasible_prop < m_infeasible_var_trail.size()) {
                 var v = m_infeasible_var_trail[m_infeasible_prop++];
                 DTRACE(std::cout << "show var: " << v << " "; m_display_var(std::cout, v) << std::endl;
