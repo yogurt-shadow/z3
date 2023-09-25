@@ -327,6 +327,23 @@ namespace nlsat {
             trail(var x, atom * a):m_kind(UPDT_EQ), m_old_eq(a), m_x(x) {}
             trail(var x, semantics_decision): m_kind(SEMANTICS_DECISION), m_x(x) {} 
             trail(var x, var y, branch): m_kind(BRANCH), m_x(x), m_x2(y) {}
+
+            bool operator==(trail const &other) const {
+                if(m_kind != other.m_kind) {
+                    return false;
+                }
+                switch(m_kind) {
+                    case BVAR_ASSIGNMENT: return m_x == other.m_x;
+                    case ARITH_ASSIGNMENT: return m_x == other.m_x;
+                    case NEW_LEVEL: return m_x == other.m_x && m_x2 == other.m_x2;
+                    case NEW_STAGE: return true;
+                    case INFEASIBLE_UPDT: return m_x == other.m_x && m_old_set == other.m_old_set;
+                    case UPDT_EQ: return m_x == other.m_x && m_old_eq == other.m_old_eq;
+                    case SEMANTICS_DECISION: return m_x == other.m_x;
+                    case BRANCH: return m_x == other.m_x && m_x2 == other.m_x2;
+                    default: UNREACHABLE();
+                }
+            }
         };
         svector<trail>         m_trail;
 
@@ -652,6 +669,7 @@ namespace nlsat {
         }
 
         void dec_ref(bool_var b) {
+            DTRACE(std::cout << "dec ref" << std::endl;);
             if (b == null_bool_var)
                 return;
             atom * a = m_atoms[b];
@@ -760,6 +778,7 @@ namespace nlsat {
         }
 
         void del(bool_var b) {
+            DTRACE(std::cout << "delete bool var: " << b << std::endl;);
             m_num_bool_vars--;
             m_dead[b]  = true;
             m_atoms[b] = nullptr;
@@ -1911,7 +1930,9 @@ namespace nlsat {
                 SASSERT(m_bvalues[b] == l_undef);
             }
             else {
-                DTRACE(std::cout << "undo until arith " << x << " unassigned..." << std::endl;);
+                DTRACE(std::cout << "undo until arith " << x << " unassigned..." << std::endl;
+                    display_trails(std::cout);
+                );
                 undo_until(arith_unassigned_pred(m_assignment, x));
                 SASSERT(!m_assignment.is_assigned(x));
             }
@@ -3796,7 +3817,6 @@ namespace nlsat {
                 var_vector vec;
                 vec.push_back(v1); vec.push_back(v2);
                 for(var v: vec) {
-                    std::cout << "v: " << v << std::endl;
                     j = 0;
                     for(int i = 0; i < m_var_watching_atoms[v].size(); i++) {
                         if(m_var_watching_atoms[v][i]->m_atom_index != b) {
@@ -3824,6 +3844,26 @@ namespace nlsat {
                 m_var_atom_infeasible_set[v][b] = std::make_pair(false, nullptr);
             }
             m_nlsat_atoms[b] = nullptr;
+            if(m_valued_atom_table.contains(b)) { // previously assigned
+                m_valued_atom_table.erase(b);
+                m_valued_atom_trail.erase(b);
+                remove_bvar_assignment_trail(b);
+                if(m_atom_prop > m_assigned_atom_indices[b]) {
+                    m_atom_prop--;
+                }
+                m_assigned_atom_indices[b] = null_var;
+            }
+        }
+
+        void remove_bvar_assignment_trail(bool_var b) {
+            unsigned sz = m_trail.size(), index;
+            for(index = 0; index < sz && !(m_trail[index].m_kind == trail::BVAR_ASSIGNMENT 
+                                            && m_trail[index].m_x == b); index++);
+            if(index == sz) return;
+            for(unsigned i = index; i + 1 < sz; i++) {
+                m_trail[i] = m_trail[i + 1];
+            }
+            m_trail.pop_back();
         }
 
         void del_nlsat_clause(unsigned id) {
@@ -4457,6 +4497,7 @@ namespace nlsat {
             // fix_order();
             register_nlsat_structures();
             DTRACE(std::cout << "register nlsat structures done" << std::endl;);
+            DTRACE(display_clauses(std::cout););
             if (!m_incremental && m_inline_vars) {
                 if (!simplify()) 
                     return l_false;
@@ -6904,6 +6945,7 @@ namespace nlsat {
     }
 
     void solver::dec_ref(bool_var b) {
+        std::cout << "solver dec ref for " << b << std::endl;
         m_imp->dec_ref(b);
     }
         
