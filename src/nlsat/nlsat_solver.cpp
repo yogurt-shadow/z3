@@ -1827,7 +1827,7 @@ namespace nlsat {
                 update_infeasible_cache_using_bool(pure_b);
                 m_hybrid_assigned_indices[pure_b] = null_var;
                 if(!m_decision_bools.contains(pure_b)) { // propagated bool var
-                    m_var_heap.insert(b);
+                    m_var_heap.insert(pure_b);
                     m_hybrid_find_stage[pure_b] = null_var;
                 }
                 if(m_hybrid_var_clause_prop == m_hybrid_trail.size()) {
@@ -3066,6 +3066,7 @@ namespace nlsat {
             hybrid_var res;
             while(!m_var_heap.empty()) {
                 if(!is_hybrid_assigned(res = m_var_heap.erase_min())) {
+                    std::cout << "res: " << res << std::endl;
                     if(hybrid_is_bool(res)) m_decision_bools.insert(res);
                     DTRACE(
                         if(hybrid_is_arith(res)) {
@@ -3120,6 +3121,10 @@ namespace nlsat {
         }
 
         void select_witness() {
+            std::cout << "m_hk: " << m_hk << std::endl;
+            std::cout << "num of arith: " << num_arith_vars() << std::endl;
+            std::cout << "num of hybrid: " << num_hybrid_vars() << std::endl;
+            std::cout << "num of bool: " << num_bool_vars() << std::endl;
             var x = hybrid2arith(m_hk);
             SASSERT(!m_ism.is_full(m_infeasible[x]));
             DTRACE(std::cout << "show infeasible:\n";
@@ -3129,22 +3134,28 @@ namespace nlsat {
             m_ism.peek_in_complement(m_infeasible[x], m_is_int[x], w, false);
             if (!m_am.is_rational(w)) m_irrational_assignments++;
             m_assignment.set_core(x, w);
-            DTRACE(display_assignment(std::cout);
-            );
             save_arith_assignment_trail(x);
+            std::cout << "here -1" << std::endl;
             m_hybrid_trail.push_back(m_hk);
             m_arith_trail.push_back(x);
+            std::cout << "x: " << x << std::endl;
             m_hybrid_assigned_indices[m_hk] = m_hybrid_trail.size() - 1;
+            std::cout << m_arith_unit_atom.size() << std::endl;
             m_arith_unit_atom[x].clear();
             m_arith_unit_clauses[x].clear();
             m_arith_unit_clauses_more_lits[x].clear();
             m_arith_unit_learned[x].clear();
             m_arith_unit_learned_more_lits[x].clear();
+            std::cout << m_newly_unit_arith_clauses.size() << std::endl;
             m_newly_unit_arith_clauses[x].clear();
             m_newly_unit_arith_learned[x].clear();
+            std::cout << "here 0" << std::endl;
             check_atom_status_using_arith();
+            std::cout << "here 0" << std::endl;
             check_clause_status_using_hybrid_var();
+            std::cout << "here 0" << std::endl;
             check_learned_status_using_hybrid_var();
+            DTRACE(std::cout << "witness done" << std::endl;);
         }
 
         void check_clause_status_using_hybrid_var() {
@@ -3600,6 +3611,7 @@ namespace nlsat {
         }
 
         void register_nlsat_avar(var x) {
+            DTRACE(std::cout << "register nlsat avar" << std::endl;);
             m_num_hybrid_vars++;
             m_hybrid_assigned_indices.setx(arith2hybrid(x), null_var, null_var);
             m_hybrid_find_stage.setx(arith2hybrid(x), null_var, null_var);
@@ -3625,6 +3637,7 @@ namespace nlsat {
         }
 
         void register_nlsat_bvar(bool_var b) {
+            DTRACE(std::cout << "register nlsat bvar" << std::endl;);
             m_num_hybrid_vars++;
             m_assigned_atom_indices.setx(b, null_var, null_var);
             m_hybrid_assigned_indices.setx(b, null_var, null_var);
@@ -4551,11 +4564,13 @@ namespace nlsat {
         }
 
         void build_var_heap() {
+            DTRACE(std::cout << "build var heap" << std::endl;);
             m_var_heap.clear();
             m_var_heap.set_bounds(m_num_hybrid_vars);
             for(hybrid_var v = 0; v < m_num_hybrid_vars; v++){
                 m_var_heap.insert(v);
             }
+            DTRACE(std::cout << "#vars in heap: " << m_var_heap.size() << std::endl;);
         }
 
         void build_frontend_info() {
