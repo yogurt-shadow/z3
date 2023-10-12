@@ -132,6 +132,13 @@ Revision History:
  * 
  * @date 2023/09/25
  * @brief Fix bug about prop maintainer, if we pop back an element, decrease pop if it is equal to size
+ * 
+ * @date 2023/10/12
+ * @brief Maintain unit static learned clause
+ * @example Suppose we learned a new clause x >= 1 in the process, we may update frontend infeasible set by (-oo, 1)
+ *          However, when we upadte x's infeasible set during this epoch, the frontend infeasible won't help us, and we need to look at unit static ones
+ * Current: record unit static learned clause when registering, 
+ *          add static unit learned into newly unit ones when updating unit about undoing arith assignment
  * ---------------------------------------------------------------------------------------------------------------
  **/
 
@@ -415,6 +422,10 @@ namespace nlsat {
         
         // unit atom (static)
         vector<unsigned_vector>                  m_static_unit_atom;
+
+        // we do not maintain static unit clause, since it is recorded with method of frontend infeasible set
+        // currently we maintain static unit learned clause, because we need its infeasible set right away
+        vector<unsigned_vector>                  m_arith_static_unit_learned;
 
         // unit atoms and clauses (dynamical)
         unsigned_vector                          m_atom_unit_clauses;
@@ -1364,6 +1375,7 @@ namespace nlsat {
                             m_arith_unit_learned_more_lits[av].push_back(idx);
                         }
                     }
+                    m_arith_static_unit_learned[av].push_back(idx);
                 }
             } else { // vars >= 2
                 hybrid_var v1 = null_var, v2 = null_var;
@@ -1705,13 +1717,20 @@ namespace nlsat {
           \brief Update real unit learned clauses after an arith var is unassigned
         */
         void update_unit_learned_after_var_unassigned(hybrid_var x) {
+            var v = hybrid2arith(x);
+            for(unsigned idx: m_arith_static_unit_learned[v]) {
+                m_arith_unit_learned[v].insert(idx);
+                m_newly_unit_arith_learned[v].push_back(idx);
+                if(m_learned[idx]->size() > 1) {
+                    m_arith_unit_learned_more_lits[v].insert(idx);
+                }
+            }
             for(int i = 0; i < m_var_watching_learned[x].size(); i++) {
                 clause_var_watcher *watcher = m_var_watching_learned[x][i];
                 hybrid_var another_var = watcher->get_another_var(x);
                 int idx = watcher->m_clause_index;
                 if(another_var == null_var || m_assignment.is_assigned(another_var)) { // previously all assigned
                     if(hybrid_is_arith(x)) {
-                        var v = hybrid2arith(x);
                         if(check_learned_unit(idx, v)) {
                             m_arith_unit_learned[v].insert(idx);
                             m_newly_unit_arith_learned[v].push_back(idx);
@@ -3457,6 +3476,16 @@ namespace nlsat {
                     }
                 }
                 m_newly_unit_arith_learned[v].shrink(j);
+                j = 0;
+                for(int i = 0; i < m_arith_static_unit_learned[v].size(); i++) {
+                    unsigned origin_idx = m_arith_static_unit_learned[v][i];
+                    if(m_learned_indices[origin_idx] == null_var) {
+                        continue;
+                    } else {
+                        m_arith_static_unit_learned[v][j++] = m_learned_indices[origin_idx];
+                    }
+                }
+                m_arith_static_unit_learned[v].shrink(j);
             }
             for(bool_var b = 0; b < m_atoms.size(); b++) {
                 int j = 0;
@@ -3634,6 +3663,7 @@ namespace nlsat {
             m_newly_unit_arith_clauses.enlarge(x, var_vector(0));
             m_newly_unit_arith_learned.enlarge(x, var_vector(0));
             m_frontend_infeasible.enlarge(x, nullptr);
+            m_arith_static_unit_learned.enlarge(x, var_vector(0));
         }
 
         void register_nlsat_bvar(bool_var b) {
@@ -3812,6 +3842,7 @@ namespace nlsat {
             m_decision_bools.reset();
             m_arith_level.clear();
             m_var_max_level.clear();
+            m_arith_static_unit_learned.clear();
         }
 
         void clear_nlsat_atoms() {
@@ -4053,6 +4084,10 @@ namespace nlsat {
                         m_neg_literal_watching_learned[-index].shrink(j);
                     }
                 }
+            }
+            if(m_nlsat_learned[id]->m_bool_vars.empty() && m_nlsat_learned[id]->m_arith_vars.size() == 1) { // unit arith clause
+                var v = *m_nlsat_learned[id]->m_arith_vars.begin();
+                m_arith_static_unit_learned[v].erase(id);
             }
             for(bool_var b: m_nlsat_learned[id]->m_bool_vars) {
                 int j = 0;
@@ -5256,9 +5291,8 @@ namespace nlsat {
             bool found_decision;
             while (true) {
                 found_decision = false;
-                while (m_num_marks > 0) {
+                while (top > 0 && m_num_marks > 0) {
                     checkpoint();
-                    SASSERT(top > 0);
                     trail & t = m_trail[top-1];
                     SASSERT(t.m_kind != trail::NEW_STAGE); // we only mark literals that are in the same stage
                     if (t.m_kind == trail::BVAR_ASSIGNMENT) {
@@ -5267,6 +5301,7 @@ namespace nlsat {
                         insert_conflict_vars_from_atom(b);
                         if (is_marked(b)) {
                             m_num_marks--;
+                            std::cout << "curr num mark: " << m_num_marks << std::endl;
                             reset_mark(b);
                             justification jst = m_justifications[b];
                             switch (jst.get_kind()) {
