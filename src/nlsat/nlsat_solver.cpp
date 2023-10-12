@@ -1588,8 +1588,10 @@ namespace nlsat {
         }
 
         void save_set_updt_trail(var x, interval_set * old_set, interval_set * new_set) {
-            m_trail.push_back(trail(x, old_set, new_set));
-            m_infeasible_var_trail.push_back(x);
+            if(!m_ism.eq(old_set, new_set)) {
+                m_trail.push_back(trail(x, old_set, new_set));
+                m_infeasible_var_trail.push_back(x);
+            }
         }
 
         void save_semantics_decision_trail(var v) {
@@ -1717,20 +1719,23 @@ namespace nlsat {
           \brief Update real unit learned clauses after an arith var is unassigned
         */
         void update_unit_learned_after_var_unassigned(hybrid_var x) {
-            var v = hybrid2arith(x);
-            for(unsigned idx: m_arith_static_unit_learned[v]) {
-                m_arith_unit_learned[v].insert(idx);
-                m_newly_unit_arith_learned[v].push_back(idx);
-                if(m_learned[idx]->size() > 1) {
-                    m_arith_unit_learned_more_lits[v].insert(idx);
+            if(hybrid_is_arith(x)) {
+                var v = hybrid2arith(x);
+                for(unsigned idx: m_arith_static_unit_learned[v]) {
+                    m_arith_unit_learned[v].insert(idx);
+                    m_newly_unit_arith_learned[v].push_back(idx);
+                    if(m_learned[idx]->size() > 1) {
+                        m_arith_unit_learned_more_lits[v].insert(idx);
+                    }
                 }
             }
             for(int i = 0; i < m_var_watching_learned[x].size(); i++) {
                 clause_var_watcher *watcher = m_var_watching_learned[x][i];
                 hybrid_var another_var = watcher->get_another_var(x);
                 int idx = watcher->m_clause_index;
-                if(another_var == null_var || m_assignment.is_assigned(another_var)) { // previously all assigned
+                if(another_var == null_var || is_hybrid_assigned(another_var)) { // previously all assigned
                     if(hybrid_is_arith(x)) {
+                        var v = hybrid2arith(x);
                         if(check_learned_unit(idx, v)) {
                             m_arith_unit_learned[v].insert(idx);
                             m_newly_unit_arith_learned[v].push_back(idx);
@@ -1786,11 +1791,13 @@ namespace nlsat {
         }
 
         void undo_new_stage() {
+            DTRACE(std::cout << "undo new stage" << std::endl;);
             SASSERT(m_scope_stage >= 1);
             m_scope_stage--;
         }
 
         void undo_new_level(bool_var b, var v) {
+            DTRACE(std::cout << "undo new level" << std::endl;);
             SASSERT(m_scope_lvl > 0);
             m_scope_lvl--;
             m_evaluator.pop(1);
@@ -1801,11 +1808,13 @@ namespace nlsat {
         }
 
         void undo_updt_eq(var v, atom * a) {
+            DTRACE(std::cout << "undo update infeasible" << std::endl;);
             if (m_var2eq.size() > v)
                 m_var2eq[v] = a; 
         }
 
         void undo_semantics_decision(var v) {
+            DTRACE(std::cout << "undo semantics decision" << std::endl;);
             // do nothing
         }
 
@@ -1819,6 +1828,7 @@ namespace nlsat {
              4.2 assigned vars: assignment
         */
         void undo_branch(hybrid_var old_v) {
+            DTRACE(std::cout << "undo branch" << std::endl;);
             m_hybrid_find_stage[m_hk] = null_var;
             if(hybrid_is_bool(m_hk)) {
                 SASSERT(m_decision_bools.contains(m_hk));
@@ -1829,6 +1839,7 @@ namespace nlsat {
         }
 
         void undo_bvar_assignment(bool_var b) {
+            DTRACE(std::cout << "undo bvar assignment" << std::endl;);
             m_bvalues[b] = l_undef;
             m_levels[b]  = UINT_MAX;
             m_arith_level[b] = default_arith_level;
@@ -1858,6 +1869,7 @@ namespace nlsat {
                 m_hybrid_trail.pop_back();
                 m_bool_trail.pop_back();
             }
+            DTRACE(std::cout << "undo bvar assignment done" << std::endl;);
         }
 
         template<typename Predicate>
@@ -3198,9 +3210,9 @@ namespace nlsat {
                         }
                         watches[j++] = watches[i];
                         if (!is_sat) { // conflict clause, this situation should be found when updating the last unassigned var
-                        // @date: 2023/09/21
-                        // this situation can occur without preprocessing
-                        // b1 \/ b2, b1 \/ !b2
+                            // @date: 2023/09/21
+                            // this situation can occur without preprocessing
+                            // b1 \/ b2, b1 \/ !b2
                             conflict_clause = m_clauses[idx];
                             return;
                         }
@@ -3340,7 +3352,7 @@ namespace nlsat {
                     // conflict and unsat, learn empty lemma, found conflict in stage and level zero
                     // even if resolve succeeded, we need next turn's overall propagate to detect possible new conflict
                     else if(!resolve(*conflict_clause)) return l_false;
-                } 
+                }
                 // previously found conflict when registering learned clauses
                 else if(!resolve(*conflict_clause)) return l_false;
                 // conflict exceed
@@ -5359,8 +5371,17 @@ namespace nlsat {
                 //    - we must bump m_num_marks for literals removed from m_lemma
                 DTRACE(std::cout << "case 3, Conflict does not depend on the current decision, and it is still in the current stage" << std::endl;);
                 unsigned max_lvl = max_scope_lvl(m_lemma.size(), m_lemma.data());
+                DTRACE(std::cout << "max_lvl: " << max_lvl << std::endl;
+                    std::cout << "scope_lvl: " << scope_lvl() << std::endl;
+                );
+                DTRACE(std::cout << "show lemma before remove: ";
+                       display(std::cout, m_lemma.size(), m_lemma.data()) << std::endl;
+                );
                 SASSERT(max_lvl < scope_lvl());
                 remove_literals_from_lvl(m_lemma, max_lvl);
+                DTRACE(std::cout << "show lemma after remove: ";
+                       display(std::cout, m_lemma.size(), m_lemma.data()) << std::endl;);
+
                 undo_until_level(max_lvl);
                 top = m_trail.size();
                 SASSERT(scope_lvl() == max_lvl);
@@ -6680,7 +6701,8 @@ namespace nlsat {
             for(auto ele: m_trail){
                 switch(ele.m_kind){
                     case trail::BVAR_ASSIGNMENT:
-                        out << "[BVAR ASSIGNMENT]: "; display_atom(out, ele.m_x); 
+                        out << "[BVAR ASSIGNMENT]: ";
+                        out << "b" << ele.m_x << ": "; display_atom(out, ele.m_x); 
                         if(m_atoms[ele.m_x] == nullptr){
                             out << " -> bool_var " << m_pure_bool_convert[ele.m_x];
                         }
@@ -6694,7 +6716,8 @@ namespace nlsat {
                         break;
 
                     case trail::NEW_LEVEL:
-                        out << "[NEW LEVEL]\n";
+                        out << "[NEW LEVEL]: ";
+                        display_atom(out, ele.m_x) << std::endl;
                         break;
                     
                     case trail::NEW_STAGE:
