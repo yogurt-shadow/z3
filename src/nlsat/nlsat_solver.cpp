@@ -3097,17 +3097,7 @@ namespace nlsat {
             hybrid_var res;
             while(!m_var_heap.empty()) {
                 if(!is_hybrid_assigned(res = m_var_heap.erase_min())) {
-                    std::cout << "res: " << res << std::endl;
                     if(hybrid_is_bool(res)) m_decision_bools.insert(res);
-                    DTRACE(
-                        if(hybrid_is_arith(res)) {
-                            std::cout << "pick branching arith var: " << hybrid2arith(res) << " ";
-                            m_display_var(std::cout, hybrid2arith(res));
-                        } else {
-                            std::cout << "pick branching bool var: " << res;
-                        }
-                        std::cout << std::endl;
-                    );
                     return res;
                 }
             }
@@ -3152,10 +3142,6 @@ namespace nlsat {
         }
 
         void select_witness() {
-            std::cout << "m_hk: " << m_hk << std::endl;
-            std::cout << "num of arith: " << num_arith_vars() << std::endl;
-            std::cout << "num of hybrid: " << num_hybrid_vars() << std::endl;
-            std::cout << "num of bool: " << num_bool_vars() << std::endl;
             var x = hybrid2arith(m_hk);
             SASSERT(!m_ism.is_full(m_infeasible[x]));
             DTRACE(std::cout << "show infeasible:\n";
@@ -3166,25 +3152,18 @@ namespace nlsat {
             if (!m_am.is_rational(w)) m_irrational_assignments++;
             m_assignment.set_core(x, w);
             save_arith_assignment_trail(x);
-            std::cout << "here -1" << std::endl;
             m_hybrid_trail.push_back(m_hk);
             m_arith_trail.push_back(x);
-            std::cout << "x: " << x << std::endl;
             m_hybrid_assigned_indices[m_hk] = m_hybrid_trail.size() - 1;
-            std::cout << m_arith_unit_atom.size() << std::endl;
             m_arith_unit_atom[x].clear();
             m_arith_unit_clauses[x].clear();
             m_arith_unit_clauses_more_lits[x].clear();
             m_arith_unit_learned[x].clear();
             m_arith_unit_learned_more_lits[x].clear();
-            std::cout << m_newly_unit_arith_clauses.size() << std::endl;
             m_newly_unit_arith_clauses[x].clear();
             m_newly_unit_arith_learned[x].clear();
-            std::cout << "here 0" << std::endl;
             check_atom_status_using_arith();
-            std::cout << "here 0" << std::endl;
             check_clause_status_using_hybrid_var();
-            std::cout << "here 0" << std::endl;
             check_learned_status_using_hybrid_var();
             DTRACE(std::cout << "witness done" << std::endl;);
         }
@@ -3800,7 +3779,6 @@ namespace nlsat {
                 m_var_learned_infeasible_set[v].enlarge(idx, std::make_pair(false, nullptr));
             }
             set_learned_literal_watcher(idx);
-            DTRACE(std::cout <<  "here" << std::endl;);
             set_learned_var_watcher(idx);
             DTRACE(std::cout << "register learned done" << std::endl;);
         }
