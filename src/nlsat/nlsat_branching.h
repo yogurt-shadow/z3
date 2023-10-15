@@ -9,8 +9,8 @@ namespace nlsat {
     #define                                                 ORIGIN_STATIC_BOOL_FIRST_MODE          4
     #define                                                 RANDOM_MODE                            5
     
-    #define DYNAMIC_MODE                                    UNIFORM_VSIDS
-    // #define DYNAMIC_MODE                                    ORIGIN_STATIC_BOOL_FIRST_MODE
+    // #define DYNAMIC_MODE                                    UNIFORM_VSIDS
+    #define DYNAMIC_MODE                                    ORIGIN_STATIC_BOOL_FIRST_MODE
     
     struct uniform_vsids {
         const double_vector & m_activity;

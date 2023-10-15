@@ -139,6 +139,13 @@ Revision History:
  *          However, when we upadte x's infeasible set during this epoch, the frontend infeasible won't help us, and we need to look at unit static ones
  * Current: record unit static learned clause when registering, 
  *          add static unit learned into newly unit ones when updating unit about undoing arith assignment
+ * 
+ * @date 2023/10/15
+ * @brief Process and Decide Literals when found conflict clauses by atoms
+ * @example m - 1 = 0 \/ m + 1 = 0, m = x^2
+ *          Suppose we decide x to be 0, then using frontend infeasible set, we propagate m-x^2 is false,
+ *          and thus encounter a conflict.
+ *          In this case, we should reprocess and decide literal sets which we want to make them consistent
  * ---------------------------------------------------------------------------------------------------------------
  **/
 
@@ -2686,11 +2693,19 @@ namespace nlsat {
         clause* propagate_unit_clause_using_atom(unsigned idx) {
             DTRACE(std::cout << "propagate unit clauses" << std::endl;);
             if(m_atom_unit_clauses[idx] != null_var) {
-                clause const &cls = *m_clauses[m_atom_unit_clauses[idx]];
+                unsigned c_idx = m_atom_unit_clauses[idx];
+                clause const &cls = *m_clauses[c_idx];
                 literal l = cls[0];
                 if(value(l) == l_false) {
-                    direct_stage_to_conflict_clause(m_atom_unit_clauses[idx]);
-                    return m_clauses[m_atom_unit_clauses[idx]];
+                    direct_stage_to_conflict_clause(c_idx);
+                    // return m_clauses[m_atom_unit_clauses[idx]];
+                    if(is_bool_literal(l)) {
+                        return m_clauses[c_idx];
+                    } else {
+                        var v = find_unassigned_var(idx);
+                        SASSERT(v != null_var);
+                        return m_arith_unit_clauses_more_lits[v].empty() && m_arith_unit_learned_more_lits[v].empty() ? m_clauses[c_idx] : process_and_decide_literals_while_conflict();
+                    }
                 }
             }
             return nullptr;
@@ -4253,12 +4268,6 @@ namespace nlsat {
                 if(v1 == null_var && v2 == null_var) { // all assigned
                     register_valued_atom(idx);
                     get_atom_last_assigned_two_vars(idx, v1, v2);
-                    DTRACE(
-                        display_atom(std::cout, idx) << std::endl;
-                        std::cout << "all assigned watcher: ";
-                        m_display_var(std::cout, v1) << " ";
-                        m_display_var(std::cout, v2) << std::endl;
-                    );
                 } else if(v1 != null_var && v2 == null_var) { // only v1 unassigned
                     get_atom_last_assigned_one_var(idx, v2);
                     if(m_atoms[idx]->is_ineq_atom() || to_root_atom(m_atoms[idx])->x() == v1) {
@@ -4731,8 +4740,8 @@ namespace nlsat {
         void reset_mark(bool_var b) { m_marks[b] = 0; }
 
         void reset_marks() {
-            for (auto const& l : m_lemma) {
-                reset_mark(l.var());
+            for(bool_var b = 0; b < m_marks.size(); b++) {
+                reset_mark(b);
             }
         }
 
@@ -4764,6 +4773,7 @@ namespace nlsat {
             bool_var b  = antecedent.var();
             insert_conflict_from_atom(b);
             if (assigned_value(antecedent) == l_undef) {
+                DTRACE(std::cout << "literal is undef" << std::endl;);
                 checkpoint();
                 // antecedent must be false in the current arith interpretation
                 SASSERT(value(antecedent) == l_false || m_rlimit.is_canceled());
@@ -4787,6 +4797,8 @@ namespace nlsat {
                     m_lemma.push_back(antecedent);
                     DTRACE(std::cout << "case 2 antecedent, push back lemma: "; display(std::cout, antecedent) << std::endl;);
                 }
+            } else {
+                std::cout << "literal is marked" << std::endl;
             }
         }
 
