@@ -146,6 +146,13 @@ Revision History:
  *          Suppose we decide x to be 0, then using frontend infeasible set, we propagate m-x^2 is false,
  *          and thus encounter a conflict.
  *          In this case, we should reprocess and decide literal sets which we want to make them consistent
+ * 
+ * @date 2023/10/16
+ * @brief Conflict clause's literal is assigned before semantics decision, thus cause not same stage and level
+ * @example x + y = 0 \/ x - y = 0
+ *          x + z^2 - 1 = 0
+ *          we decide y -> 0.125, z -> -2, then we use c1's infeasible set to propagate c2 is conflict
+ * @brief Perhaps we should record conflict clauses used to propagate this conflict clause, then we undo and reprocess them one by one.
  * ---------------------------------------------------------------------------------------------------------------
  **/
 
