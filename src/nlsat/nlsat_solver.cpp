@@ -142,7 +142,7 @@ Revision History:
  * 
  * @date 2023/10/15
  * @brief Process and Decide Literals when found conflict clauses by atoms
- * @example m - 1 = 0 \/ m + 1 = 0, m = x^2
+ * @example m + 2 = 0 \/ m + 1 = 0, m = x^2
  *          Suppose we decide x to be 0, then using frontend infeasible set, we propagate m-x^2 is false,
  *          and thus encounter a conflict.
  *          In this case, we should reprocess and decide literal sets which we want to make them consistent
@@ -1425,7 +1425,7 @@ namespace nlsat {
                         }
                         if (!update_learned_infeasible_set(idx, av)) {
                             direct_stage_to_conflict_var(arith2hybrid(av));
-                            conflict_clause = m_arith_unit_learned[av].empty() ? m_learned[idx] : process_and_decide_literals_while_conflict();
+                            conflict_clause = m_arith_unit_learned_more_lits[av].empty() && m_arith_unit_clauses_more_lits[av].empty() ? m_learned[idx] : process_and_decide_literals_while_conflict();
                         } else {
                             unsigned lit_idx;
                             if(get_only_undef_literal_learned(idx, lit_idx)) {
@@ -1692,6 +1692,7 @@ namespace nlsat {
         */
         void insert_unit_atom(unsigned idx, var x) {
             DTRACE(std::cout << "insert unit atom: "; display_atom(std::cout, idx) << std::endl;);
+            DTRACE(std::cout << "unit var: " << x << std::endl;);
             m_arith_unit_atom[x].push_back(idx);
             propagate_atom(idx, x);
             DTRACE(std::cout << "insert unit atom done " << std::endl;);
@@ -2395,7 +2396,7 @@ namespace nlsat {
                     sz++;
                     if (!update_clause_infeasible_set(idx, v)) { // conflict
                         direct_stage_to_conflict_var(arith2hybrid(v));
-                        return m_arith_unit_clauses_more_lits[v].empty() ? m_clauses[idx] : process_and_decide_literals_while_conflict();
+                        return m_arith_unit_clauses_more_lits[v].empty() && m_arith_unit_learned_more_lits[v].empty() ? m_clauses[idx] : process_and_decide_literals_while_conflict();
                     } else {
                         unsigned lit_idx;
                         if(get_only_undef_literal_clause(idx, lit_idx)) {
@@ -2439,7 +2440,7 @@ namespace nlsat {
                     sz++;
                     if(!update_learned_infeasible_set(idx, v)) { // conflict
                         direct_stage_to_conflict_var(arith2hybrid(v));
-                        return m_arith_unit_learned_more_lits[v].empty() ? m_learned[idx] : process_and_decide_literals_while_conflict();
+                        return m_arith_unit_learned_more_lits[v].empty() && m_arith_unit_clauses_more_lits[v].empty() ? m_learned[idx] : process_and_decide_literals_while_conflict();
                     } else {
                         unsigned lit_idx;
                         if(get_only_undef_literal_learned(idx, lit_idx)) {
@@ -2546,7 +2547,7 @@ namespace nlsat {
           \note If all clauses are unit, no need for semantics decision and won't enter this function
         */
         clause* process_and_decide_literals_while_conflict() {
-            DTRACE(std::cout << "clause level conflict, enter semantics decision" << std::endl;);
+            DTRACE(std::cout << "encounter conflict, enter semantics decision" << std::endl;);
             var v = hybrid2arith(m_hk);
             DTRACE(std::cout << "v: " << v << std::endl; m_display_var(std::cout, v) << std::endl;);
             DTRACE(display_clause_vector(std::cout, m_arith_unit_clauses[v]););
@@ -3163,7 +3164,7 @@ namespace nlsat {
                 m_ism.display(std::cout, m_infeasible[x]) << std::endl;
             );
             scoped_anum w(m_am);
-            m_ism.peek_in_complement(m_infeasible[x], m_is_int[x], w, false);
+            m_ism.peek_in_complement(m_infeasible[x], m_is_int[x], w, true);
             if (!m_am.is_rational(w)) m_irrational_assignments++;
             m_assignment.set_core(x, w);
             save_arith_assignment_trail(x);
@@ -4562,8 +4563,20 @@ namespace nlsat {
             m_reduce_threshold = OPTIONS::reduce_init_conf;
         }
 
+        void fix_order() {
+            var_vector perm;
+            perm.resize(3, 0);
+            // x y z
+            // y z x
+            perm[0] = 2;
+            perm[1] = 0;
+            perm[2] = 1;
+            reorder(perm.size(), perm.data());
+        }
+
         lbool check() {
             DTRACE(std::cout << "start check..." << std::endl;);
+            fix_order();
             register_nlsat_structures();
             DTRACE(std::cout << "register nlsat structures done" << std::endl;);
             DTRACE(display_clauses(std::cout););
@@ -5287,6 +5300,7 @@ namespace nlsat {
                 }
                 display_assignment(std::cout);
                 display_hybrid_trail(std::cout);
+                display_trails(std::cout);
             );
             resolve_clause(null_bool_var, *conflict_clause);
             unsigned top = m_trail.size();
