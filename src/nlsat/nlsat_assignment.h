@@ -30,8 +30,9 @@ namespace nlsat {
     class assignment : public polynomial::var2anum {
         scoped_anum_vector m_values;
         bool_vector      m_assigned;
+        unsigned         m_size;
     public:
-        assignment(anum_manager & _m):m_values(_m) {}
+        assignment(anum_manager & _m):m_values(_m), m_size(0) {}
         virtual ~assignment() {}
         anum_manager & am() const { return m_values.m(); }
         void swap(assignment & other) {
@@ -47,22 +48,36 @@ namespace nlsat {
                     am().set(m_values[i], other.value(i));
                 }
             }
+            m_size = other.m_size;
         }
 
         void set_core(var x, anum & v) {
             m_values.reserve(x+1, anum());
             m_assigned.reserve(x+1, false); 
+            if(!m_assigned[x]) {
+                m_size++;
+            }
             m_assigned[x] = true;
             am().swap(m_values[x], v); 
         }
         void set(var x, anum const & v) {
             m_values.reserve(x+1, anum());
             m_assigned.reserve(x+1, false); 
+            if(!m_assigned[x]) {
+                m_size++;
+            }
             m_assigned[x] = true;
             am().set(m_values[x], v); 
         }
-        void reset(var x) { if (x < m_assigned.size()) m_assigned[x] = false; }
-        void reset() { m_assigned.reset(); }
+        void reset(var x) { 
+            if (x < m_assigned.size()) {
+                if(m_assigned[x]) {
+                    m_size--;
+                }
+                m_assigned[x] = false; 
+            }
+        }
+        void reset() { m_assigned.reset(); m_size = 0; }
         bool is_assigned(var x) const { return m_assigned.get(x, false); }
         anum const & value(var x) const { return m_values[x]; }
         anum_manager & m() const override { return am(); }
@@ -81,6 +96,12 @@ namespace nlsat {
                     out << "\n";
                 }
             }
+        }
+        unsigned size() const {
+            return m_size;
+        }
+        bool empty() const {
+            return size() == 0;
         }
     };
     

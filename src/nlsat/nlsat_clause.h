@@ -20,6 +20,7 @@ Revision History:
 
 #include "nlsat/nlsat_types.h"
 #include "util/vector.h"
+#include "util/chashtable.h"
 
 namespace nlsat {
     class clause {
@@ -28,10 +29,7 @@ namespace nlsat {
         unsigned         m_size;
         unsigned         m_capacity:31;
         unsigned         m_learned:1;
-        // wzh dynamic
-        // unsigned         m_activity;
-        double m_activity;
-        // hzw dynamic
+        double           m_activity;
         assumption_set   m_assumptions;
         literal          m_lits[0];
         static size_t get_obj_size(unsigned num_lits) { return sizeof(clause) + num_lits * sizeof(literal); }
@@ -56,9 +54,20 @@ namespace nlsat {
         bool contains(bool_var v) const;
         void shrink(unsigned num_lits) { SASSERT(num_lits <= m_size); if (num_lits < m_size) { m_size = num_lits; } }
         assumption_set assumptions() const { return m_assumptions; }
+        struct hash_proc {
+            unsigned operator()(clause const *cls) const {
+                return cls->is_learned() ? 2 * cls->id() + 1 : 2 * cls->id();
+            }
+        };
+
+        struct eq_proc {
+            bool operator()(clause const *c1, clause const *c2) const {
+                return c1->id() == c2->id() && c1->is_learned() == c2->is_learned();
+            }
+        };
     };
 
     typedef ptr_vector<clause> clause_vector;
-
+    typedef chashtable<clause*, clause::hash_proc, clause::eq_proc> clause_table;
 };
 

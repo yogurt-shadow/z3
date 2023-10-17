@@ -77,11 +77,7 @@ namespace nlsat {
         kind     m_kind;
         unsigned m_ref_count;
         bool_var m_bool_var;
-        // wzh dynamic
-        // var      m_max_var;
-        // hzw dynamic 
     public:
-        // atom(kind k, var max_var):m_kind(k), m_ref_count(0), m_bool_var(null_bool_var), m_max_var(max_var) {}
         atom(kind k):m_kind(k), m_ref_count(0), m_bool_var(null_bool_var) {}
         bool is_eq() const { return m_kind == EQ || m_kind == ROOT_EQ; }
 
@@ -89,7 +85,6 @@ namespace nlsat {
         bool is_root_atom() const { return m_kind >= ROOT_EQ; }
         kind get_kind() const { return m_kind; }
         bool_var bvar() const { return m_bool_var; }
-        // var max_var() const { return m_max_var; }
         unsigned ref_count() const { return m_ref_count; }
         void inc_ref() { m_ref_count++; }
         void dec_ref() { SASSERT(m_ref_count > 0); m_ref_count--; }
@@ -101,13 +96,11 @@ namespace nlsat {
         friend class solver;
         unsigned     m_size;
         poly *       m_ps[0];
-        // ineq_atom(kind k, unsigned sz, poly * const * ps, bool const * is_even, var max_var);
         ineq_atom(kind k, unsigned sz, poly * const * ps, bool const * is_even);
         static unsigned get_obj_size(unsigned sz) { return sizeof(ineq_atom) + sizeof(poly*)*sz; }
     public:
         unsigned size() const { return m_size; }
         poly * p(unsigned i) const { SASSERT(i < size()); return UNTAG(poly*, m_ps[i]); }
-        // Return true if i-th factor has odd degree
         bool is_odd(unsigned i) const { SASSERT(i < size()); return GET_TAG(m_ps[i]) == 0; }
         bool is_even(unsigned i) const { return !is_odd(i); }
         struct khasher { unsigned operator()(ineq_atom const * a) const { return a->m_kind; } };

@@ -287,8 +287,8 @@ namespace nlsat {
             // TODO caching
             // SASSERT(max_var(p) == max_var(q));
             // SASSERT(max_var(p) == x);
-            SASSERT(max_stage_var_poly(p) == max_stage_var_poly(q));
-            SASSERT(max_stage_var_poly(p) == x);
+            SASSERT(max_level_var_poly(p) == max_level_var_poly(q));
+            SASSERT(max_level_var_poly(p) == x);
             m_cache.psc_chain(p, q, x, result);
         }
         
@@ -367,7 +367,7 @@ namespace nlsat {
             SASSERT(!is_const(p));
             // var x = max_var(p);
             // wzh dynamic
-            var x = m_solver.max_stage_var_poly(p);
+            var x = m_solver.max_level_var_poly(p);
             TRACE("nlsat_explain", tout << "[debug] max var in elim: " << x << std::endl;);
             // hzw dynamic
             unsigned k = degree(p, x);
@@ -382,7 +382,7 @@ namespace nlsat {
                     // x vanished from p, peek next maximal variable
                     // x = max_var(p);
                     // wzh dynamic
-                    x = m_solver.max_stage_var_poly(p);
+                    x = m_solver.max_level_var_poly(p);
                     // hzw dynamic
                     SASSERT(x != null_var);
                     k = degree(p, x);
@@ -483,7 +483,7 @@ namespace nlsat {
                 bool normalized = false; // true if the literal needs to be normalized
 
                 // wzh dynamic
-                var max_stage = m_solver.find_hybrid_var_stage(arith2hybrid(max));
+                var max_stage = m_solver.find_hybrid_var_level(arith2hybrid(max));
                 // hzw dynamic
                 for (unsigned i = 0; i < sz; i++) {
                     p = a->p(i);
@@ -492,16 +492,16 @@ namespace nlsat {
                         tout << std::endl;
                     );
                     // if (max_var(p) == max)
-                    if(m_solver.max_stage_var_poly(p) == max){
+                    if(m_solver.max_level_var_poly(p) == max){
                         TRACE("nlsat_explain", tout << "[debug] max stage is equal to max, enter elim vanishing\n";);
                         elim_vanishing(p); // eliminate vanishing coefficients of max
                     }
                     // if (is_const(p) || max_var(p) < max) {
-                    if(is_const(p) || m_solver.max_stage_poly(p) < max_stage){
+                    if(is_const(p) || m_solver.max_level_poly(p) < max_stage){
                         int s = sign(p); 
                         if (!is_const(p)) {
                             // SASSERT(max_var(p) != null_var);
-                            SASSERT(max_stage_poly(p) < max_stage);
+                            SASSERT(max_level_poly(p) < max_stage);
                             // factor p is a lower stage polynomial, so we should add assumption to justify p being eliminated
                             if (s == 0)
                                 add_simple_assumption(atom::EQ, p);  // add assumption p = 0
@@ -642,7 +642,7 @@ namespace nlsat {
             for (unsigned i = 0; i < sz; i++) {
                 poly * q = ps.get(i);
                 // if (max_var(q) != x) {
-                if(m_solver.max_stage_poly(q) != m_solver.find_hybrid_var_stage(arith2hybrid(x))){
+                if(m_solver.max_level_poly(q) != m_solver.find_hybrid_var_level(arith2hybrid(x))){
                     qs.push_back(q);
                 }
                 else {
@@ -1000,7 +1000,7 @@ namespace nlsat {
                 
                 // wzh dynamic
                
-                if(m_solver.max_stage_poly(p) != m_solver.find_hybrid_var_stage(arith2hybrid(y))){
+                if(m_solver.max_level_poly(p) != m_solver.find_hybrid_var_level(arith2hybrid(y))){
                     continue;
                 }
                 // hzw dynamic
@@ -1114,7 +1114,7 @@ namespace nlsat {
                 }
                 tout << std::endl;
             );
-            var x = m_solver.max_stage_or_unassigned_ps(todo_ps);
+            var x = m_solver.max_level_or_unassigned_ps(todo_ps);
             TRACE("nlsat_explain", tout << "[dynamic] next projection var: " << x << std::endl;);
             m_todo.remove_var_polys(ps, x);
             TRACE("nlsat_explain", tout << "[dynamic] show polynomials after remove:\n";
@@ -1157,7 +1157,7 @@ namespace nlsat {
                     }
                     tout << std::endl;
                 );
-                x = m_solver.max_stage_or_unassigned_ps(todo_ps);
+                x = m_solver.max_level_or_unassigned_ps(todo_ps);
                 TRACE("nlsat_explain", tout << "[dynamic] next projection var: " << x << std::endl;);
                 m_todo.remove_var_polys(ps, x);
                 TRACE("nlsat_explain", tout << "[dynamic] show polynomials after remove:\n";
@@ -1359,10 +1359,10 @@ namespace nlsat {
                 TRACE("nlsat_simplify_core", tout << "simplified literal:\n"; display(tout, new_lit) << "\n" << m_solver.value(new_lit) << "\n";);
                 // TRACE("nlsat_explain", tout << "[debug] simplified literal:\n"; display(tout, new_lit) << std::endl;);
                 // TRACE("nlsat_explain", tout << "[debug] display max var: " << max << std::endl;);
-                // TRACE("nlsat_explain", tout << "[debug] max stage literal, max stage: " << find_hybrid_var_stage(max) << std::endl;);
-                // TRACE("nlsat_explain", tout << "[debug] literal's max stage: " << max_stage_literal(new_lit) << std::endl;);
+                // TRACE("nlsat_explain", tout << "[debug] max stage literal, max stage: " << find_hybrid_var_level(max) << std::endl;);
+                // TRACE("nlsat_explain", tout << "[debug] literal's max stage: " << max_level_literal(new_lit) << std::endl;);
                 // TRACE("nlsat_explain", display_dynamic(tout) << std::endl;);
-                if (m_solver.max_stage_literal(new_lit) < m_solver.find_hybrid_var_stage(arith2hybrid(max))) {
+                if (m_solver.max_level_literal(new_lit) < m_solver.find_hybrid_var_level(arith2hybrid(max))) {
                 // if(!contains_literal(new_lit, max)){
                 // if (max_var(new_lit) < max) {
                 // if(false){
@@ -1391,7 +1391,7 @@ namespace nlsat {
             info.m_eq = eq;
             // info.m_x  = m_pm.max_var(info.m_eq);
             // wzh dynamic
-            info.m_x = m_solver.max_stage_var_poly(info.m_eq);
+            info.m_x = m_solver.max_level_var_poly(info.m_eq);
             var_vector curr_vars;
             m_pm.vars(eq, curr_vars);
             TRACE("nlsat_explain", tout << "[debug] vars in equal: " << std::endl;
@@ -1499,7 +1499,7 @@ namespace nlsat {
         ineq_atom * select_lower_stage_eq(scoped_literal_vector & C, var max) {
             var_vector & xs = m_select_tmp;
             // wzh dynamic
-            var max_stage = m_solver.find_hybrid_var_stage(arith2hybrid(max));
+            var max_stage = m_solver.find_hybrid_var_level(arith2hybrid(max));
             // hzw dynamic
             for (literal l : C) {
                 bool_var b = l.var();
@@ -1516,7 +1516,7 @@ namespace nlsat {
                         // if (y >= max)
                             // continue;
                         // wzh dynamic
-                        var curr_stage = m_solver.find_hybrid_var_stage(arith2hybrid(y));
+                        var curr_stage = m_solver.find_hybrid_var_level(arith2hybrid(y));
                         if(curr_stage >= max_stage){
                             continue;
                         }
@@ -1589,7 +1589,7 @@ namespace nlsat {
                 return;
             collect_polys(num, ls, m_ps);
             // var max_x = max_var(m_ps);
-            var max_x = m_solver.max_stage_or_unassigned_ps(m_ps);
+            var max_x = m_solver.max_level_or_unassigned_ps(m_ps);
             TRACE("nlsat_explain", tout << "polynomials in the conflict:\n"; display(tout, m_ps); tout << "\n";);
             elim_vanishing(m_ps);
             TRACE("nlsat_explain", tout << "elim vanishing\n"; display(tout, m_ps); tout << "\n";);
@@ -1602,7 +1602,7 @@ namespace nlsat {
                 m_core2.reset();
                 m_core2.append(num, ls);
                 // var max = max_var(num, ls);
-                var max = m_solver.max_stage_or_unassigned_literals(num, ls);
+                var max = m_solver.max_level_or_unassigned_literals(num, ls);
                 SASSERT(max != null_var);
                 TRACE("nlsat_explain", display(tout << "core before normalization\n", m_core2) << "\n";);
                 // fix bug for MulliganEconomicsModel0054e
@@ -1637,7 +1637,7 @@ namespace nlsat {
                 atom * a  = m_atoms[l.var()];
                 SASSERT(a != 0);
                 // interval_set_ref inf = m_evaluator.infeasible_intervals(a, l.sign(), nullptr);
-                interval_set_ref inf = m_evaluator.infeasible_intervals(a, l.sign(), nullptr, m_solver.max_stage_or_unassigned_atom(a));
+                interval_set_ref inf = m_evaluator.infeasible_intervals(a, l.sign(), nullptr, m_solver.max_level_or_unassigned_atom(a));
                 r = ism.mk_union(inf, r);
                 if (ism.is_full(r)) {
                     // Done
@@ -1657,7 +1657,7 @@ namespace nlsat {
                 atom * a  = m_atoms[l.var()];
                 SASSERT(a != 0);
                 // interval_set_ref inf = m_evaluator.infeasible_intervals(a, l.sign(), nullptr);
-                interval_set_ref inf = m_evaluator.infeasible_intervals(a, l.sign(), nullptr, m_solver.max_stage_or_unassigned_atom(a));
+                interval_set_ref inf = m_evaluator.infeasible_intervals(a, l.sign(), nullptr, m_solver.max_level_or_unassigned_atom(a));
                 r = ism.mk_union(inf, r);
                 if (ism.is_full(r)) {
                     // literal l must be in the core
@@ -1733,7 +1733,7 @@ namespace nlsat {
             split_literals(x, num, ls, lits);
             collect_polys(lits.size(), lits.data(), m_ps);
             // var mx_var = max_var(m_ps);
-            var mx_var = m_solver.max_stage_or_unassigned_ps(m_ps);
+            var mx_var = m_solver.max_level_or_unassigned_ps(m_ps);
             if (!m_ps.empty()) {                
                 svector<var> renaming;
                 if (x != mx_var) {
@@ -1828,7 +1828,7 @@ namespace nlsat {
                 p = ps.get(i);
                 int s = sign(p);
                 // if (max_var(p) != x) {
-                if(m_solver.max_stage_poly(p) != m_solver.find_hybrid_var_stage(arith2hybrid(x))){
+                if(m_solver.max_level_poly(p) != m_solver.find_hybrid_var_level(arith2hybrid(x))){
                     atom::kind k = (s == 0)?(atom::EQ):((s < 0)?(atom::LT):(atom::GT));
                     add_simple_assumption(k, p, false);
                     ps[i] = ps.back();
