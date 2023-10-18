@@ -669,7 +669,6 @@ namespace nlsat {
         }
 
         void dec_ref(bool_var b) {
-            DTRACE(std::cout << "dec ref" << std::endl;);
             if (b == null_bool_var)
                 return;
             atom * a = m_atoms[b];
@@ -2333,6 +2332,9 @@ namespace nlsat {
         bool update_learned_infeasible_set(int idx, var arith_var) {
             interval_set_ref curr_st(m_ism);
             curr_st = get_learned_infeasible_set(idx, arith_var);
+            DTRACE(std::cout << "show infeasible set for learned:\n";
+                m_ism.display(std::cout, curr_st) << std::endl;
+            );
             interval_set_ref union_st(m_ism);
             union_st = m_ism.mk_union(curr_st, m_infeasible[arith_var]);
             if(m_ism.is_full(union_st)) { // conflict
@@ -2696,6 +2698,8 @@ namespace nlsat {
                     }
                     interval_set_ref curr_st(m_ism);
                     curr_st = get_atom_infeasible_set(idx, v, false, nullptr);
+                    m_ism.display(std::cout, curr_st) << std::endl;
+                    m_ism.display(std::cout, m_infeasible[v]) << std::endl;
                     if(m_ism.is_empty(curr_st)) {
                         real_propagate_using_clauses(literal(idx, false), nullptr);
                     } else if(m_ism.is_full(curr_st)) {
@@ -2786,9 +2790,6 @@ namespace nlsat {
           If we don't insert new stage when branching a, y is in the same stage.
         */
         bool decide() {
-            DTRACE(std::cout << "decide" << std::endl;
-                std::cout << "curr m_hk: " << m_hk << std::endl;
-            );
             if(m_hk != null_var && !is_hybrid_assigned(m_hk)) { // current m_hk may not be assigned due to resolving
                 DTRACE(std::cout << "current m_hk is not assigned, choose value" << std::endl;);
                 choose_value();
@@ -2797,8 +2798,10 @@ namespace nlsat {
             hybrid_var old_hk = m_hk;
             if((m_hk = pick_branching_var()) == null_var) { // var heap is empty, all vars assigned
                 check_overall_satisfied();
+                DTRACE(display_trails(std::cout););
                 return true;
             }
+            DTRACE(std::cout << "branch hybrid var: " << m_hk << std::endl;);
             save_branch_trail(old_hk, m_hk);
             m_scope_lvl++;
             m_hybrid_find_level[m_hk] = m_scope_lvl;
@@ -2817,7 +2820,7 @@ namespace nlsat {
                 m_ism.display(std::cout, m_infeasible[x]) << std::endl;
             );
             scoped_anum w(m_am);
-            m_ism.peek_in_complement(m_infeasible[x], m_is_int[x], w, true);
+            m_ism.peek_in_complement(m_infeasible[x], m_is_int[x], w, false);
             if (!m_am.is_rational(w)) m_irrational_assignments++;
             m_assignment.set_core(x, w);
             save_arith_assignment_trail(x);
@@ -3967,6 +3970,10 @@ namespace nlsat {
             if(unit_v != null_var) {
                 interval_set_ref curr_st(m_ism);
                 curr_st = get_atom_infeasible_set(idx, unit_v, false, nullptr);
+                DTRACE(
+                    std::cout << "show curr st:";
+                    m_ism.display(std::cout, curr_st) << std::endl;
+                );
                 if (m_ism.is_empty(curr_st))  real_propagate_using_clauses(literal(idx, false), nullptr);
                 else if (m_ism.is_full(curr_st)) real_propagate_using_clauses(literal(idx, true), nullptr);
                 else if (m_ism.subset(curr_st, m_infeasible[unit_v])) real_propagate_using_clauses(literal(idx, false), m_infeasible[unit_v]);
@@ -4053,6 +4060,7 @@ namespace nlsat {
                         }
                     }
                 }
+                m_ism.set_clauses(curr_st, m_clauses[idx]);
                 if(curr_st != nullptr) {
                     m_ism.inc_ref(curr_st);
                 }
@@ -4083,6 +4091,7 @@ namespace nlsat {
                         }
                     }
                 }
+                m_ism.set_clauses(curr_st, m_learned[idx]);
                 if(curr_st != nullptr) {
                     m_ism.inc_ref(curr_st);
                 }
@@ -4229,8 +4238,8 @@ namespace nlsat {
         void fix_order() {
             var_vector perm;
             perm.resize(3, 0);
+            // z x y
             // x y z
-            // y z x
             perm[0] = 2;
             perm[1] = 0;
             perm[2] = 1;
@@ -4239,7 +4248,9 @@ namespace nlsat {
 
         lbool check() {
             DTRACE(std::cout << "start check..." << std::endl;);
+            DTRACE(display_vars(std::cout););
             fix_order();
+            DTRACE(std::cout << "after reorder:\n"; display_vars(std::cout););
             register_nlsat_structures();
             DTRACE(std::cout << "register nlsat structures done" << std::endl;);
             DTRACE(display_clauses(std::cout););
@@ -4455,12 +4466,10 @@ namespace nlsat {
             }
             if (!is_marked(b)) {
                 mark(b);
-                // if(b_lvl == scope_lvl() && same_stage_atom(b, m_scope_lvl)){
-                if(same_level_atom(b, m_scope_lvl)) {
+                if(max_level_atom(b) >= m_scope_lvl) {
                     m_num_marks++;
-                    DTRACE(std::cout << "same level, increase mark " << m_num_marks << std::endl;);
-                }
-                else {
+                    DTRACE(std::cout << "same or higher level, increase mark " << m_num_marks << std::endl;);
+                } else {
                     m_lemma.push_back(antecedent);
                     DTRACE(std::cout << "case 2 antecedent, push back lemma: "; display(std::cout, antecedent) << std::endl;);
                 }
@@ -4793,6 +4802,20 @@ namespace nlsat {
             return true;
         }
 
+        bool max_level_literals(unsigned num, literal const *ls) {
+            unsigned res = 0;
+            for(unsigned i = 0; i < num; i++) {
+                unsigned curr_lvl = max_level_literal(ls[i]);
+                if(curr_lvl > res) {
+                    res = curr_lvl;
+                }
+                if(res == null_var) {
+                    return res;
+                }
+            }
+            return res;
+        }
+
         /**
            \brief Return the maximum scope level in ls. 
            
@@ -4987,8 +5010,8 @@ namespace nlsat {
                 // If lemma only contains literals from previous stages, then we can stop.
                 // We make progress by returning to a previous stage with additional information (new lemma)
                 // that forces us to select a new partial interpretation
-                if (only_literals_from_previous_levels(m_lemma.size(), m_lemma.data())){
-                    DTRACE(std::cout << "case 2, all previous levels" << std::endl;);
+                if (max_level_literals(m_lemma.size(), m_lemma.data()) <= m_scope_lvl){
+                    DTRACE(std::cout << "case 2, all previous or current levels" << std::endl;);
                     break;
                 }
                 DTRACE(std::cout << "case 3, Conflict does not depend on the current decision, and it is still in the current stage" << std::endl;);

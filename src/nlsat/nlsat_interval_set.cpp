@@ -30,7 +30,7 @@ namespace nlsat {
         interval  m_intervals[0];
     };
 
-    void display(std::ostream & out, anum_manager & am, interval const & curr) {
+    std::ostream & interval_set_manager::display_interval(std::ostream & out, interval const & curr) const {
         if (curr.m_lower_inf) {
             out << "(-oo, ";
         }
@@ -39,7 +39,7 @@ namespace nlsat {
                     out << "(";
             else
                 out << "[";
-            am.display_decimal(out, curr.m_lower);
+            m_am.display_decimal(out, curr.m_lower);
             out << ", ";
         }
         if (curr.m_justification.sign())
@@ -50,12 +50,20 @@ namespace nlsat {
             out << "oo)";
         }
         else {
-            am.display_decimal(out, curr.m_upper);
+            m_am.display_decimal(out, curr.m_upper);
             if (curr.m_upper_open)
                 out << ")";
             else
                 out << "]";
         }
+        out << std::endl;
+        out << "interval clause: ";
+        if(curr.m_clause != nullptr) {
+            m_solver.display(out, *curr.m_clause);
+        } else {
+            out << "nullptr";
+        }
+        return out;
     }
 
     bool check_interval(anum_manager & am, interval const & i) {
@@ -77,7 +85,6 @@ namespace nlsat {
         SASSERT(!curr.m_upper_inf);
         SASSERT(!next.m_lower_inf);
         sign s = am.compare(curr.m_upper, next.m_lower);
-        CTRACE("nlsat", s > 0, display(tout, am, curr); tout << "  "; display(tout, am, next); tout << "\n";);
         SASSERT(s <= 0);
         SASSERT(!is_zero(s) || curr.m_upper_open || next.m_lower_open);        
         (void)s;
@@ -95,8 +102,8 @@ namespace nlsat {
         return true;
     }
 
-    interval_set_manager::interval_set_manager(anum_manager & m, small_object_allocator & a):
-        m_am(m),
+    interval_set_manager::interval_set_manager(anum_manager & m, small_object_allocator & a, solver& s):
+        m_am(m), m_solver(s),
         m_allocator(a) {
             set_const_anum();
     }
@@ -191,13 +198,10 @@ namespace nlsat {
 
     inline ::sign compare_upper_lower(anum_manager & am, interval const & i1, interval const & i2) {
         if (i1.m_upper_inf || i2.m_lower_inf) {
-            TRACE("nlsat_interval", nlsat::display(tout << "i1: ", am, i1); nlsat::display(tout << "i2: ", am, i2););
             return sign_pos;
         }
         SASSERT(!i1.m_upper_inf && !i2.m_lower_inf);
         auto s = am.compare(i1.m_upper, i2.m_lower);
-        TRACE("nlsat_interval", nlsat::display(tout << "i1: ", am, i1); nlsat::display(tout << " i2: ", am, i2); 
-              tout << " compare: " << s << "\n";);
         if (!::is_zero(s))
             return s;
         if (!i1.m_upper_open && !i2.m_lower_open)
@@ -283,7 +287,6 @@ namespace nlsat {
         while (true) {
             if (i1 >= sz1) {
                 while (i2 < sz2) {
-                    TRACE("nlsat_interval", tout << "adding remaining intervals from s2: "; nlsat::display(tout, m_am, s2->m_intervals[i2]); tout << "\n";);
                     push_back(m_am, result, s2->m_intervals[i2]);
                     i2++;
                 }
@@ -291,7 +294,6 @@ namespace nlsat {
             }
             if (i2 >= sz2) {
                 while (i1 < sz1) {
-                    TRACE("nlsat_interval", tout << "adding remaining intervals from s1: "; nlsat::display(tout, m_am, s1->m_intervals[i1]); tout << "\n";);
                     push_back(m_am, result, s1->m_intervals[i1]);
                     i1++;
                 }
@@ -301,10 +303,6 @@ namespace nlsat {
             interval const & int2 = s2->m_intervals[i2];
             int l1_l2_sign = compare_lower_lower(m_am, int1, int2);
             int u1_u2_sign = compare_upper_upper(m_am, int1, int2);
-            TRACE("nlsat_interval", 
-                  tout << "i1: " << i1 << ", i2: " << i2 << "\n";
-                  tout << "int1: "; nlsat::display(tout, m_am, int1); tout << "\n";
-                  tout << "int2: "; nlsat::display(tout, m_am, int2); tout << "\n";);
             if (l1_l2_sign <= 0) {
                 if (u1_u2_sign == 0) {
                     // Cases:
@@ -542,9 +540,6 @@ namespace nlsat {
         while (i1 < sz1 && i2 < sz2) {
             interval const & int1 = s1->m_intervals[i1];
             interval const & int2 = s2->m_intervals[i2];
-            TRACE("nlsat_interval", tout << "subset main loop, i1: " << i1 << ", i2: " << i2 << "\n";
-                  tout << "int1: "; nlsat::display(tout, m_am, int1); tout << "\n";
-                  tout << "int2: "; nlsat::display(tout, m_am, int2); tout << "\n";);
             if (compare_lower_lower(m_am, int1, int2) < 0) {
                 TRACE("nlsat_interval", tout << "done\n";);
                 // interval [int1.lower1, int2.lower2] is not in s2
@@ -554,8 +549,6 @@ namespace nlsat {
             }
             while (i2 < sz2) {
                 interval const & int2 = s2->m_intervals[i2];
-                TRACE("nlsat_interval", tout << "inner loop, i2: " << i2 << "\n";
-                      tout << "int2: "; nlsat::display(tout, m_am, int2); tout << "\n";);
                 int u1_u2_sign = compare_upper_upper(m_am, int1, int2);
                 if (u1_u2_sign == 0) {
                     TRACE("nlsat_interval", tout << "case 1, break\n";);
@@ -653,9 +646,22 @@ namespace nlsat {
         return new_set;
     }
 
+    void interval_set_manager::set_clauses(interval_set *s, clause *cls) {
+        if(s == nullptr) {
+            return;
+        }
+        for(unsigned i = 0; i < s->m_num_intervals; i++) {
+            interval & inter = s->m_intervals[i];
+            inter.m_clause = cls;
+        }
+    }
+
     void interval_set_manager::get_clauses(interval_set const *s, clause_vector &clauses)  {
         clauses.clear();
         curr_clauses.reset();
+        if(s == nullptr) {
+            return;
+        }
         for(unsigned i = 0; i < s->m_num_intervals; i++) {
             interval const &inter = s->m_intervals[i];
             if(!curr_clauses.contains(inter.m_clause)) {
@@ -899,13 +905,11 @@ namespace nlsat {
             out << "{}";
             return out;
         }
-        out << "{";
         for (unsigned i = 0; i < s->m_num_intervals; i++) {
             if (i > 0)
                 out << ", ";
-            nlsat::display(out, m_am, s->m_intervals[i]);
+            display_interval(out, s->m_intervals[i]);
         }
-        out << "}";
         if (s->m_full)
             out << "*";
         return out;

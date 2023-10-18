@@ -367,7 +367,7 @@ namespace nlsat {
             m_pm(pm),
             m_allocator(allocator),
             m_am(m_assignment.am()),
-            m_ism(m_am, allocator),
+            m_ism(m_am, allocator, s),
             m_tmp_values(m_am),
             m_add_roots_tmp(m_am),
             m_inf_tmp(m_am),

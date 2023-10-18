@@ -21,6 +21,7 @@ Revision History:
 #include "nlsat/nlsat_types.h"
 #include "math/polynomial/algebraic_numbers.h"
 #include "nlsat/nlsat_clause.h"
+#include "nlsat/nlsat_solver.h"
 
 namespace nlsat {
    struct interval {
@@ -35,6 +36,7 @@ namespace nlsat {
     };
 
     class interval_set;
+    using interval_set_vector = ptr_vector<interval_set>;
 
     class interval_set_manager {
         clause_table  curr_clauses;
@@ -43,9 +45,10 @@ namespace nlsat {
         small_object_allocator & m_allocator;
         svector<char>            m_already_visited;
         random_gen               m_rand;
+        solver                 & m_solver;
         void del(interval_set * s);
     public:
-        interval_set_manager(anum_manager & m, small_object_allocator & a);
+        interval_set_manager(anum_manager & m, small_object_allocator & a, solver &sol);
         ~interval_set_manager();
         
         void set_seed(unsigned s) { m_rand.set_seed(s); }
@@ -123,6 +126,7 @@ namespace nlsat {
            \pre idx < num_intervals()
         */
         interval_set * get_interval(interval_set const * s, unsigned idx) const;
+        void set_clauses(interval_set *s, clause *cls);
         void get_clauses(interval_set const *s, clause_vector &clauses);
 
         /**
@@ -131,6 +135,7 @@ namespace nlsat {
            \pre !is_full(s)
         */
         void peek_in_complement(interval_set const * s, bool is_int, anum & w, bool randomize);
+        std::ostream & display_interval(std::ostream & out, interval const & curr) const;
     };
 
     typedef obj_ref<interval_set, interval_set_manager> interval_set_ref;

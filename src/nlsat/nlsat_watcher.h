@@ -20,7 +20,6 @@
    \ref A Generalized Two-watched-literal Scheme (Tino Teige & Christian Herde, EPIA'2007)
 */
 namespace nlsat {
-    using interval_set_vector = ptr_vector<interval_set>;
     using lbool_vector        = vector<lbool>;
 
     using hybrid_var    = var;
