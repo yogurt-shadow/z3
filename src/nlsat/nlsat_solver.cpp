@@ -4518,16 +4518,13 @@ namespace nlsat {
             unsigned j = 0;
             for(unsigned i = 0; i < cls.size(); i++) {
                 literal curr = cls[i];
-                // if a clause contains true literal, it won't help propagate conflict
-                SASSERT(value(curr) != l_true);
-                if(value(curr) == l_true) {
-                    UNREACHABLE();
-                }
                 if(value(curr) == l_false) {
                     continue;
                 }
+                // note that the literal's value can be true
+                // e.g. l1 \/ l2 \/ l3, previous we choose l1 and l2, and learned ...\/ !l1, ...\/ !l2
+                // this time we can only choose l3 as a choice
                 j++;
-                SASSERT(value(curr) == l_undef);
                 if(random) {
                     if(r() % j == 0) { // 1/j replaced
                         res = curr;
