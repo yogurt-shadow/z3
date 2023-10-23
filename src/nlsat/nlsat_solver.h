@@ -32,8 +32,10 @@ namespace nlsat {
 
 #ifdef NLSAT_DEBUG
    #define DTRACE(CODE) { CODE } ((void) 0)
+   #define SDTRACE(COND, CODE1, CODE2) { if (COND) { CODE1 } else { CODE2 } }
 #else
    #define DTRACE(CODE) ((void) 0)
+   #define SDTRACE(COND, CODE1, CODE2) ((void) 0)
 #endif
 
     class evaluator;

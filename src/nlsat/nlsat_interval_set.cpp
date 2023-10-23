@@ -664,7 +664,7 @@ namespace nlsat {
         }
         for(unsigned i = 0; i < s->m_num_intervals; i++) {
             interval const &inter = s->m_intervals[i];
-            if(!curr_clauses.contains(inter.m_clause)) {
+            if(inter.m_clause != nullptr && !curr_clauses.contains(inter.m_clause)) {
                 curr_clauses.insert(inter.m_clause);
                 clauses.push_back(inter.m_clause);
             }

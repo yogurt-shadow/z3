@@ -4,9 +4,8 @@
 (declare-const y Real)
 (declare-const z Real)
 
-(assert (> z 1))
-(assert (< z 10))
-(assert (or (< (+ (* x x) 20) z) (< z (- (* y y) 10))))
+(assert (> z 10))
+(assert (or (< z (+ (* x x) 5)) (< z (+ (* y y) 8))))
 
 (check-sat)
 (get-model)

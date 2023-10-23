@@ -160,6 +160,10 @@ Revision History:
  * 
  * @date 2023/10/17
  * @brief Frontend Simplify for Unit atoms, delete falsed and true arith atoms
+ * 
+ * @date 2023/10/18
+ * @brief Undo last unassigned or last second var?
+ * @example See special3
  * ---------------------------------------------------------------------------------------------------------------
  **/
 
@@ -1975,7 +1979,7 @@ namespace nlsat {
                 DTRACE(std::cout << "[unit propagate]" << std::endl;);
                 m_unit_propagate++;
             } else if(j.is_clause_lazy()) {
-                DTRACE(std::cout << "[lazy propagate]" << std::endl;);
+                DTRACE(std::cout << "[clause lazy propagate]" << std::endl;);
                 m_real_propagate++;
             }
             bool_var b   = l.var();
@@ -2689,17 +2693,12 @@ namespace nlsat {
             DTRACE(std::cout << "use infeasible to propagate atom" << std::endl;);
             while(m_infeasible_prop < m_infeasible_var_trail.size()) {
                 var v = m_infeasible_var_trail[m_infeasible_prop++];
-                DTRACE(std::cout << "show var: " << v << " "; m_display_var(std::cout, v) << std::endl;
-                    std::cout << "show infeasible: "; m_ism.display(std::cout, m_infeasible[v]) << std::endl;
-                );
                 for(int idx: m_arith_unit_atom[v]) {
                     if(m_valued_atom_table.contains(idx)) { // Ignore propagated atoms
                         continue;
                     }
                     interval_set_ref curr_st(m_ism);
                     curr_st = get_atom_infeasible_set(idx, v, false, nullptr);
-                    m_ism.display(std::cout, curr_st) << std::endl;
-                    m_ism.display(std::cout, m_infeasible[v]) << std::endl;
                     if(m_ism.is_empty(curr_st)) {
                         real_propagate_using_clauses(literal(idx, false), nullptr);
                     } else if(m_ism.is_full(curr_st)) {
@@ -2710,7 +2709,7 @@ namespace nlsat {
                         interval_set_ref tmp(m_ism);
                         tmp = m_ism.mk_union(curr_st, m_infeasible[v]);
                         if (m_ism.is_full(tmp)) {
-                            real_propagate_using_clauses(literal(idx, true), m_infeasible[v]);
+                            real_propagate_using_clauses(literal(idx, true), tmp);
                         }
                     }
                 }
@@ -2730,7 +2729,7 @@ namespace nlsat {
                         interval_set_ref tmp(m_ism);
                         tmp = m_ism.mk_union(curr_st, m_infeasible[v]);
                         if (m_ism.is_full(tmp)) {
-                            real_propagate_using_clauses(literal(idx, true), m_infeasible[v]);
+                            real_propagate_using_clauses(literal(idx, true), tmp);
                         }
                     }
                 }
@@ -3980,7 +3979,7 @@ namespace nlsat {
                 else {
                     interval_set_ref tmp(m_ism);
                     tmp = m_ism.mk_union(curr_st, m_infeasible[unit_v]);
-                    if (m_ism.is_full(tmp)) real_propagate_using_clauses(literal(idx, true), m_infeasible[unit_v]);
+                    if (m_ism.is_full(tmp)) real_propagate_using_clauses(literal(idx, true), tmp);
                 }
             }
         }
@@ -4249,7 +4248,7 @@ namespace nlsat {
         lbool check() {
             DTRACE(std::cout << "start check..." << std::endl;);
             DTRACE(display_vars(std::cout););
-            fix_order();
+            // fix_order();
             DTRACE(std::cout << "after reorder:\n"; display_vars(std::cout););
             register_nlsat_structures();
             DTRACE(std::cout << "register nlsat structures done" << std::endl;);
@@ -4457,7 +4456,6 @@ namespace nlsat {
                 // antecedent must be false in the current arith interpretation
                 SASSERT(value(antecedent) == l_false || m_rlimit.is_canceled());
                 if (!is_marked(b)) {
-                    SASSERT(is_arith_atom(b) && all_assigned(a)); // must be in a previous stage
                     mark(b);
                     m_lemma.push_back(antecedent);
                     DTRACE(std::cout << "case 1 antecedent, push back lemma: "; display(std::cout, antecedent) << std::endl;);
@@ -4514,31 +4512,66 @@ namespace nlsat {
             }
         }
 
-        bool is_self_negation(unsigned num, literal const *ls) const {
-            return num == 2 && ls[0].var() == ls[1].var() && ls[0].sign() != ls[1].sign();
+        literal get_clause_unfalse_literal(clause const& cls, bool random) {
+            literal res = null_literal;
+            random_gen r(m_random_seed);
+            unsigned j = 0;
+            for(unsigned i = 0; i < cls.size(); i++) {
+                literal curr = cls[i];
+                // if a clause contains true literal, it won't help propagate conflict
+                SASSERT(value(curr) != l_true);
+                if(value(curr) == l_true) {
+                    UNREACHABLE();
+                }
+                if(value(curr) == l_false) {
+                    continue;
+                }
+                j++;
+                SASSERT(value(curr) == l_undef);
+                if(random) {
+                    if(r() % j == 0) { // 1/j replaced
+                        res = curr;
+                    }
+                } else {
+                    return curr;
+                }
+            }
+            SASSERT(res != null_literal);
+            return res;
         }
 
-        void get_explain_lits(clause_lazy_justification const &jst, scoped_literal_vector &vec, bool random) const {
+        void choose_explain_literals(clause_lazy_justification const &jst, scoped_literal_vector &vec, bool random)  {
             vec.reset();
-            vec.push_back(jst.get_literal());
-            for(unsigned i = 0; i < jst.num_clauses(); i++) {
+            vec.push_back(~jst.get_literal()); // insert propagated literal
+            SDTRACE(random, std::cout << "pick decision path randomly\n";, std::cout << "pick decision path first pos\n";);
+            for(unsigned i = 0; i < jst.num_clauses(); i++) { // insert clauses' literal
                 clause const& cls = jst.clause(i);
                 literal l;
-                if(random) {
-                    random_gen r(m_random_seed);
-                    l = cls[r() % cls.size()];
-                } else {
-                    l = cls[0];
+                int pre_dec = m_clauses_decided_literals[cls.id()];
+                if(pre_dec != 0) { // has chosen
+                    l = literal(std::abs(pre_dec), pre_dec < 0);
+                } else { // choose this time
+                    l = get_clause_unfalse_literal(cls, random);
+                    m_clauses_decided_literals[cls.id()] = l.sign() ? -l.var() : l.var();
                 }
                 vec.push_back(l);
             }
         }
 
+        int_vector          m_clauses_decided_literals;
+
+        void reset_clause_decisions() {
+            m_clauses_decided_literals.clear();
+            m_clauses_decided_literals.resize(m_clauses.size(), 0);
+        }
+
         void resolve_clause_lazy_justification(bool_var b, clause_lazy_justification const & jst) {
             m_lazy_clause.reset();
+            DTRACE(std::cout << "clause lazy for bool: "; display_atom(std::cout, b) << std::endl;
+                display(std::cout, jst) << std::endl;
+            );
             scoped_literal_vector explain_lits(m_solver);
-            get_explain_lits(jst, explain_lits, false);
-            DTRACE(std::cout << "enter explain" << std::endl;);
+            choose_explain_literals(jst, explain_lits, false);
             DTRACE(std::cout << "enter explain lits: ";
                 display(std::cout, explain_lits.size(), explain_lits.data()) << std::endl;
             );
@@ -4758,28 +4791,18 @@ namespace nlsat {
             unsigned max_index = 0;
             for(var v: curr_vars){
                 var index = find_assigned_index(arith2hybrid(v));
-                if(index == null_var){
-                    UNREACHABLE();
-                }
-                else {
-                    if(index >= max_index){
-                        max_index = index;
-                        res = v;
-                        is_bool = false;
-                    }
+                if(index >= max_index){
+                    max_index = index;
+                    res = v;
+                    is_bool = false;
                 }
             }
             for(bool_var b: curr_bools){
                 var index = find_assigned_index(b);
-                if(index == null_var){
-                    UNREACHABLE();
-                }
-                else {
-                    if(index >= max_index){
-                        max_index = index;
-                        res = b;
-                        is_bool = true;
-                    }
+                if(index >= max_index){
+                    max_index = index;
+                    res = b;
+                    is_bool = true;
                 }
             }
             max_stage = find_hybrid_var_level(is_bool ? res : arith2hybrid(res));
@@ -4920,12 +4943,11 @@ namespace nlsat {
             return false;
         }
 
-        /**
-           \brief Return true if the conflict was solved.
-        */
-       // remember here we delete const clause
         bool resolve(clause & conflict) {
-            m_lemma_assumptions = nullptr;
+            if(m_scope_lvl == 0) {
+                return false;
+            }
+            reset_clause_decisions();
             SASSERT(check_marks());
             reset_conflict_vars();
             m_conflicts++;
@@ -4934,28 +4956,12 @@ namespace nlsat {
             m_num_marks = 0;
             m_lemma.reset();
             m_lemma_assumptions = nullptr;
-            scoped_reset_marks _sr(*this);
-            DTRACE(std::cout << "conflict clause: "; 
-                display(std::cout, conflict) << std::endl;
-                std::cout << "m_hk: " << m_hk <<" ";
-                if(hybrid_is_arith(m_hk)) {
-                    std::cout << "arith "; m_display_var(std::cout, hybrid2arith(m_hk)) << std::endl;
-                    std::cout << "clause: \n";
-                    display_clause_vector(std::cout, m_arith_unit_clauses[hybrid2arith(m_hk)]);
-                    std::cout << "learned: \n";
-                    display_learned_vector(std::cout, m_arith_unit_learned[hybrid2arith(m_hk)]);
-                    std::cout << "done\n";
-                }
-                display_assignment(std::cout);
-                display_hybrid_trail(std::cout);
-                display_trails(std::cout);
-            );
             resolve_clause(null_bool_var, *conflict_clause);
             unsigned top = m_trail.size();
             bool found_decision;
             while (true) {
                 found_decision = false;
-                while (m_num_marks > 0) {
+                while (top > 0 && m_num_marks > 0) {
                     checkpoint();
                     trail & t = m_trail[top-1];
                     SASSERT(t.m_kind != trail::NEW_STAGE); // we only mark literals that are in the same stage
@@ -4999,37 +5005,15 @@ namespace nlsat {
                 DTRACE(std::cout << "current lemma: ";
                     display(std::cout, m_lemma.size(), m_lemma.data()) << std::endl;
                 );
-                DTRACE(std::cout << "bump hybrid vars" << std::endl;);
                 bump_conflict_hybrid_vars();
-                DTRACE(std::cout << "bump hybrid vars done" << std::endl;);
-                // m_lemma is an implicating clause after backtracking current scope level.
-                if (found_decision){
-                    DTRACE(std::cout << "case 1, found decision" << std::endl;);
-                    break;
-                }
                 // If lemma only contains literals from previous stages, then we can stop.
                 // We make progress by returning to a previous stage with additional information (new lemma)
                 // that forces us to select a new partial interpretation
-                if (max_level_literals(m_lemma.size(), m_lemma.data()) <= m_scope_lvl){
-                    DTRACE(std::cout << "case 2, all previous or current levels" << std::endl;);
+                if (found_decision || max_level_literals(m_lemma.size(), m_lemma.data()) <= m_scope_lvl){
+                    DTRACE(std::cout << "found decision or all previous or current levels" << std::endl;);
                     break;
                 }
-                DTRACE(std::cout << "case 3, Conflict does not depend on the current decision, and it is still in the current stage" << std::endl;);
-                unsigned max_lvl = max_scope_lvl(m_lemma.size(), m_lemma.data());
-                DTRACE(std::cout << "max_lvl: " << max_lvl << std::endl;
-                    std::cout << "scope_lvl: " << scope_lvl() << std::endl;
-                );
-                DTRACE(std::cout << "show lemma before remove: ";
-                       display(std::cout, m_lemma.size(), m_lemma.data()) << std::endl;
-                );
-                SASSERT(max_lvl < scope_lvl());
-                remove_literals_from_lvl(m_lemma, max_lvl);
-                DTRACE(std::cout << "show lemma after remove: ";
-                       display(std::cout, m_lemma.size(), m_lemma.data()) << std::endl;);
-
-                undo_until_level(max_lvl);
-                top = m_trail.size();
-                SASSERT(scope_lvl() == max_lvl);
+                UNREACHABLE();
             }
             if (m_lemma.empty()) {
                 return false; // problem is unsat, empty clause was generated
@@ -5038,20 +5022,6 @@ namespace nlsat {
             if (false && m_check_lemmas) {
                 check_lemma(m_lemma.size(), m_lemma.data(), false, m_lemma_assumptions.get());
             }
-    
-            // There are two possibilities:
-            // 1) m_lemma contains only literals from previous stages, and they
-            //    are false in the current interpretation. We make progress 
-            //    by returning to a previous stage with additional information (new clause)
-            //    that forces us to select a new partial interpretation
-            //    >>> Return to some previous stage (we may also backjump many decisions and stages).
-            //    
-            // 2) m_lemma contains at most one literal from the current level (the last literal).
-            //    Moreover, this literal was a decision, but the new lemma forces it to 
-            //    be assigned to a different value.
-            //    >>> In this case, we remain in the same stage but, we add a new asserted literal
-            //        in a previous scope level. We may backjump many decisions.
-            //
             unsigned sz = m_lemma.size();
             clause * new_cls = nullptr;
             conflict_clause = nullptr; // clear conflict this time
@@ -5688,7 +5658,7 @@ namespace nlsat {
             return out;
         }
 
-        std::ostream& display(std::ostream& out, justification j) const {
+        std::ostream& display(std::ostream& out, justification const& j) const {
             switch (j.get_kind()) {
             case justification::CLAUSE:
                 display(out, *j.get_clause()) << "\n";
@@ -5704,6 +5674,16 @@ namespace nlsat {
             default:
                 out << j.get_kind() << "\n";
                 break;                
+            }
+            return out;
+        }
+
+        std::ostream& display(std::ostream& out, clause_lazy_justification const& lz) const {
+            out << "literal: ";
+            display(out, ~lz.get_literal()) << "\n";
+            out << "clauses: \n";
+            for (unsigned i = 0; i < lz.num_clauses(); ++i) {
+                display(out, lz.clause(i)) << "\n";
             }
             return out;
         }
