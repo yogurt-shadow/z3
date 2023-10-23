@@ -28,7 +28,7 @@ Revision History:
 
 namespace nlsat {
 // macro used for debug
-// #define NLSAT_DEBUG
+#define NLSAT_DEBUG
 
 #ifdef NLSAT_DEBUG
    #define DTRACE(CODE) { CODE } ((void) 0)

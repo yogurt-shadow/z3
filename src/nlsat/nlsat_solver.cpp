@@ -1353,6 +1353,7 @@ namespace nlsat {
                     var av = hybrid2arith(v);
                     if(OPTIONS::learned_arith_frontend) {
                         if(!update_learned_frontend_infeasible_set(idx, av)) {
+                            DTRACE(std::cout << "update learned infeasible false" << std::endl;);
                             frontend_conflict = true;
                             return;
                         } else {
@@ -1482,6 +1483,7 @@ namespace nlsat {
                 literal l = curr_clause[0];
                 if(OPTIONS::learned_literal_frontend) {
                     if (frontend_value(l) == l_false) {
+                        DTRACE(std::cout << "frontend conflict about learned literal" << std::endl;);
                         frontend_conflict = true;
                         return;
                     }
@@ -3383,7 +3385,7 @@ namespace nlsat {
             m_neg_literal_watching_learned.enlarge(b, vector<clause_literal_watcher*>(0));
             m_frontend_bvalues.enlarge(b, l_undef);
             m_frontend_unit_indices.enlarge(b, null_var);
-            m_frontend_used.enlarge(b, null_var);
+            m_frontend_used.enlarge(b, false);
             for(var v: vars) {
                 m_var_atoms.enlarge(v, unsigned_vector(0));
                 m_var_atoms[v].push_back(b);
@@ -3566,6 +3568,9 @@ namespace nlsat {
             }
             DTRACE(std::cout << "delete atom: " << b << std::endl;);
             SASSERT(b < m_nlsat_atoms.size());
+            m_frontend_bvalues[b] = l_undef;
+            m_frontend_used[b] = false;
+            m_frontend_unit_indices[b] = null_var;
             m_atom_unit_clauses[b] = null_var;
             m_atom_unit_learned[b] = null_var;
             m_pos_literal_watching_clauses[b].clear();
