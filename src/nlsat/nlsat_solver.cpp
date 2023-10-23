@@ -594,7 +594,7 @@ namespace nlsat {
             m_explain.reset();
             m_lemma.reset();
             m_lazy_clause.reset();
-            m_deleted_clauses.clear();
+            m_frontend_deleted_clauses.clear();
             undo_until_size(0);
             del_clauses();
             del_unref_atoms();
@@ -607,7 +607,7 @@ namespace nlsat {
             m_explain.reset();
             m_lemma.reset();
             m_lazy_clause.reset();
-            m_deleted_clauses.clear();
+            m_frontend_deleted_clauses.clear();
             undo_until_size(0);
             del_clauses();
             del_unref_atoms();
@@ -778,7 +778,9 @@ namespace nlsat {
         }
 
         void del(bool_var b) {
-            DTRACE(std::cout << "delete bool var: " << b << std::endl;);
+            DTRACE(std::cout << "delete bool var: " << b << std::endl;
+                display_atom(std::cout, b) << std::endl;
+            );
             m_num_bool_vars--;
             m_dead[b]  = true;
             m_atoms[b] = nullptr;
@@ -936,17 +938,17 @@ namespace nlsat {
             m_allocator.deallocate(obj_sz, cls);
         }
 
-        unsigned_vector        m_deleted_clauses;
+        unsigned_vector        m_frontend_deleted_clauses;
         
         void del_clause(clause * cls) {
             DTRACE(std::cout << "delete clause: ";
                 display(std::cout, cls) << std::endl;
             );
-            m_deleted_clauses.push_back(cls->id());
             if(cls->is_learned()) {
-                del_nlsat_learned(cls->id());
+                del_nlsat_learned(cls->nlsat_id());
             } else {
-                del_nlsat_clause(cls->id());
+                m_frontend_deleted_clauses.push_back(cls->nlsat_id());
+                del_nlsat_clause(cls->nlsat_id());
             }
             m_cid_gen.recycle(cls->id());
             unsigned sz = cls->size();
@@ -2104,7 +2106,8 @@ namespace nlsat {
 
         void check_overall_satisfied() {
             for(unsigned i = 0; i < m_clauses.size(); i++){
-                if(!is_clause_sat(m_clauses[i])){
+                if(!m_frontend_deleted_clauses.contains(i) && !is_clause_sat(m_clauses[i])){
+                    DTRACE(display(std::cout, *m_clauses[i]) << std::endl;);
                     UNREACHABLE();
                 }
             }
@@ -2823,7 +2826,7 @@ namespace nlsat {
             m_ism.peek_in_complement(m_infeasible[x], m_is_int[x], w, false);
             if (!m_am.is_rational(w)) m_irrational_assignments++;
             m_assignment.set_core(x, w);
-            DTRACE(std::cout << "pick value: "; m_am.display(std::cout, w) << std::endl;);
+            DTRACE(std::cout << "pick value: "; m_am.display(std::cout, m_assignment.value(x)) << std::endl;);
             save_arith_assignment_trail(x);
             m_hybrid_trail.push_back(m_hk);
             m_arith_trail.push_back(x);
@@ -3270,7 +3273,7 @@ namespace nlsat {
         }
 
         void register_nlsat_structures() {
-            m_frontend_deleted.clear();
+            m_frontend_deleted_atoms.clear();
             register_nlsat_vars();
             register_nlsat_atoms();
             register_nlsat_clauses();
@@ -3278,7 +3281,8 @@ namespace nlsat {
         }
 
         void clear_deleted_atoms() {
-            for(bool_var b: m_frontend_deleted) {
+            DTRACE(std::cout << "clear deleted atoms" << std::endl;);
+            for(bool_var b: m_frontend_deleted_atoms) {
                 del_nlsat_atom(b);
             }
         }
@@ -3390,11 +3394,11 @@ namespace nlsat {
             bool deleted;
             set_atom_arith_watcher(b, deleted);
             if(deleted) {
-                m_frontend_deleted.push_back(b);
+                m_frontend_deleted_atoms.push_back(b);
             }
         }
 
-        bool_var_vector m_frontend_deleted;
+        bool_var_vector m_frontend_deleted_atoms;
 
         void register_nlsat_clause(unsigned idx) {
             clause * cls = m_clauses[idx];
@@ -3557,6 +3561,9 @@ namespace nlsat {
         }
 
         void del_nlsat_atom(bool_var b) {
+            if(b >= m_nlsat_atoms.size() || m_nlsat_atoms[b] == nullptr) { // deleted previously
+                return;
+            }
             DTRACE(std::cout << "delete atom: " << b << std::endl;);
             SASSERT(b < m_nlsat_atoms.size());
             m_atom_unit_clauses[b] = null_var;
@@ -4248,7 +4255,7 @@ namespace nlsat {
         }
 
         lbool check() {
-            DTRACE(std::cout << "start check..." << std::endl;);
+            DTRACE(display_smt2(std::cout); std::cout << "start check..." << std::endl;);
             DTRACE(display_vars(std::cout););
             // fix_order();
             DTRACE(std::cout << "after reorder:\n"; display_vars(std::cout););
@@ -6336,7 +6343,7 @@ namespace nlsat {
         std::ostream & display_clauses(std::ostream & out) const {
             out << "display clauses\n";
             for(unsigned i = 0; i < m_clauses.size(); i++){
-                if(!m_deleted_clauses.contains(i)) {
+                if(!m_frontend_deleted_clauses.contains(i)) {
                     display(out, *m_clauses[i]); out << std::endl;
                 }
             }
