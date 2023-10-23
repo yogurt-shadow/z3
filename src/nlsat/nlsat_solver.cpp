@@ -4968,7 +4968,6 @@ namespace nlsat {
                         insert_conflict_vars_from_atom(b);
                         if (is_marked(b)) {
                             m_num_marks--;
-                            std::cout << "curr num mark: " << m_num_marks << std::endl;
                             reset_mark(b);
                             justification jst = m_justifications[b];
                             switch (jst.get_kind()) {
