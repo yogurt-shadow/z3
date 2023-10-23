@@ -1127,7 +1127,8 @@ namespace nlsat {
             SASSERT(num_lits > 0);
             unsigned cid = m_cid_gen.mk();
             void * mem = m_allocator.allocate(clause::get_obj_size(num_lits));
-            clause * cls = new (mem) clause(cid, num_lits, lits, learned, a);
+            unsigned nlsat_id = learned ? m_learned.size() : m_clauses.size();
+            clause * cls = new (mem) clause(cid, nlsat_id, num_lits, lits, learned, a);
             for (unsigned i = 0; i < num_lits; i++)
                 inc_ref(lits[i]);
             inc_ref(a);
@@ -2822,6 +2823,7 @@ namespace nlsat {
             m_ism.peek_in_complement(m_infeasible[x], m_is_int[x], w, false);
             if (!m_am.is_rational(w)) m_irrational_assignments++;
             m_assignment.set_core(x, w);
+            DTRACE(std::cout << "pick value: "; m_am.display(std::cout, w) << std::endl;);
             save_arith_assignment_trail(x);
             m_hybrid_trail.push_back(m_hk);
             m_arith_trail.push_back(x);
@@ -4518,6 +4520,7 @@ namespace nlsat {
             unsigned j = 0;
             for(unsigned i = 0; i < cls.size(); i++) {
                 literal curr = cls[i];
+                std::cout << lbool2str(value(curr)) << std::endl;
                 if(value(curr) == l_false) {
                     continue;
                 }
@@ -4544,22 +4547,31 @@ namespace nlsat {
             for(unsigned i = 0; i < jst.num_clauses(); i++) { // insert clauses' literal
                 clause const& cls = jst.clause(i);
                 literal l;
-                int pre_dec = m_clauses_decided_literals[cls.id()];
+                int pre_dec = cls.is_learned() ? m_learned_decided_literals[cls.nlsat_id()] : m_clauses_decided_literals[cls.nlsat_id()];
                 if(pre_dec != 0) { // has chosen
+                    DTRACE(std::cout << "has chosen previously" << std::endl;);
                     l = literal(std::abs(pre_dec), pre_dec < 0);
                 } else { // choose this time
+                    DTRACE(std::cout << "choose literal this time" << std::endl;);
                     l = get_clause_unfalse_literal(cls, random);
-                    m_clauses_decided_literals[cls.id()] = l.sign() ? -l.var() : l.var();
+                    if(!cls.is_learned()) {
+                        m_clauses_decided_literals[cls.nlsat_id()] = l.sign() ? -l.var() : l.var();
+                    } else {
+                        m_learned_decided_literals[cls.nlsat_id()] = l.sign() ? -l.var() : l.var();
+                    }
                 }
+                DTRACE(std::cout << "index " << i << " completed" << std::endl;);
                 vec.push_back(l);
             }
         }
 
-        int_vector          m_clauses_decided_literals;
+        int_vector          m_clauses_decided_literals, m_learned_decided_literals;
 
         void reset_clause_decisions() {
             m_clauses_decided_literals.clear();
             m_clauses_decided_literals.resize(m_clauses.size(), 0);
+            m_learned_decided_literals.clear();
+            m_learned_decided_literals.resize(m_learned.size(), 0);
         }
 
         void resolve_clause_lazy_justification(bool_var b, clause_lazy_justification const & jst) {

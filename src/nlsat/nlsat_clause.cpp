@@ -20,8 +20,8 @@ Revision History:
 
 namespace nlsat {
 
-    clause::clause(unsigned id, unsigned sz, literal const * lits, bool learned, assumption_set as):
-        m_id(id),
+    clause::clause(unsigned id, unsigned id2, unsigned sz, literal const * lits, bool learned, assumption_set as):
+        m_id(id), m_nlsat_id(id2),
         m_size(sz),
         m_capacity(sz),
         m_learned(learned),
