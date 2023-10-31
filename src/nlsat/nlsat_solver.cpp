@@ -164,6 +164,13 @@ Revision History:
  * @date 2023/10/18
  * @brief Undo last unassigned or last second var?
  * @example See special3
+ * 
+ * @todo delete literals (clause or lemma) that is propagated using frontend_info
+ * 
+ * @date 2023/10/30
+ * @brief 
+ * 1. use complement instead of subset to simplify minimal literal core
+ * 2. add unit propagate rather than infeasible propagate (self-propagate)
  * ---------------------------------------------------------------------------------------------------------------
  **/
 
@@ -1659,11 +1666,11 @@ namespace nlsat {
           Propagate atom using current infeasible set.
         */
         void insert_unit_atom(unsigned idx, var x) {
-            DTRACE(std::cout << "insert unit atom: "; display_atom(std::cout, idx) << std::endl;);
-            DTRACE(std::cout << "unit var: " << x << std::endl;);
+            // DTRACE(std::cout << "insert unit atom: "; display_atom(std::cout, idx) << std::endl;);
+            // DTRACE(std::cout << "unit var: " << x << std::endl;);
             m_arith_unit_atom[x].push_back(idx);
-            propagate_atom(idx, x);
-            DTRACE(std::cout << "insert unit atom done " << std::endl;);
+            real_propagate_atom(idx, x);
+            // DTRACE(std::cout << "insert unit atom done " << std::endl;);
         }
 
         void update_unit_clause_after_var_unassigned(hybrid_var x) {
@@ -2014,7 +2021,7 @@ namespace nlsat {
             assign_literal(l, decided_justification);
         }
 
-        lbool value(literal l){
+        lbool value(literal l) {
             lbool val = assigned_value(l);
             if(val != l_undef){
                 return val;
@@ -2217,6 +2224,7 @@ namespace nlsat {
             }
             m_newly_unit_arith_clauses.clear();
             m_newly_unit_arith_clauses.resize(num_arith_vars(), var_vector(0));
+            DTRACE(std::cout << "rp clauses done" << std::endl;);
             return nullptr;
         }
 
@@ -2315,6 +2323,26 @@ namespace nlsat {
             }
         }
 
+        bool check_unit_clause(clause const *cls, literal &l) {
+            l = null_literal;
+            for(literal _l: *cls) {
+                lbool val = value(_l);
+                if(val == l_true) {
+                    return false;
+                }
+                if(val == l_false) {
+                    continue;
+                }
+                // l_undef case
+                if(l == null_literal) {
+                    l = _l;
+                } else {
+                    return false;
+                }
+            }
+            return l != null_literal;
+        }
+
         /**
           \return Whether updating clause infeasible set causes conflict
         */
@@ -2325,7 +2353,14 @@ namespace nlsat {
             union_st = m_ism.mk_union(curr_st, m_infeasible[arith_var]);
             if(m_ism.is_full(union_st)) { // conflict
                 return false;
-            } else { // consistent, just update infeasible set
+            } else { // consistent
+                // first, up unit clauses
+                literal l;
+                if (check_unit_clause(m_clauses[idx], l)) {
+                    DTRACE(std::cout << "up assign" << std::endl;);
+                    assign_literal(l, mk_clause_jst(m_clauses[idx]));
+                }
+                // second, update infeasible set
                 if(union_st != nullptr) {
                     m_ism.inc_ref(union_st);
                 }
@@ -2349,7 +2384,14 @@ namespace nlsat {
             union_st = m_ism.mk_union(curr_st, m_infeasible[arith_var]);
             if(m_ism.is_full(union_st)) { // conflict
                 return false;
-            } else { // consistent, just update infeasible set
+            } else { // consistent
+                // 1. up unit clauses
+                literal l;
+                if (check_unit_clause(m_learned[idx], l)) {
+                    DTRACE(std::cout << "up assign" << std::endl;);
+                    assign_literal(l, mk_clause_jst(m_learned[idx]));
+                }
+                // 2. update infeasible set
                 if(union_st != nullptr) {
                     m_ism.inc_ref(union_st);
                 }
@@ -2700,44 +2742,10 @@ namespace nlsat {
             while(m_infeasible_prop < m_infeasible_var_trail.size()) {
                 var v = m_infeasible_var_trail[m_infeasible_prop++];
                 for(int idx: m_arith_unit_atom[v]) {
-                    if(m_valued_atom_table.contains(idx)) { // Ignore propagated atoms
-                        continue;
-                    }
-                    interval_set_ref curr_st(m_ism);
-                    curr_st = get_atom_infeasible_set(idx, v, false, nullptr);
-                    if(m_ism.is_empty(curr_st)) {
-                        real_propagate_using_clauses(literal(idx, false), nullptr);
-                    } else if(m_ism.is_full(curr_st)) {
-                        real_propagate_using_clauses(literal(idx, true), nullptr);
-                    } else if(m_ism.subset(curr_st, m_infeasible[v])) {
-                        real_propagate_using_clauses(literal(idx, false), m_infeasible[v]);
-                    } else {
-                        interval_set_ref tmp(m_ism);
-                        tmp = m_ism.mk_union(curr_st, m_infeasible[v]);
-                        if (m_ism.is_full(tmp)) {
-                            real_propagate_using_clauses(literal(idx, true), tmp);
-                        }
-                    }
+                    real_propagate_atom(idx, v);
                 }
                 for(int idx: m_static_unit_atom[v]) {
-                    if(m_valued_atom_table.contains(idx)) { // Ignore propagated atoms
-                        continue;
-                    }
-                    interval_set_ref curr_st(m_ism);
-                    curr_st = get_atom_infeasible_set(idx, v, false, nullptr);
-                    if(m_ism.is_empty(curr_st)) {
-                        real_propagate_using_clauses(literal(idx, false), nullptr);
-                    } else if(m_ism.is_full(curr_st)) {
-                        real_propagate_using_clauses(literal(idx, true), nullptr);
-                    } else if(m_ism.subset(curr_st, m_infeasible[v])) {
-                        real_propagate_using_clauses(literal(idx, false), m_infeasible[v]);
-                    } else {
-                        interval_set_ref tmp(m_ism);
-                        tmp = m_ism.mk_union(curr_st, m_infeasible[v]);
-                        if (m_ism.is_full(tmp)) {
-                            real_propagate_using_clauses(literal(idx, true), tmp);
-                        }
-                    }
+                    real_propagate_atom(idx, v);
                 }
             }
             DTRACE(std::cout << "use infeasible done" << std::endl;);
@@ -2803,7 +2811,9 @@ namespace nlsat {
             hybrid_var old_hk = m_hk;
             if((m_hk = pick_branching_var()) == null_var) { // var heap is empty, all vars assigned
                 check_overall_satisfied();
-                DTRACE(display_trails(std::cout););
+                DTRACE(display_trails(std::cout);
+                    display_assignment(std::cout);
+                );
                 return true;
             }
             DTRACE(std::cout << "branch hybrid var: " << m_hk << std::endl;);
@@ -3229,6 +3239,9 @@ namespace nlsat {
             init_restart_options();
             while (true) { // branch and bound used in nia    
                 r = solve();
+                DTRACE(
+                    display_learned(std::cout);
+                );
                 if (r != l_true) return r;
                 // nra done
 
@@ -3979,21 +3992,32 @@ namespace nlsat {
             }
         }
 
-        void propagate_atom(unsigned idx, var unit_v) {
-            if(unit_v != null_var) {
-                interval_set_ref curr_st(m_ism);
-                curr_st = get_atom_infeasible_set(idx, unit_v, false, nullptr);
-                DTRACE(
-                    std::cout << "show curr st:";
-                    m_ism.display(std::cout, curr_st) << std::endl;
-                );
-                if (m_ism.is_empty(curr_st))  real_propagate_using_clauses(literal(idx, false), nullptr);
-                else if (m_ism.is_full(curr_st)) real_propagate_using_clauses(literal(idx, true), nullptr);
-                else if (m_ism.subset(curr_st, m_infeasible[unit_v])) real_propagate_using_clauses(literal(idx, false), m_infeasible[unit_v]);
-                else {
-                    interval_set_ref tmp(m_ism);
-                    tmp = m_ism.mk_union(curr_st, m_infeasible[unit_v]);
-                    if (m_ism.is_full(tmp)) real_propagate_using_clauses(literal(idx, true), tmp);
+        void real_propagate_atom(unsigned idx, var v) {
+            if(v == null_var || m_valued_atom_table.contains(idx)) { // Ignore propagated atoms
+                return;
+            }
+            interval_set_ref curr_st(m_ism);
+            curr_st = get_atom_infeasible_set(idx, v, false, nullptr);
+            if(m_ism.is_empty(curr_st)) {
+                real_propagate_using_clauses(literal(idx, false), nullptr);
+            } else if(m_ism.is_full(curr_st)) {
+                real_propagate_using_clauses(literal(idx, true), nullptr);
+            } else if(m_ism.subset(curr_st, m_infeasible[v])) {
+                DTRACE(std::cout << "subset case" << std::endl;);
+                // curr_st < infeasible
+                // ~curr_st + infeasible = full
+                // here we use union to simplify literals
+                interval_set_ref comp_st(m_ism), tmp(m_ism);
+                comp_st = m_ism.mk_complement(curr_st);
+                tmp = m_ism.mk_union(comp_st, m_infeasible[v]);
+                SASSERT(m_ism.is_full(tmp));
+                real_propagate_using_clauses(literal(idx, false), tmp);
+            } else {
+                interval_set_ref tmp(m_ism);
+                tmp = m_ism.mk_union(curr_st, m_infeasible[v]);
+                if (m_ism.is_full(tmp)) {
+                    DTRACE(std::cout << "complement case" << std::endl;);
+                    real_propagate_using_clauses(literal(idx, true), tmp);
                 }
             }
         }
@@ -4572,7 +4596,6 @@ namespace nlsat {
                         m_learned_decided_literals[cls.nlsat_id()] = l.sign() ? -l.var() : l.var();
                     }
                 }
-                DTRACE(std::cout << "index " << i << " completed" << std::endl;);
                 vec.push_back(l);
             }
         }
@@ -4968,6 +4991,8 @@ namespace nlsat {
             if(m_scope_lvl == 0) {
                 return false;
             }
+            DTRACE(std::cout << "resolve, conflicting clause:\n";
+            display(std::cout, *conflict_clause) << "\n";);
             reset_clause_decisions();
             SASSERT(check_marks());
             reset_conflict_vars();
@@ -4992,6 +5017,7 @@ namespace nlsat {
                         insert_conflict_vars_from_atom(b);
                         if (is_marked(b)) {
                             m_num_marks--;
+                            DTRACE(std::cout << "curr num mark: " << m_num_marks << std::endl;);
                             reset_mark(b);
                             justification jst = m_justifications[b];
                             switch (jst.get_kind()) {

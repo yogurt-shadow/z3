@@ -1606,11 +1606,11 @@ namespace nlsat {
                 SASSERT(max != null_var);
                 TRACE("nlsat_explain", display(tout << "core before normalization\n", m_core2) << "\n";);
                 // fix bug for MulliganEconomicsModel0054e
-                normalize(m_core2, max);
+                // normalize(m_core2, max);
                 TRACE("nlsat_explain", display(tout << "core after normalization\n", m_core2) << "\n";);
                 // TRACE("nlsat_explain", display(tout << "core before simplify\n", m_core2) << "\n";);
                 // fix bug for MulliganEconomicsModel0054e
-                simplify(m_core2, max);
+                // simplify(m_core2, max);
                 // TRACE("nlsat_explain", display(tout << "core after simplify\n", m_core2) << "\n";);
                 // TRACE("nlsat_explain", tout << "[dynamic] we disable simplify currently" << std::endl;);
                 TRACE("nlsat_explain", tout << "[dynamic] we enable simplify currently" << std::endl;);

@@ -56,13 +56,13 @@ namespace nlsat {
             else
                 out << "]";
         }
-        out << std::endl;
-        out << "interval clause: ";
-        if(curr.m_clause != nullptr) {
-            m_solver.display(out, *curr.m_clause);
-        } else {
-            out << "nullptr";
-        }
+        // out << std::endl;
+        // out << "interval clause: ";
+        // if(curr.m_clause != nullptr) {
+        //     m_solver.display(out, *curr.m_clause);
+        // } else {
+        //     out << "nullptr";
+        // }
         return out;
     }
 
@@ -832,6 +832,12 @@ namespace nlsat {
     }
 
     void interval_set_manager::peek_in_complement(interval_set const * s, bool is_int, anum & w, bool randomize) {
+        // anum a24;
+        // m_am.set(a24, 24);
+        // if(s == nullptr || !contains(s, a24)) {
+        //     m_am.set(w, a24);
+        //     return;
+        // }
         SASSERT(!is_full(s));
         if (s == nullptr) {
             if (randomize) {
