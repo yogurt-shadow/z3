@@ -985,6 +985,7 @@ namespace nlsat {
 
         // We use a simple heuristic to sort literals
         //   - bool literals < arith literals
+        //   - sort by max var
         //   - sort literal with the max degree
         //     break ties using the fact that ineqs are usually cheaper to process than eqs.
         struct lit_lt {
@@ -1000,6 +1001,13 @@ namespace nlsat {
                     return true;
                 if (a2 == nullptr)
                     return false;
+                var v1 = m.max_level_atom(l1.var()), v2 = m.max_level_atom(l2.var());
+                if(v1 < v2) {
+                    return true;
+                }
+                if(v1 > v2) {
+                    return false;
+                }
                 var x1 = m.max_degree(a1);
                 var x2 = m.max_degree(a2);
                 if (x1 < x2)
@@ -1132,37 +1140,76 @@ namespace nlsat {
             out << "(check-sat)\n(reset)\n";
         }
 
-        clause * mk_clause_core(unsigned num_lits, literal const * lits, bool learned, _assumption_set a) {
+        // remove literals which can be propagated false using frontend information
+        void simplify_learned(clause &cls, bool &deleted) {
+            deleted = false;
+            unsigned j = 0;
+            for(literal l: cls) {
+                if(frontend_value(l) == l_false) {
+                    continue;
+                } else if(frontend_value(l) == l_true) {
+                    deleted = true;
+                    del_clause(&cls);
+                    return;
+                } else if(is_arith_literal(l) && m_nlsat_atoms[l.var()]->m_vars.size() == 1) {
+                    var v = *m_nlsat_atoms[l.var()]->m_vars.begin();
+                    interval_set_ref curr_st(m_ism);
+                    curr_st = get_atom_infeasible_set(l.var(), v, l.sign(), nullptr);
+                    if (m_ism.subset(curr_st, m_frontend_infeasible[v])) {
+                        deleted = true;
+                        del_clause(&cls);
+                        return;
+                    } else if (m_ism.is_union_full(curr_st, m_frontend_infeasible[v])) {
+                        continue;
+                    }
+                }
+                cls[j++] = l;
+            }
+            if(j == 0) {
+                frontend_conflict = true;
+                deleted = true;
+                del_clause(&cls);
+            } else {
+                cls.shrink(j);
+            }
+        }
+
+        clause * mk_clause_core(unsigned num_lits, literal const * lits, bool learned, _assumption_set a, bool &deleted) {
+            std::cout << "make clause here" << std::endl;
             SASSERT(num_lits > 0);
             unsigned cid = m_cid_gen.mk();
             void * mem = m_allocator.allocate(clause::get_obj_size(num_lits));
             unsigned nlsat_id = learned ? m_learned.size() : m_clauses.size();
             clause * cls = new (mem) clause(cid, nlsat_id, num_lits, lits, learned, a);
-            for (unsigned i = 0; i < num_lits; i++)
-                inc_ref(lits[i]);
-            inc_ref(a);
-            return cls;
+            deleted = false;
+            if(learned) {
+                // simplify_learned(*cls, deleted);
+            }
+            if(!deleted) {
+                for (unsigned i = 0; i < cls->size(); i++)
+                    inc_ref((*cls)[i]);
+                inc_ref(a);
+            }
+            CDTRACE(deleted, std::cout << "[DELETED] clause is deleted" << std::endl;);
+            return !deleted ? cls : nullptr;
         }
 
         clause * mk_clause(unsigned num_lits, literal const * lits, bool learned, _assumption_set a) {
             SASSERT(num_lits > 0);
-            clause * cls = mk_clause_core(num_lits, lits, learned, a);
+            bool deleted;
+            clause * cls = mk_clause_core(num_lits, lits, learned, a, deleted);
             ++m_lemma_count;
-            if (learned && m_log_lemmas) {
-                log_lemma(verbose_stream(), *cls);
-            }
-            if (learned && m_check_lemmas) {
-                check_lemma(cls->size(), cls->data(), false, cls->assumptions());
-            }
-            if (learned){
-                m_learned.push_back(cls);
-                m_learned_added++;
-                register_nlsat_learned(m_learned.size() - 1);
-                clause_bump_act(*cls);
-            }
-            else{
-                m_clauses.push_back(cls);
-                SASSERT(m_clauses.size() == m_clause_vars.size());
+            if(!deleted) {
+                std::sort(cls->begin(), cls->end(), lit_lt(*this));
+                if (learned){
+                    m_learned.push_back(cls);
+                    m_learned_added++;
+                    register_nlsat_learned(m_learned.size() - 1);
+                    clause_bump_act(*cls);
+                } else{
+                    m_clauses.push_back(cls);
+                    SASSERT(m_clauses.size() == m_clause_vars.size());
+                }
             }
             return cls;
         }
@@ -1926,7 +1973,6 @@ namespace nlsat {
             }
             else {
                 DTRACE(std::cout << "undo until arith " << x << " unassigned..." << std::endl;
-                    display_trails(std::cout);
                 );
                 undo_until(arith_unassigned_pred(m_assignment, x));
                 SASSERT(!m_assignment.is_assigned(x));
@@ -2811,7 +2857,7 @@ namespace nlsat {
             hybrid_var old_hk = m_hk;
             if((m_hk = pick_branching_var()) == null_var) { // var heap is empty, all vars assigned
                 check_overall_satisfied();
-                DTRACE(display_trails(std::cout);
+                DTRACE(
                     display_assignment(std::cout);
                 );
                 return true;
@@ -3292,7 +3338,43 @@ namespace nlsat {
             register_nlsat_vars();
             register_nlsat_atoms();
             register_nlsat_clauses();
+            simplify_clauses_using_infeasible();
             clear_deleted_atoms();
+        }
+
+        void simplify_clauses_using_infeasible() {
+            DTRACE(std::cout << "simplify using infeasible" << std::endl;);
+            for(unsigned i = 0; i < m_clauses.size(); i++) {
+                if(m_frontend_deleted_clauses.contains(i)) {
+                    continue;
+                }
+                bool is_sat = false;
+                bool_var_vector falsed_atoms;
+                for(literal l: *m_clauses[i]) {
+                    if(is_arith_literal(l) && m_nlsat_atoms[l.var()]->m_vars.size() == 1) {
+                        var v = *m_nlsat_atoms[l.var()]->m_vars.begin();
+                        interval_set_ref curr_st(m_ism);
+                        curr_st = get_atom_infeasible_set(l.var(), v, l.sign(), nullptr);
+                        // when an atom contributes to the set, we can not remove it
+                        if(!m_ism.atom_contributed(m_frontend_infeasible[v], l.var()) && m_ism.subset(curr_st, m_frontend_infeasible[v])) { // useless but sat literal
+                            is_sat = true;
+                            break;
+                        } else if(m_ism.is_union_full(curr_st, m_frontend_infeasible[v])) { // useless and unsat literal
+                            falsed_atoms.push_back(l.var());
+                        }
+                    }
+                }
+                if(is_sat) {
+                    del_clause(m_clauses[i]);
+                } else {
+                    bool deleted;
+                    simplify_clause(*m_clauses[i], falsed_atoms, deleted);
+                    if(deleted) { // all atoms are falsed
+                        frontend_conflict = true;
+                        return;
+                    }
+                }
+            }
         }
 
         void clear_deleted_atoms() {
@@ -3417,7 +3499,6 @@ namespace nlsat {
 
         void register_nlsat_clause(unsigned idx) {
             clause * cls = m_clauses[idx];
-            std::sort(cls->begin(), cls->end(), lit_lt(*this));
             m_nlsat_clauses.enlarge(idx, nullptr);
             var_table avars; bool_var_table bvars;
             collect_clause_arith_and_bool_vars(m_clauses[idx], avars, bvars);
@@ -4272,25 +4353,15 @@ namespace nlsat {
             m_reduce_threshold = OPTIONS::reduce_init_conf;
         }
 
-        void fix_order() {
-            var_vector perm;
-            perm.resize(3, 0);
-            // z x y
-            // x y z
-            perm[0] = 2;
-            perm[1] = 0;
-            perm[2] = 1;
-            reorder(perm.size(), perm.data());
-        }
-
         lbool check() {
             DTRACE(display_smt2(std::cout); std::cout << "start check..." << std::endl;);
             DTRACE(display_vars(std::cout););
-            // fix_order();
-            DTRACE(std::cout << "after reorder:\n"; display_vars(std::cout););
+            DTRACE(std::cout << "after reorder:\n"; display_vars(std::cout);
+                display_clauses(std::cout) << std::endl;
+            );
             register_nlsat_structures();
             DTRACE(std::cout << "register nlsat structures done" << std::endl;);
-            DTRACE(display_clauses(std::cout););
+            DTRACE(display_clauses(std::cout) << std::endl;);
             if (!m_incremental && m_inline_vars) {
                 if (!simplify()) 
                     return l_false;
@@ -4628,9 +4699,6 @@ namespace nlsat {
                 display(std::cout, m_lazy_clause.size(), m_lazy_clause.data()) << "\n";
             );
             insert_conflict_vars_from_literals(m_lazy_clause.size(), m_lazy_clause.data());
-            if (m_check_lemmas) {
-                m_valids.push_back(mk_clause_core(m_lazy_clause.size(), m_lazy_clause.data(), false, nullptr));
-            }
             checkpoint();
             resolve_clause(b, m_lazy_clause.size(), m_lazy_clause.data());
             for (unsigned i = 0; i < jst.num_clauses(); ++i) {
@@ -4641,11 +4709,7 @@ namespace nlsat {
         }
 
        unsigned find_hybrid_var_level(hybrid_var x) const {
-            if(x == null_var) {
-                return null_var;
-            }
-            SASSERT(x < m_num_hybrid_vars);
-            return m_hybrid_find_level[x];
+            return x < m_hybrid_find_level.size() ? m_hybrid_find_level[x] : null_var;
        }
 
         bool same_level_literal(literal l, unsigned lvl) const {
@@ -4700,6 +4764,9 @@ namespace nlsat {
             if(m_atoms[b] == nullptr) {
                 return find_hybrid_var_level(m_pure_bool_convert[b]);
             } else {
+                if(b >= m_nlsat_atoms.size()) { // not registered yet, before the main search
+                    return null_var;
+                }
                 nlsat_atom const *a = m_nlsat_atoms[b];
                 unsigned res = 0;
                 for(var v: a->m_vars) {
@@ -5079,7 +5146,7 @@ namespace nlsat {
             hybrid_var new_max_var = max_assigned_var(sz, m_lemma.data(), is_bool, max_level);
             undo_until_unassigned(new_max_var, is_bool);
             new_cls = mk_clause(sz, m_lemma.data(), true, m_lemma_assumptions.get());
-            DTRACE(std::cout << "new clause: \n"; display(std::cout, *new_cls) << "\n";);
+            CDTRACE(new_cls != nullptr, std::cout << "new clause: \n"; display(std::cout, *new_cls) << "\n";);
             hybrid_decay_act();
             clause_decay_act();
             if(OPTIONS::enable_reduce) {

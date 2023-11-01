@@ -28,13 +28,15 @@ Revision History:
 
 namespace nlsat {
 // macro used for debug
-// #define NLSAT_DEBUG
+#define NLSAT_DEBUG
 
 #ifdef NLSAT_DEBUG
    #define DTRACE(CODE) { CODE } ((void) 0)
+   #define CDTRACE(COND, CODE) { if (COND) {CODE} }
    #define SDTRACE(COND, CODE1, CODE2) { if (COND) { CODE1 } else { CODE2 } }
 #else
    #define DTRACE(CODE) ((void) 0)
+   #define CDTRACE(COND, CODE) ((void) 0)
    #define SDTRACE(COND, CODE1, CODE2) ((void) 0)
 #endif
 

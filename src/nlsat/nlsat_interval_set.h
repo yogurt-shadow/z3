@@ -106,6 +106,8 @@ namespace nlsat {
         */
         bool subset(interval_set const * s1, interval_set const * s2);
 
+        bool is_union_full(interval_set const *s1, interval_set const *s2);
+
         /**
            \brief Return true if s1 and s2 cover the same subset of R.
            The justifications are ignored
@@ -126,6 +128,7 @@ namespace nlsat {
            \pre idx < num_intervals()
         */
         interval_set * get_interval(interval_set const * s, unsigned idx) const;
+        bool atom_contributed(interval_set const *s, bool_var bvar) const;
         void set_clauses(interval_set *s, clause *cls);
         void get_clauses(interval_set const *s, clause_vector &clauses);
 

@@ -516,6 +516,10 @@ namespace nlsat {
         return s->m_full == 1;
     }
 
+    bool interval_set_manager::is_union_full(interval_set const *s1, interval_set const *s2) {
+        return is_full(mk_union(s1, s2));
+    }
+
     unsigned interval_set_manager::num_intervals(interval_set const * s) const {
         if (s == nullptr) return 0;
         return s->m_num_intervals;
@@ -644,6 +648,18 @@ namespace nlsat {
         interval_set * new_set = mk_interval(m_allocator, result, !found_slack);
         SASSERT(check_interval_set(m_am, result.size(), new_set->m_intervals));
         return new_set;
+    }
+
+    bool interval_set_manager::atom_contributed(interval_set const *s, bool_var bvar) const {
+        if(s == nullptr) {
+            return false;
+        }
+        for(unsigned i = 0; i < s->m_num_intervals; i++) {
+            if(s->m_intervals[i].m_justification.var() == bvar) {
+                return true;
+            }
+        }
+        return false;
     }
 
     void interval_set_manager::set_clauses(interval_set *s, clause *cls) {
