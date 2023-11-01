@@ -1175,7 +1175,6 @@ namespace nlsat {
         }
 
         clause * mk_clause_core(unsigned num_lits, literal const * lits, bool learned, _assumption_set a, bool &deleted) {
-            std::cout << "make clause here" << std::endl;
             SASSERT(num_lits > 0);
             unsigned cid = m_cid_gen.mk();
             void * mem = m_allocator.allocate(clause::get_obj_size(num_lits));

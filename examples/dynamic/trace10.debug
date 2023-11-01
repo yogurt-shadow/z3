@@ -1,0 +1,197 @@
+vec file size: 12134
+finish: file[2] = /pub/data/wangzh/smt_benchmark/QF_NRA/20180501-Economics-Mulligan/MulliganEconomicsModel0053a.smt2
+finish: file[10] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/atan-vega-3-chunk-0154.smt2
+finish: file[5] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/CMOS/CMOS-opamp-chunk-0280.smt2
+finish: file[0] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sin/cos/sin-cos-346-b-chunk-0593.smt2
+ASSERTION VIOLATION
+File: ../src/nlsat/nlsat_explain.cpp
+Line: 1576
+Failed to verify: simplify(C, eq_p, max)
+
+Z3 4.12.2.0
+Please file an issue with this message and more detail about how you encountered it at https://github.com/Z3Prover/z3/issues/new
+finish: file[6] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/atan-vega-3-chunk-0408.smt2
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/20180501-Economics-Mulligan/MulliganEconomicsModel0061c.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/MulliganEconomicsModel0061c.txt
+finish: file[4] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/atan-vega-3-chunk-0259.smt2
+ASSERTION VIOLATION
+File: ../src/nlsat/nlsat_explain.cpp
+Line: 1576
+Failed to verify: simplify(C, eq_p, max)
+
+Z3 4.12.2.0
+Please file an issue with this message and more detail about how you encountered it at https://github.com/Z3Prover/z3/issues/new
+finish: file[12] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_1d_plain.10.seq_lazy_lemmas_global_1.smt2
+ASSERTION VIOLATION
+File: ../src/nlsat/nlsat_explain.cpp
+Line: 1576
+Failed to verify: simplify(C, eq_p, max)
+
+Z3 4.12.2.0
+Please file an issue with this message and more detail about how you encountered it at https://github.com/Z3Prover/z3/issues/new
+finish: file[29] = /pub/data/wangzh/smt_benchmark/QF_NRA/20220314-Uncu/Rational_Function_Proof_Calls_With_Basic_Denominator_Simplifications/BDC_ProveIneq_ISSAC05_Bessack_2_m1.smt2
+finish: file[39] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/atan-vega-3-chunk-0337.smt2
+finish: file[25] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/polypaver/sqrt43-int/3vars/polypaver-sqrt43-int-3vars-chunk-0032.smt2
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_1d_plain.03.seq_lazy_linear_enc_lemmas_global_10.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_1d_plain.03.seq_lazy_linear_enc_lemmas_global_10.txt
+finish: file[8] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_1d_plain.10.qfree_global_11.smt2
+finish: file[20] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/atan-vega-3-chunk-0139.smt2
+ASSERTION VIOLATION
+File: finish: file[37] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/atan-vega-3-chunk-0484.smt2
+finish: file[57] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sin/cos/sin-cos-346-b-chunk-0203.smt2
+finish: file[36] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/atan-vega-3-chunk-0274.smt2
+finish: file[86] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/bottom-plate-mixer/bottom-plate-mixer-chunk-0041.smt2
+finish: file[68] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sin/cos/sin-cos-346-b-chunk-0267.smt2
+finish: file[23] = /pub/data/wangzh/smt_benchmark/QF_NRA/20220314-Uncu/Polynomial_Proof_Calls/ProveIneq_ISSAC05_Mitrinovic_5_15.smt2
+../src/nlsat/nlsat_explain.cppfinish: file[11] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill_simple.05.qfree_global_1.smt2
+finish: file[7] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill_simple.01.seq_lazy_lemmas_global_9.smt2
+finish: file[115] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/weak/atan-vega-3-weak-chunk-0507.smt2
+finish: file[96] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/Chua/2/VC1/L/Chua-2-VC1-L-chunk-0079.smt2
+finish: file[103] = /pub/data/wangzh/smt_benchmark/QF_NRA/20200911-Pine/1599122161444977000.smt2
+finish: file[99] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sin/cos/sin-cos-346-b-chunk-0408.smt2
+finish: file[73] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/atan-vega-3-chunk-0064.smt2
+finish: file[30] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/polypaver/bench-sqrt-3d/polypaver-bench-sqrt-3d-chunk-0229.smt2
+finish: file[61] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/polypaver/sqrt43-int/4vars/polypaver-sqrt43-int-4vars-chunk-0029.smt2
+finish: file[67] = /pub/data/wangzh/smt_benchmark/QF_NRA/UltimateAutomizer/InVarSynth_InvariantSynthesis_Disjunctive02.bpl_Iteration1_0.smt2
+finish: file[105] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/CMOS/CMOS-opamp-chunk-0289.smt2
+finish: file[112] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sin/cos/sin-cos-346-b-chunk-0106.smt2
+finish: file[63] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/Chua/2/IL/L/Chua-2-IL-L-chunk-0067.smt2
+finish: file[90] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/cbrt/3/cbrt-problem-3-chunk-0026.smt2
+finish: file[47] = /pub/data/wangzh/smt_benchmark/QF_NRA/20161105-Sturm-MBO/mbo_E5E27.smt2
+finish: file[32] = /pub/data/wangzh/smt_benchmark/QF_NRA/20200911-Pine/1599122160834023000.smt2
+finish: file[72] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/Chua/1/VC2/U/Chua-1-VC2-U-chunk-0056.smt2
+ASSERTION VIOLATION
+File: ../src/nlsat/nlsat_explain.cpp
+Line: 1576
+Failed to verify: simplify(C, eq_p, max)
+
+Z3 4.12.2.0
+Please file an issue with this message and more detail about how you encountered it at https://github.com/Z3Prover/z3/issues/new
+ASSERTION VIOLATION
+File: finish: file[77] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sin/problem/7/sin-problem-7-chunk-0179.smt2
+../src/nlsat/nlsat_explain.cpp
+Line: 1576
+Failed to verify: simplify(C, eq_p, max)
+
+Z3 4.12.2.0
+Please file an issue with this message and more detail about how you encountered it at https://github.com/Z3Prover/z3/issues/new
+finish: file[28] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/Chua/1/VC2/L/Chua-1-VC2-L-chunk-0017.smt2
+finish: file[75] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/1mcosq/7/sqrt-1mcosq-7-chunk-0150.smt2
+finish: file[34] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/Chua/2/VC1/L/Chua-2-VC1-L-chunk-0091.smt2
+finish: file[19] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/Chua/1/IL/U/Chua-1-IL-U-chunk-0039.smt2
+finish: file[60] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/problem/2/weak2/atan-problem-2-weak2-chunk-0040.smt2
+finish: file[58] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sin/cos/sin-cos-346-b-chunk-0582.smt2
+finish: file[45] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/cbrt/3/weak/cbrt-problem-3-weak-chunk-0077.smt2
+finish: file[89] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/problem/13/sqrt1/sqrt-problem-13-sqrt1-chunk-0044.smt2
+finish: file[35] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/polypaver/bench-sqrt-3d/polypaver-bench-sqrt-3d-chunk-0111.smt2
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/20220314-Uncu/Rational_Function_Proof_Calls_With_Basic_Denominator_Simplifications/BDC_ProveIneq_Mitrinovic_4_1.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/BDC_ProveIneq_Mitrinovic_4_1.txt
+finish: file[109] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/Chua/2/IL/L/Chua-2-IL-L-chunk-0084.smt2
+finish: file[38] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/Chua/2/VC1/U/Chua-2-VC1-U-chunk-0061.smt2
+finish: file[54] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/1mcosq/7/sqrt-1mcosq-7-chunk-0027.smt2
+finish: file[53] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/Nichols-Plot/Inverted-Pendulum/Nichols-Plot-Inverted-Pendulum-Fails-1-6-chunk-0247.smt2
+finish: file[113] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill.04.seq_lazy_linear_enc_global_5.smt2
+finish: file[41] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/1mcosq/8/sqrt-1mcosq-8-chunk-0084.smt2
+finish: file[40] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/problem/2/weak/atan-problem-2-weak-chunk-0222.smt2
+finish: file[27] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/Chua/2/VC1/U/Chua-2-VC1-U-chunk-0018.smt2
+finish: file[62] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/weak/atan-vega-3-weak-chunk-0329.smt2
+finish: file[80] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/exp/problem/10/3/weak/exp-problem-10-3-weak-chunk-0158.smt2
+finish: file[94] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/problem/sqrt-problem-Melquiond2-chunk-0088.smt2
+finish: file[76] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/weak/atan-vega-3-weak-chunk-0623.smt2
+finish: file[95] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/Chua/2/IL/U/Chua-2-IL-U-chunk-0091.smt2
+finish: file[50] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/simple_ballistics_reach.01.seq_lazy_linear_enc_global_8.smt2
+finish: file[24] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_1d_plain.10.seq_lazy_lemmas_global_7.smt2
+finish: file[82] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/problem/2/weak/atan-problem-2-weak-chunk-0169.smt2
+ASSERTION VIOLATION
+File: finish: file[69] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/problem/2/atan-problem-2-chunk-0072.smt2
+finish: file[66] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sin/problem/7/sin-problem-7-chunk-0107.smt2
+finish: file[44] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/atan-vega-3-chunk-0256.smt2
+ASSERTION VIOLATION
+File: finish: file[15] = /pub/data/wangzh/smt_benchmark/QF_NRA/20180501-Economics-Mulligan/MulliganEconomicsModel0061c.smt2
+ASSERTION VIOLATION
+File: ../src/nlsat/nlsat_explain.cpp
+Line: ASSERTION VIOLATION
+File: 1576
+../src/nlsat/nlsat_explain.cpp
+Line: Failed to verify: simplify(C, eq_p, max)
+../src/nlsat/nlsat_explain.cpp
+
+Line: Z3 4.12.2.0
+Please file an issue with this message and more detail about how you encountered it at https://github.com/Z3Prover/z3/issues/new
+15761576
+Failed to verify: simplify(C, eq_p, max)
+
+Failed to verify: simplify(C, eq_p, max)
+
+Z3 4.12.2.0
+Please file an issue with this message and more detail about how you encountered it at https://github.com/Z3Prover/z3/issues/new
+
+Z3 4.12.2.0
+Please file an issue with this message and more detail about how you encountered it at https://github.com/Z3Prover/z3/issues/new
+
+Line: finish: file[74] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sin/problem/7/weak/sin-problem-7-weak-chunk-0149.smt2
+1576
+Failed to verify: simplify(C, eq_p, max)
+
+Z3 4.12.2.0
+Please file an issue with this message and more detail about how you encountered it at https://github.com/Z3Prover/z3/issues/new
+finish: file[79] = /pub/data/wangzh/smt_benchmark/QF_NRA/LassoRanker/SV-COMP/LeeJonesBen-Amram-2001POPL-Ex3_true-termination.c_Iteration6_Loop_4-pieceTemplate.smt2
+finish: file[49] = /pub/data/wangzh/smt_benchmark/QF_NRA/UltimateAutomizer/InVarSynth_ShortCircuit-SideEffect-SwitchStatement-Safe.c_Iteration1_1.smt2
+finish: file[18] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill.10.seq_lazy_linear_enc_lemmas_global_11.smt2
+finish: file[114] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_1d_plain.10.seq_lazy_lemmas_global_5.smt2
+finish: file[88] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill.04.seq_lazy_linear_enc_global_8.smt2
+finish: file[52] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/problem/2/atan-problem-2-chunk-0070.smt2
+finish: file[106] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/problem/2/atan-problem-2-chunk-0049.smt2
+finish: file[111] = /pub/data/wangzh/smt_benchmark/QF_NRA/20200911-Pine/1599122166437928000.smt2
+finish: file[87] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/exp/problem/10/3/weak/exp-problem-10-3-weak-chunk-0101.smt2
+finish: file[51] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/exp/problem/10/2/exp-problem-10-2-chunk-0152.smt2
+finish: file[83] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill.05.redlog_global_3.smt2
+finish: file[59] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_slope.03.seq_lazy_linear_enc_lemmas_global_12.smt2
+finish: file[97] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/problem/2/weak/atan-problem-2-weak-chunk-0018.smt2
+finish: file[43] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/asin/8/vars4/asin-8-vars4-chunk-0010.smt2
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_plain.04.seq_lazy_global_12.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_plain.04.seq_lazy_global_12.txt
+finish: file[104] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/weak/atan-vega-3-weak-chunk-0187.smt2
+finish: file[78] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/Chua/2/IL/U/Chua-2-IL-U-chunk-0104.smt2
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_1d_plain.04.seq_lazy_lemmas_global_10.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_1d_plain.04.seq_lazy_lemmas_global_10.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/20211101-Geogebra/TriangleInequality_Triangle-a+b_c.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/TriangleInequality_Triangle-a+b_c.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/LassoRanker/CooperatingT2/eric2.t2.c_Iteration7_Loop_4-pieceTemplate.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/eric2.t2.c_Iteration7_Loop_4-pieceTemplate.txt
+finish: file[14] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/1mcosq/7/sqrt-1mcosq-7-chunk-0025.smt2
+finish: file[46] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sin/problem/7/weak/sin-problem-7-weak-chunk-0159.smt2
+finish: file[98] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sin/344/3/sin-344-3-chunk-0058.smt2
+finish: file[84] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill.05.seq_lazy_linear_enc_lemmas_global_10.smt2
+finish: file[64] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/weak/atan-vega-3-weak-chunk-0324.smt2
+finish: file[100] = /pub/data/wangzh/smt_benchmark/QF_NRA/UltimateAutomizer/InVarSynth_MonadicInvariant01.bpl_Iteration1_0.smt2
+finish: file[117] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sin/problem/10/sin-problem-10-3-chunk-0031.smt2
+finish: file[71] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/weak/atan-vega-3-weak-chunk-0260.smt2
+sh: line 1: 310237 Segmentation fault      (core dumped) /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/problem/2/weak/atan-problem-2-weak-chunk-0210.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/atan-problem-2-weak-chunk-0210.txt
+finish: file[92] = /pub/data/wangzh/smt_benchmark/QF_NRA/UltimateAutomizer/InVarSynth_agroce_minmax.c_Iteration2_1.smt2
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill_simple.01.qfree_global_12.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_hill_simple.01.qfree_global_12.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_plain.02.seq_lazy_global_6.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_2d_plain.02.seq_lazy_global_6.txt
+../src/nlsat/nlsat_explain.cppfinish: file[120] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/Chua/1/IL/L/Chua-1-IL-L-chunk-0126.smt2
+
+Line: finish: file[9] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_1d_plain.03.seq_lazy_linear_enc_lemmas_global_10.smt2
+1576
+Failed to verify: simplify(C, eq_p, max)
+
+Z3 4.12.2.0
+Please file an issue with this message and more detail about how you encountered it at https://github.com/Z3Prover/z3/issues/new
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/problem/2/weak/atan-problem-2-weak-chunk-0210.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/atan-problem-2-weak-chunk-0210.txt
+system error: /home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_1d_plain.05.seq_lazy_lemmas_global_8.smt2 -T:1200 -memory:30720 -st > /home/wangzh/smt_exp/z3_debug/ball_count_1d_plain.05.seq_lazy_lemmas_global_8.txt
+finish: file[121] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sin/cos/sin-cos-346-b-chunk-0562.smt2
+finish: file[81] = /pub/data/wangzh/smt_benchmark/QF_NRA/20220314-Uncu/Rational_Function_Proof_Calls_With_Basic_Denominator_Simplifications/BDC_ProveIneq_Mitrinovic_4_1.smt2
+finish: file[123] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sin/problem/10/sin-problem-10-3-chunk-0026.smt2
+finish: file[124] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_hill_simple.10.seq_lazy_global_7.smt2
+finish: file[126] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/vega/3/atan-vega-3-chunk-0478.smt2
+finish: file[118] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_plain.04.seq_lazy_global_12.smt2
+finish: file[1] = /pub/data/wangzh/smt_benchmark/QF_NRA/LassoRanker/CooperatingT2/eric2.t2.c_Iteration7_Loop_4-pieceTemplate.smt2
+finish: file[70] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_1d_plain.04.seq_lazy_lemmas_global_10.smt2
+finish: file[26] = /pub/data/wangzh/smt_benchmark/QF_NRA/20211101-Geogebra/TriangleInequality_Triangle-a+b_c.smt2
+finish: file[128] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/cbrt/3/weak/cbrt-problem-3-weak-chunk-0033.smt2
+finish: file[102] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_slope.04.seq_lazy_linear_enc_global_11.smt2
+finish: file[130] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/sqrt/1mcosq/7/sqrt-1mcosq-7-chunk-0173.smt2
+ASSERTION VIOLATION
+File: ../src/nlsat/nlsat_explain.cpp
+Line: 1576
+Failed to verify: simplify(C, eq_p, max)
+
+Z3 4.12.2.0
+Please file an issue with this message and more detail about how you encountered it at https://github.com/Z3Prover/z3/issues/new
+finish: file[42] = /pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/ball_count_2d_plain.02.seq_lazy_global_6.smt2
+finish: file[48] = /pub/data/wangzh/smt_benchmark/QF_NRA/meti-tarski/atan/problem/2/weak/atan-problem-2-weak-chunk-0210.smt2
