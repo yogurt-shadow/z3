@@ -365,11 +365,8 @@ namespace nlsat {
         */
         void elim_vanishing(polynomial_ref & p) {
             SASSERT(!is_const(p));
-            // var x = max_var(p);
-            // wzh dynamic
             var x = m_solver.max_level_var_poly(p);
             TRACE("nlsat_explain", tout << "[debug] max var in elim: " << x << std::endl;);
-            // hzw dynamic
             unsigned k = degree(p, x);
             SASSERT(k > 0);
             polynomial_ref lc(m_pm);
@@ -380,23 +377,10 @@ namespace nlsat {
                     return;
                 if (k == 0) {
                     // x vanished from p, peek next maximal variable
-                    // x = max_var(p);
-                    // wzh dynamic
                     x = m_solver.max_level_var_poly(p);
-                    // hzw dynamic
                     SASSERT(x != null_var);
                     k = degree(p, x);
                 }
-#if 0
-                anum const & x_val = m_assignment.value(x);
-                if (m_am.is_zero(x_val)) {
-                    // add_zero_assumption(lc);
-                    lc = m_pm.coeff(p, x, k, reduct);
-                    k--;
-                    p = reduct;
-                    continue;
-                }
-#endif
                 if (m_pm.nonzero_const_coeff(p, x, k)) {
                     TRACE("nlsat_explain", tout << "nonzero const x" << x << "\n";);
                     return; // lc is a nonzero constant
@@ -473,7 +457,9 @@ namespace nlsat {
             if (b == true_bool_var)
                 return l;
             SASSERT(m_atoms[b] != 0);
-            if (m_atoms[b]->is_ineq_atom()) {
+            if(m_atoms[b]->is_root_atom()) { // ignore root atoms
+                return l;
+            } else {
                 polynomial_ref_buffer ps(m_pm);
                 sbuffer<bool>         is_even;
                 polynomial_ref p(m_pm);
@@ -481,28 +467,18 @@ namespace nlsat {
                 int atom_sign = 1;
                 unsigned sz = a->size();
                 bool normalized = false; // true if the literal needs to be normalized
-
-                // wzh dynamic
-                var max_stage = m_solver.find_hybrid_var_level(arith2hybrid(max));
-                // hzw dynamic
+                unsigned max_level = m_solver.find_hybrid_var_level(arith2hybrid(max));
                 for (unsigned i = 0; i < sz; i++) {
                     p = a->p(i);
-                    TRACE("nlsat_explain", tout << "[debug] show polynomial:\n";
-                        m_pm.display(tout, p);
-                        tout << std::endl;
-                    );
-                    // if (max_var(p) == max)
                     if(m_solver.max_level_var_poly(p) == max){
                         TRACE("nlsat_explain", tout << "[debug] max stage is equal to max, enter elim vanishing\n";);
                         elim_vanishing(p); // eliminate vanishing coefficients of max
                     }
-                    // if (is_const(p) || max_var(p) < max) {
-                    if(is_const(p) || m_solver.max_level_poly(p) < max_stage){
+                    if(is_const(p) || m_solver.max_level_poly(p) < max_level){
                         int s = sign(p); 
                         if (!is_const(p)) {
-                            // SASSERT(max_var(p) != null_var);
-                            SASSERT(max_level_poly(p) < max_stage);
-                            // factor p is a lower stage polynomial, so we should add assumption to justify p being eliminated
+                            SASSERT(max_level_poly(p) < max_level);
+                            // factor p is a lower level polynomial, so we should add assumption to justify p being eliminated
                             if (s == 0)
                                 add_simple_assumption(atom::EQ, p);  // add assumption p = 0
                             else if (a->is_even(i))
@@ -516,13 +492,11 @@ namespace nlsat {
                             bool atom_val = a->get_kind() == atom::EQ;
                             bool lit_val  = l.sign() ? !atom_val : atom_val;
                             return lit_val ? true_literal : false_literal;
-                        }
-                        else if (s < 0 && a->is_odd(i)) {
+                        } else if (s < 0 && a->is_odd(i)) {
                             atom_sign = -atom_sign;
                         }
                         normalized = true;
-                    }
-                    else {
+                    } else {
                         if (p != a->p(i)) {
                             SASSERT(!m_pm.eq(p, a->p(i)));
                             normalized = true;
@@ -558,9 +532,6 @@ namespace nlsat {
                     return l;
                 }
             }
-            else {
-                return l;
-            }
         }
 
         /**
@@ -586,52 +557,6 @@ namespace nlsat {
             }
             C.shrink(j);
         }
-
-        // var max_var(poly const * p) { return m_pm.max_var(p); }
-
-        // /**
-        //    \brief Return the maximal variable in a set of nonconstant polynomials.
-        // */
-        // var max_var(polynomial_ref_vector const & ps) {
-        //     if (ps.empty())
-        //         return null_var;
-        //     var max = max_var(ps.get(0)); 
-        //     SASSERT(max != null_var); // there are no constant polynomials in ps
-        //     unsigned sz = ps.size();
-        //     for (unsigned i = 1; i < sz; i++) {
-        //         var curr = m_pm.max_var(ps.get(i));
-        //         SASSERT(curr != null_var);
-        //         if (curr > max)
-        //             max = curr;
-        //     }
-        //     return max;
-        // }
-
-        // polynomial::var max_var(literal l) {
-        //     atom * a  = m_atoms[l.var()];
-        //     if (a != nullptr)
-        //         return a->max_var();
-        //     else
-        //         return null_var;
-        // }
-
-        // /**
-        //    \brief Return the maximal variable in the given set of literals
-        //  */
-        // var max_var(unsigned sz, literal const * ls) {
-        //     var max = null_var;
-        //     for (unsigned i = 0; i < sz; i++) {
-        //         literal l = ls[i];
-        //         atom * a  = m_atoms[l.var()];
-        //         if (a != nullptr) {
-        //             var x = a->max_var();
-        //             SASSERT(x != null_var);
-        //             if (max == null_var || x > max) 
-        //                 max = x;
-        //         }
-        //     }
-        //     return max;
-        // }
 
         /**
            \brief Move the polynomials in q in ps that do not contain x to qs.
@@ -1254,7 +1179,7 @@ namespace nlsat {
             bool_var b = l.var();
             atom * a   = m_atoms[b];
             SASSERT(a);
-            if (a->is_root_atom()) {
+            if (a->is_root_atom()) { // ignore root atoms
                 new_lit = l;
                 return;
             }
@@ -1273,10 +1198,6 @@ namespace nlsat {
             polynomial_ref        new_factor(m_pm);
             for (unsigned s = 0; s < num_factors; s++) {
                 poly * f = _a->p(s);
-                TRACE("nlsat_explain", tout << "[debug] loop factors:\n";
-                    m_pm.display(tout, f);
-                    tout << std::endl;
-                );
                 bool is_even = _a->is_even(s);
                 if (m_pm.degree(f, info.m_x) < info.m_k) {
                     new_factors.push_back(f);
@@ -1357,15 +1278,7 @@ namespace nlsat {
                 if (l.sign())
                     new_lit.neg();
                 TRACE("nlsat_simplify_core", tout << "simplified literal:\n"; display(tout, new_lit) << "\n" << m_solver.value(new_lit) << "\n";);
-                // TRACE("nlsat_explain", tout << "[debug] simplified literal:\n"; display(tout, new_lit) << std::endl;);
-                // TRACE("nlsat_explain", tout << "[debug] display max var: " << max << std::endl;);
-                // TRACE("nlsat_explain", tout << "[debug] max stage literal, max stage: " << find_hybrid_var_level(max) << std::endl;);
-                // TRACE("nlsat_explain", tout << "[debug] literal's max stage: " << max_level_literal(new_lit) << std::endl;);
-                // TRACE("nlsat_explain", display_dynamic(tout) << std::endl;);
                 if (m_solver.max_level_literal(new_lit) < m_solver.find_hybrid_var_level(arith2hybrid(max))) {
-                // if(!contains_literal(new_lit, max)){
-                // if (max_var(new_lit) < max) {
-                // if(false){
                     if (m_solver.value(new_lit) == l_true) {
                         new_lit = l;
                     }
@@ -1389,19 +1302,8 @@ namespace nlsat {
             bool modified_core = false;
             eq_info info;
             info.m_eq = eq;
-            // info.m_x  = m_pm.max_var(info.m_eq);
-            // wzh dynamic
             info.m_x = m_solver.max_level_var_poly(info.m_eq);
-            var_vector curr_vars;
-            m_pm.vars(eq, curr_vars);
-            TRACE("nlsat_explain", tout << "[debug] vars in equal: " << std::endl;
-                for(var v:curr_vars){
-                    tout << v << " ";
-                }
-                tout << std::endl;
-            );
             TRACE("nlsat_explain", tout << "[debug] max var for equal: " << info.m_x << std::endl;);
-            // hzw dynamic
             info.m_k  = m_pm.degree(eq, info.m_x);
             TRACE("nlsat_explain", tout << "[debug] degree of max var: " << info.m_k << std::endl;);
             polynomial_ref lc_eq(m_pm);
@@ -1418,15 +1320,15 @@ namespace nlsat {
             for (unsigned i = 0; i < sz; i++) {
                 literal  l = C[i];
                 new_lit = null_literal;
-                // fix bug of Mulligan here
                 simplify(l, info, max, new_lit);
                 SASSERT(new_lit != null_literal);
-                // wzh
-                // unchanged
-                if (l == new_lit) {
+                if (l == new_lit) { // unchanged
+                    DTRACE(std::cout << "simplify unchanged" << std::endl;);
                     C.set(j, l);
                     j++;
                     continue;
+                } else {
+                    DTRACE(std::cout << "simplift succeed" << std::endl;);
                 }
                 modified_core = true;
                 if (new_lit == true_literal)
@@ -1447,15 +1349,19 @@ namespace nlsat {
                     add_assumption(atom::EQ, info.m_lc, true);
             }
             return modified_core;
-            // return false;
         }
 
         /**
            \brief (try to) Select an equation from C. Returns 0 if C does not contain any equality.
            This method selects the equation of minimal degree in max.
         */
+
+        typedef chashtable<ineq_atom *, ineq_atom::hash_proc, ineq_atom::eq_proc> ineq_atom_table;
+
+        ineq_atom_table m_selected_eq;
         poly * select_eq(scoped_literal_vector & C, var max) {
             poly * r       = nullptr;
+            ineq_atom *ra  = nullptr;
             unsigned min_d = UINT_MAX;
             unsigned sz    = C.size();
             for (unsigned i = 0; i < sz; i++) {
@@ -1468,23 +1374,26 @@ namespace nlsat {
                 if (a->get_kind() != atom::EQ)
                     continue;
                 ineq_atom * _a = to_ineq_atom(a);
+                if (m_selected_eq.contains(_a))
+                    continue;
                 if (_a->size() > 1)
                     continue;
                 if (_a->is_even(0))
                     continue;
                 unsigned d = m_pm.degree(_a->p(0), max);
-                // wzh dynamic
-                if(d == 0){
+                if(d == 0)
                     continue;
-                }
-                // hzw dynamic
                 SASSERT(d > 0);
                 if (d < min_d) {
                     r     = _a->p(0);
                     min_d = d;
+                    ra    = _a;
                     if (min_d == 1)
                         break;
                 }
+            }
+            if(ra != nullptr) {
+                m_selected_eq.insert(ra);
             }
             return r;
         }
@@ -1496,11 +1405,10 @@ namespace nlsat {
            Return 0, if such equation was not found.
         */
         var_vector m_select_tmp;
+        ineq_atom_table m_selected_lower_eq;
         ineq_atom * select_lower_stage_eq(scoped_literal_vector & C, var max) {
             var_vector & xs = m_select_tmp;
-            // wzh dynamic
-            var max_stage = m_solver.find_hybrid_var_level(arith2hybrid(max));
-            // hzw dynamic
+            var max_level = m_solver.find_hybrid_var_level(arith2hybrid(max));
             for (literal l : C) {
                 bool_var b = l.var();
                 atom * a = m_atoms[b];
@@ -1513,28 +1421,27 @@ namespace nlsat {
                     xs.reset();
                     m_pm.vars(p, xs);
                     for (var y : xs) {
-                        // if (y >= max)
-                            // continue;
-                        // wzh dynamic
-                        var curr_stage = m_solver.find_hybrid_var_level(arith2hybrid(y));
-                        if(curr_stage >= max_stage){
+                        unsigned curr_level = m_solver.find_hybrid_var_level(arith2hybrid(y));
+                        if(curr_level >= max_level){
                             continue;
                         }
-                        // hzw dynamic
                         atom * eq = m_x2eq[y];
                         if (eq == nullptr)
                             continue;
                         SASSERT(eq->is_ineq_atom());
                         SASSERT(to_ineq_atom(eq)->size() == 1);
                         SASSERT(!to_ineq_atom(eq)->is_even(0));
+                        if (m_selected_lower_eq.contains(to_ineq_atom(eq)))
+                            continue;
                         poly * eq_p = to_ineq_atom(eq)->p(0);
                         SASSERT(m_pm.degree(eq_p, y) > 0);
-                        // TODO: create a parameter
                         // In the current experiments, using equations with non constant coefficients produces a blowup
                         if (!m_pm.nonzero_const_coeff(eq_p, y, m_pm.degree(eq_p, y))) 
                             continue;
-                        if (m_pm.degree(p, y) >= m_pm.degree(eq_p, y))
+                        if (m_pm.degree(p, y) >= m_pm.degree(eq_p, y)) {
+                            m_selected_lower_eq.insert(to_ineq_atom(eq));
                             return to_ineq_atom(eq);
+                        }
                     }
                 }
             }
@@ -1545,36 +1452,47 @@ namespace nlsat {
            \brief Simplify the core using equalities.
         */
         void simplify(scoped_literal_vector & C, var max) {
-            // Simplify using equations in the core
-            // fix bug Mulligan here
+            DTRACE(std::cout << "enter simplify:\n";
+                display(std::cout, C) << std::endl;
+            );
+            m_selected_eq.reset(); m_selected_lower_eq.reset();
             while (!C.empty()) {
-                TRACE("nlsat_explain", tout << "[debug] select stage equal\n";);
+                // TODO: same ineq equalities can be selected more than once
                 poly * eq = select_eq(C, max);
-                if (eq == nullptr)
+                if (eq == nullptr) {
+                    DTRACE(std::cout << "select curr level eq nullptr" << std::endl;);
                     break;
-                TRACE("nlsat_explain", tout << "[debug] select equal for simplify\n";
-                    m_pm.display(tout, eq);
-                    tout << std::endl;
+                }
+                DTRACE(std::cout << "select equal for simplify\n";
+                    m_pm.display(std::cout, eq);
+                    std::cout << std::endl;
                 );
                 TRACE("nlsat_simplify_core", tout << "using equality for simplifying core\n"; 
                       m_pm.display(tout, eq, m_solver.display_proc()); tout << "\n";);
                 if (!simplify(C, eq, max)){
-                    TRACE("nlsat_explain", tout << "[debug] break here\n";);
+                    DTRACE(std::cout << "break here\n";);
                     break;
                 }
             }
             // Simplify using equations using variables from lower stages.
+            DTRACE(std::cout << "simplify using lower levels" << std::endl;);
             while (!C.empty()) {
-                TRACE("nlsat_explain", tout << "[debug] selecet lower stage equal\n";);
+                DTRACE(
+                    std::cout << "show curr scoped literal vector:\n";
+                    display(std::cout, C) << std::endl;);
+                // TODO: same ineq equalities can be selected more than once
                 ineq_atom * eq = select_lower_stage_eq(C, max);
-                if (eq == nullptr)
+                if (eq == nullptr) {
+                    DTRACE(std::cout << "select lower level eq nullptr" << std::endl;);
                     break;
+                }
+                DTRACE(std::cout << "select lower equal for simplify\n";
+                       m_solver.display(std::cout, *eq); std::cout << std::endl;);
                 SASSERT(eq->size() == 1);
                 SASSERT(!eq->is_even(0));
                 poly * eq_p = eq->p(0);
-                TRACE("nlsat_explain", tout << "[debug] enter verify" << std::endl;);
-                VERIFY(simplify(C, eq_p, max));
-                TRACE("nlsat_explain", tout << "[debug] exit verify" << std::endl;);
+                // current dynamic equality record won't make sure that simplify will always take place
+                simplify(C, eq_p, max);
                 // add equation as an assumption                
                 TRACE("nlsat_simpilfy_core", display(tout << "adding equality as assumption ", literal(eq->bvar(), true)); tout << "\n";);
                 add_literal(literal(eq->bvar(), true));
@@ -1604,16 +1522,12 @@ namespace nlsat {
                 // var max = max_var(num, ls);
                 var max = m_solver.max_level_or_unassigned_literals(num, ls);
                 SASSERT(max != null_var);
-                TRACE("nlsat_explain", display(tout << "core before normalization\n", m_core2) << "\n";);
-                // fix bug for MulliganEconomicsModel0054e
+                DTRACE(display(std::cout << "core before normalization\n", m_core2) << std::endl;);
                 normalize(m_core2, max);
-                TRACE("nlsat_explain", display(tout << "core after normalization\n", m_core2) << "\n";);
-                // TRACE("nlsat_explain", display(tout << "core before simplify\n", m_core2) << "\n";);
-                // fix bug for MulliganEconomicsModel0054e
+                DTRACE(display(std::cout << "core after normalization\n", m_core2) << std::endl;);
+                DTRACE(display(std::cout << "core before simplify\n", m_core2) << std::endl;);
                 simplify(m_core2, max);
-                // TRACE("nlsat_explain", display(tout << "core after simplify\n", m_core2) << "\n";);
-                // TRACE("nlsat_explain", tout << "[dynamic] we disable simplify currently" << std::endl;);
-                TRACE("nlsat_explain", tout << "[dynamic] we enable simplify currently" << std::endl;);
+                DTRACE(display(std::cout << "core after simplify\n", m_core2) << std::endl;);
                 main(m_core2.size(), m_core2.data());
                 m_core2.reset();
             }

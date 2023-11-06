@@ -2354,9 +2354,7 @@ namespace nlsat {
         */
         bool update_clause_infeasible_set(int idx, var arith_var) {
             interval_set_ref curr_st(m_ism);
-            std::cout << "before get clause" << std::endl;
             curr_st = get_clause_infeasible_set(idx, arith_var);
-            std::cout << "get clause inf done" << std::endl;
             interval_set_ref union_st(m_ism);
             union_st = m_ism.mk_union(curr_st, m_infeasible[arith_var]);
             if(m_ism.is_full(union_st)) { // conflict
@@ -2369,7 +2367,6 @@ namespace nlsat {
                     DTRACE(std::cout << "up assign" << std::endl;);
                     assign_literal(l, mk_clause_jst(m_clauses[idx]));
                 }
-                std::cout << "after check unit" << std::endl;
                 // second, update infeasible set
                 if(union_st != nullptr) {
                     m_ism.inc_ref(union_st);
@@ -2864,11 +2861,6 @@ namespace nlsat {
                     SASSERT(another_var != null_var);
                     unsigned idx = watches[i]->m_clause_index;
                     clause const &cls = *m_clauses[idx];
-                    std::cout << "before: ";
-                    display_hybrid_var(std::cout, watches[i]->v1) << std::endl;
-                    display_hybrid_var(std::cout, watches[i]->v2) << std::endl;
-                    std::cout << "check clause here: ";
-                    display(std::cout, m_clauses[idx]) << std::endl;
                     if (is_hybrid_assigned(another_var)) { // clause is all assigned
                         bool is_sat = false;
                         for (literal l : cls) {
@@ -4102,9 +4094,7 @@ namespace nlsat {
                 return sign ? m_ism.mk_complement(m_var_atom_infeasible_set[v][idx].second) : m_var_atom_infeasible_set[v][idx].second;
             } else {
                 interval_set_ref curr_st(m_ism);
-                std::cout << "before eval" << std::endl;
                 curr_st = m_evaluator.infeasible_intervals(m_atoms[idx], false, cls, v);
-                std::cout << "after eval" << std::endl;
                 if(curr_st != nullptr) {
                     m_ism.inc_ref(curr_st);
                 }
@@ -4121,14 +4111,10 @@ namespace nlsat {
                 interval_set_ref atom_st(m_ism);
                 curr_st = m_ism.mk_full();
                 for(literal l: *m_clauses[idx]) {
-                    std::cout << "before here" << std::endl;
                     if(m_nlsat_atoms[l.var()]->m_vars.contains(v)) {
-                        std::cout << "after here 1" << std::endl;
                         atom_st = get_atom_infeasible_set(l.var(), v, l.sign(), m_clauses[idx]);
-                        std::cout << "after here 12" << std::endl;
                         curr_st = m_ism.mk_intersection(curr_st, atom_st);
                     } else {
-                        std::cout << "after here 2" << std::endl;
                         lbool v = value(l);
                         SASSERT(v != l_undef);
                         if(v == l_true) {
