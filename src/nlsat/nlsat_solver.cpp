@@ -1681,11 +1681,8 @@ namespace nlsat {
           Propagate atom using current infeasible set.
         */
         void insert_unit_atom(unsigned idx, var x) {
-            // DTRACE(std::cout << "insert unit atom: "; display_atom(std::cout, idx) << std::endl;);
-            // DTRACE(std::cout << "unit var: " << x << std::endl;);
             m_arith_unit_atom[x].push_back(idx);
             real_propagate_atom(idx, x);
-            // DTRACE(std::cout << "insert unit atom done " << std::endl;);
         }
 
         void update_unit_clause_after_var_unassigned(hybrid_var x) {
@@ -2360,7 +2357,6 @@ namespace nlsat {
             if(m_ism.is_full(union_st)) { // conflict
                 return false;
             } else { // consistent
-                std::cout << "consistent" << std::endl;
                 // first, up unit clauses
                 literal l;
                 if (check_unit_clause(m_clauses[idx], l)) {
@@ -2914,9 +2910,6 @@ namespace nlsat {
                                 }
                             }
                         }
-                        std::cout << "after: ";
-                        display_hybrid_var(std::cout, watches[i]->v1) << std::endl;
-                        display_hybrid_var(std::cout, watches[i]->v2) << std::endl;
                     }
                 }
                 watches.shrink(j);
@@ -4531,8 +4524,6 @@ namespace nlsat {
                     m_lemma.push_back(antecedent);
                     DTRACE(std::cout << "case 2 antecedent, push back lemma: "; display(std::cout, antecedent) << std::endl;);
                 }
-            } else {
-                std::cout << "literal is marked" << std::endl;
             }
         }
 
@@ -4578,7 +4569,6 @@ namespace nlsat {
             unsigned j = 0;
             for(unsigned i = 0; i < cls.size(); i++) {
                 literal curr = cls[i];
-                std::cout << lbool2str(value(curr)) << std::endl;
                 if(value(curr) == l_false) {
                     continue;
                 }
@@ -6313,7 +6303,7 @@ namespace nlsat {
                         break;
 
                     case trail::INFEASIBLE_UPDT:
-                        out << "[INFEASIBLE UPDT]: "; m_display_var(std::cout, ele.m_x) << " ";
+                        out << "[INFEASIBLE UPDT]: "; m_display_var(out, ele.m_x) << " ";
                         m_ism.display(out, ele.m_old_set);out << " -> ";
                         m_ism.display(out, ele.m_new_set) << std::endl;
                         break;
