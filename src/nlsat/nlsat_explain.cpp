@@ -1494,7 +1494,7 @@ namespace nlsat {
                 // current dynamic equality record won't make sure that simplify will always take place
                 simplify(C, eq_p, max);
                 // add equation as an assumption                
-                TRACE("nlsat_simpilfy_core", display(tout << "adding equality as assumption ", literal(eq->bvar(), true)); tout << "\n";);
+                DTRACE(display(std::cout << "adding equality as assumption ", literal(eq->bvar(), true)); std::cout << "\n";);
                 add_literal(literal(eq->bvar(), true));
             }
         }
@@ -1523,7 +1523,7 @@ namespace nlsat {
                 var max = m_solver.max_level_or_unassigned_literals(num, ls);
                 SASSERT(max != null_var);
                 DTRACE(display(std::cout << "core before normalization\n", m_core2) << std::endl;);
-                normalize(m_core2, max);
+                // normalize(m_core2, max);
                 DTRACE(display(std::cout << "core after normalization\n", m_core2) << std::endl;);
                 DTRACE(display(std::cout << "core before simplify\n", m_core2) << std::endl;);
                 simplify(m_core2, max);
