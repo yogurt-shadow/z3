@@ -2452,9 +2452,6 @@ namespace nlsat {
             int i, j = 0, size = watches.size();
             for(i = 0; i < size; i++) {
                 int c_idx = watches[i]->m_clause_index;
-                DTRACE(std::cout << "curr clause: ";
-                    display(std::cout, *m_clauses[c_idx]) << std::endl;
-                );
                 int l1 = watches[i]->l1, l2 = watches[i]->l2;
                 // the watches have already been changed (this may happen after the loop of first watcher)
                 // this case only happens for SMT, 
@@ -3286,6 +3283,7 @@ namespace nlsat {
             register_nlsat_vars();
             register_nlsat_atoms();
             register_nlsat_clauses();
+            clear_deleted_atoms();
         }
 
         // void simplify_clauses_using_infeasible() {
@@ -3326,7 +3324,7 @@ namespace nlsat {
         void clear_deleted_atoms() {
             DTRACE(std::cout << "clear deleted atoms" << std::endl;);
             for(bool_var b: m_frontend_deleted_atoms) {
-                del_nlsat_atom(b);
+                del(b);
             }
         }
 
@@ -3346,7 +3344,6 @@ namespace nlsat {
             for(bool_var b = 0; b < m_atoms.size(); b++) {
                 register_nlsat_atom(b);
             }
-            clear_deleted_atoms();
             DTRACE(std::cout << "register atoms done" << std::endl;);
         }
 
@@ -3444,9 +3441,15 @@ namespace nlsat {
         bool_var_vector m_frontend_deleted_atoms;
 
         void register_nlsat_clause(unsigned idx) {
+            DTRACE(std::cout << "register clause: ";
+                display(std::cout, *m_clauses[idx]) << std::endl;
+            );
             clause * cls = m_clauses[idx];
             m_nlsat_clauses.enlarge(idx, nullptr);
             var_table avars; bool_var_table bvars;
+            if(m_clauses[idx] == nullptr) {
+                std::cout << "nullptr" << std::endl;
+            }
             collect_clause_arith_and_bool_vars(m_clauses[idx], avars, bvars);
             m_nlsat_clauses[idx] = new nlsat_clause(idx, m_clauses[idx], avars, bvars);
             for(bool_var bv: bvars) {
@@ -3606,7 +3609,9 @@ namespace nlsat {
             if(b >= m_nlsat_atoms.size() || m_nlsat_atoms[b] == nullptr) { // deleted previously
                 return;
             }
-            DTRACE(std::cout << "delete atom: " << b << std::endl;);
+            DTRACE(std::cout << "delete atom: " << b << std::endl;
+                display_atom(std::cout, b) << std::endl;
+            );
             SASSERT(b < m_nlsat_atoms.size());
             m_frontend_bvalues[b] = l_undef;
             m_frontend_used[b] = false;
@@ -3898,6 +3903,9 @@ namespace nlsat {
             avars.reset(); bvars.reset();
             for(literal l: *cls) {
                 bool_var b = l.var();
+                if(m_dead[b]) {
+                    continue;
+                }
                 if(m_atoms[b] == nullptr) {
                     bvars.insert_if_not_there(m_pure_bool_convert[b]);
                 } else {
@@ -4192,6 +4200,7 @@ namespace nlsat {
         }
         
         void set_clause_literal_watcher(unsigned idx, bool & deleted) {
+            DTRACE(std::cout << "set clause literal watcher" << std::endl;);
             deleted = false;
             clause &curr_clause = *m_clauses[idx];
             SASSERT(curr_clause.size() > 0);
@@ -4239,6 +4248,7 @@ namespace nlsat {
         }
 
         void set_clause_var_watcher(unsigned idx) {
+            DTRACE(std::cout << "set clause var watcher" << std::endl;);
             nlsat_clause const *curr_clause = m_nlsat_clauses[idx];
             if(curr_clause->m_bool_vars.empty()) { // no bool var
                 SASSERT(!curr_clause->m_vars.empty());
@@ -4250,12 +4260,9 @@ namespace nlsat {
                         m_arith_unit_clauses_more_lits[v].push_back(idx);
                     }
                     if(!update_clause_frontend_infeasible_set(idx, v)) { // conflict
+                        DTRACE(std::cout << "frontend infeasible unsat" << std::endl;);
                         frontend_conflict = true;
                         return;
-                    } else {
-                        if(m_clauses[idx]->size() == 1) {
-                            frontend_propagate((*m_clauses[idx])[0], idx, false, true);
-                        }
                     }
                 } else { // more arith vars
                     var v1 = *it;
@@ -4290,6 +4297,7 @@ namespace nlsat {
                 m_var_watching_clauses[b2].push_back(new_watcher);
                 m_nlsat_clauses[idx]->m_var_watcher = new_watcher;
             }
+            DTRACE(std::cout << "set clause var watcher done" << std::endl;);        
         }
 
         void init_reduce_options() {
