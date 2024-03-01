@@ -13,7 +13,7 @@ if __name__ == "__main__":
         for line in open(file_name):
             if "system error:" in line:
                 for ele in line.strip().split(' '):
-                    if ".smt2" in ele:
+                    if ".smt2" in ele and os.path.getsize(ele) < 100 * 1024 * 1024:
                         command = "cp -r " + ele + " " + destination
                         error_bench.append(ele)
                         os.system(command)
