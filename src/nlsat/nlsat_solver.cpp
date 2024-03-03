@@ -33,6 +33,7 @@ Revision History:
 #include "nlsat/nlsat_evaluator.h"
 #include "nlsat/nlsat_explain.h"
 #include "nlsat/nlsat_params.hpp"
+#include <iostream>
 
 #define NLSAT_EXTRA_VERBOSE
 
@@ -1515,15 +1516,19 @@ namespace nlsat {
                 curr_st = m_evaluator.infeasible_intervals(a, l.sign(), &c);
                 res_st = m_ism.mk_intersection(res_st, curr_st);
             }
+            m_ism.inc_ref(res_st);
             return res_st;
         }
 
         interval_set* get_clauses_infset(clause_vector const &cs) {
+            std::cout << "get clauses inf start" << std::endl;
             interval_set_ref curr_st(m_ism), res_st(m_ism);
             for(clause *c: cs) {
                 curr_st = get_clause_infset(*c);
                 res_st = m_ism.mk_union(curr_st, res_st);
             }
+            std::cout << "get clauses inf done" << std::endl;
+            m_ism.inc_ref(res_st);
             return res_st;
         }
 
@@ -1531,14 +1536,23 @@ namespace nlsat {
             SASSERT(m_xk != null_var);
             interval_set_ref curr_set(m_ism);
             curr_set = get_clauses_infset(cs);
+            if(curr_set == nullptr) {
+                std::cout << "nullptr here" << std::endl;
+            } else {
+                std::cout << "not nullptr here" << std::endl;
+            }
+
             if(m_ism.is_full(curr_set)) {
+                std::cout << "full case" << std::endl;
                 appointed = false;
                 for(clause *c: cs) {
                     if(!process_clause(*c, false)) {
+                        std::cout << "process done" << std::endl;
                         return c;
                     }
                 }
             } else {
+                std::cout << "path case" << std::endl;
                 appointed = true;
                 m_ism.peek_in_complement(curr_set, m_is_int[m_xk], m_appointed_value, m_randomize); // cache current selected value
                 process_clauses_using_appointed_value(cs);
@@ -1547,9 +1561,11 @@ namespace nlsat {
         }
 
         void process_clauses_using_appointed_value(clause_vector const &cs) {
+            std::cout << "process clauses app start" << std::endl;
             for(clause *c: cs) {
                 process_clause_using_appointed_value(*c);
             }
+            std::cout << "process clauses app done" << std::endl;
         }
 
         /**

@@ -117,6 +117,9 @@ namespace nlsat {
     }
 
     void interval_set_manager::dec_ref(interval_set * s) {
+        if(s == nullptr) {
+            return;
+        }
         SASSERT(s->m_ref_count > 0);
         s->m_ref_count--;
         if (s->m_ref_count == 0)
@@ -124,6 +127,9 @@ namespace nlsat {
     }
 
     void interval_set_manager::inc_ref(interval_set * s) {
+        if(s == nullptr) {
+            return;
+        }
         s->m_ref_count++;
     }
     
