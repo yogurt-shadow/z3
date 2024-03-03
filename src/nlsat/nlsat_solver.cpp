@@ -216,6 +216,9 @@ namespace nlsat {
         unsigned               m_decisions;
         unsigned               m_stages;
         unsigned               m_irrational_assignments; // number of irrational witnesses
+        
+        bool                   appointed;
+        scoped_anum            m_appointed_value;
 
         imp(solver& s, ctx& c):
             m_ctx(c),
@@ -240,7 +243,9 @@ namespace nlsat {
             m_scope_lvl(0),
             m_lemma(s),
             m_lazy_clause(s),
-            m_lemma_assumptions(m_asm) {
+            m_lemma_assumptions(m_asm),
+            m_appointed_value(m_am)
+            {
             updt_params(c.m_params);
             reset_statistics();
             mk_true_bvar();
@@ -1396,6 +1401,82 @@ namespace nlsat {
             return true;
         }
 
+        void process_clause_using_appointed_value(clause const &cls) {
+            SASSERT(m_xk == max_var(cls));
+            unsigned num_undef   = 0;                // number of undefined literals
+            unsigned first_undef = UINT_MAX;         // position of the first undefined literal
+            unsigned first_appointed = UINT_MAX;     // first undefined literal but satisfied by appointed value
+            interval_set_ref first_undef_set(m_ism), first_appointed_set(m_ism);
+            interval_set * xk_set = m_infeasible[m_xk]; // current set of infeasible interval for current variable
+            SASSERT(!m_ism.is_full(xk_set));
+            for (unsigned idx = 0; idx < cls.size(); ++idx) {
+                literal l = cls[idx];
+                checkpoint();
+                if (value(l) == l_false)
+                    continue;
+                if (value(l) == l_true)
+                    return;  // could happen if clause is a tautology
+                CTRACE("nlsat", max_var(l) != m_xk || value(l) != l_undef, display(tout); 
+                       tout << "xk: " << m_xk << ", max_var(l): " << max_var(l) << ", l: "; display(tout, l) << "\n";
+                       display(tout, cls) << "\n";);
+                SASSERT(value(l) == l_undef);
+                SASSERT(max_var(l) == m_xk);
+                bool_var b = l.var();
+                atom * a   = m_atoms[b];
+                SASSERT(a != nullptr);
+                interval_set_ref curr_set(m_ism);
+                curr_set = m_evaluator.infeasible_intervals(a, l.sign(), &cls);
+                TRACE("nlsat_inf_set", tout << "infeasible set for literal: "; display(tout, l); tout << "\n"; m_ism.display(tout, curr_set); tout << "\n";
+                      display(tout, cls) << "\n";); 
+                if (m_ism.is_empty(curr_set)) {
+                    TRACE("nlsat_inf_set", tout << "infeasible set is empty, found literal\n";);
+                    R_propagate(l, nullptr);
+                    SASSERT(is_satisfied(cls));
+                    return;
+                }
+                if (m_ism.is_full(curr_set)) {
+                    TRACE("nlsat_inf_set", tout << "infeasible set is R, skip literal\n";);
+                    R_propagate(~l, nullptr);
+                    continue;
+                }
+                if (m_ism.subset(curr_set, xk_set)) {
+                    TRACE("nlsat_inf_set", tout << "infeasible set is a subset of current set, found literal\n";);
+                    R_propagate(l, xk_set);
+                    return;
+                }
+                interval_set_ref tmp(m_ism);
+                tmp = m_ism.mk_union(curr_set, xk_set);
+                if (m_ism.is_full(tmp)) {
+                    TRACE("nlsat_inf_set", tout << "infeasible set + current set = R, skip literal\n";
+                          display(tout, cls) << "\n";);
+                    R_propagate(~l, tmp, false);
+                    continue;
+                }
+                num_undef++;
+                if (first_undef == UINT_MAX) {
+                    first_undef = idx;
+                    first_undef_set = curr_set;
+                }
+                if(first_appointed == UINT_MAX && !m_ism.contains_value(curr_set, m_appointed_value)) {
+                    first_appointed = idx;
+                    first_appointed_set = curr_set;
+                }
+            }
+            TRACE("nlsat_inf_set", tout << "num_undef: " << num_undef << "\n";);
+            if (num_undef == 0) 
+                return;
+            SASSERT(first_undef != UINT_MAX);
+            if (num_undef == 1) {
+                // unit clause
+                assign(cls[first_undef], mk_clause_jst(&cls)); 
+                updt_infeasible(first_undef_set);
+            }
+            else { // decide first literal with appointed value
+                decide(cls[first_appointed]);
+                updt_infeasible(first_appointed_set);
+            }
+        }
+
         /**
            \brief Try to satisfy the given clause. Return true if succeeded.
 
@@ -1410,16 +1491,65 @@ namespace nlsat {
                 return process_arith_clause(cls, satisfy_learned);
         }
 
-        /**
-           \brief Try to satisfy the given "set" of clauses. 
-           Return 0, if the set was satisfied, or the violating clause otherwise
-        */
-        clause * process_clauses(clause_vector const & cs) {
-            for (clause* c : cs) {
-                if (!process_clause(*c, false))
+        clause * process_bool_clauses(clause_vector const &cs) {
+            for (clause *c: cs) {
+                if(!process_clause(*c, false)) {
                     return c;
+                }
             }
-            return nullptr; // succeeded
+            return nullptr;
+        }
+
+        interval_set* get_clause_infset(clause const &c) {
+            interval_set_ref res_st(m_ism);
+            res_st = m_ism.mk_full();
+            for(literal l: c) {
+                if(value(l) == l_true) {
+                    return nullptr;
+                }
+                if(value(l) == l_false) {
+                    continue;
+                }
+                atom * a   = m_atoms[l.var()];
+                interval_set_ref curr_st(m_ism);
+                curr_st = m_evaluator.infeasible_intervals(a, l.sign(), &c);
+                res_st = m_ism.mk_intersection(res_st, curr_st);
+            }
+            return res_st;
+        }
+
+        interval_set* get_clauses_infset(clause_vector const &cs) {
+            interval_set_ref curr_st(m_ism), res_st(m_ism);
+            for(clause *c: cs) {
+                curr_st = get_clause_infset(*c);
+                res_st = m_ism.mk_union(curr_st, res_st);
+            }
+            return res_st;
+        }
+
+        clause * process_arith_clauses(clause_vector const &cs) {
+            SASSERT(m_xk != null_var);
+            interval_set_ref curr_set(m_ism);
+            curr_set = get_clauses_infset(cs);
+            if(m_ism.is_full(curr_set)) {
+                appointed = false;
+                for(clause *c: cs) {
+                    if(!process_clause(*c, false)) {
+                        return c;
+                    }
+                }
+            } else {
+                appointed = true;
+                m_ism.peek_in_complement(curr_set, m_is_int[m_xk], m_appointed_value, m_randomize); // cache current selected value
+                process_clauses_using_appointed_value(cs);
+                return nullptr;
+            }
+        }
+
+        void process_clauses_using_appointed_value(clause_vector const &cs) {
+            for(clause *c: cs) {
+                process_clause_using_appointed_value(*c);
+            }
         }
 
         /**
@@ -1453,11 +1583,15 @@ namespace nlsat {
         */
         void select_witness() {
             scoped_anum w(m_am);
-            SASSERT(!m_ism.is_full(m_infeasible[m_xk]));
-            m_ism.peek_in_complement(m_infeasible[m_xk], m_is_int[m_xk], w, m_randomize);
+            if(appointed) {
+                m_am.set(w, m_appointed_value);
+            } else {
+                SASSERT(!m_ism.is_full(m_infeasible[m_xk]));
+                m_ism.peek_in_complement(m_infeasible[m_xk], m_is_int[m_xk], w, m_randomize);
+            }
             TRACE("nlsat", 
-                  tout << "infeasible intervals: "; m_ism.display(tout, m_infeasible[m_xk]); tout << "\n";
-                  tout << "assigning "; m_display_var(tout, m_xk) << "(x" << m_xk << ") -> " << w << "\n";);
+                tout << "infeasible intervals: "; m_ism.display(tout, m_infeasible[m_xk]); tout << "\n";
+                tout << "assigning "; m_display_var(tout, m_xk) << "(x" << m_xk << ") -> " << w << "\n";);
             TRACE("nlsat_root", tout << "value as root object: "; m_am.display_root(tout, w); tout << "\n";);
             if (!m_am.is_rational(w))
                 m_irrational_assignments++;
@@ -1518,9 +1652,9 @@ namespace nlsat {
                     checkpoint();
                     clause * conflict_clause;
                     if (m_xk == null_var)
-                        conflict_clause = process_clauses(m_bwatches[m_bk]);
+                        conflict_clause = process_bool_clauses(m_bwatches[m_bk]);
                     else 
-                        conflict_clause = process_clauses(m_watches[m_xk]);
+                        conflict_clause = process_arith_clauses(m_watches[m_xk]);
                     if (conflict_clause == nullptr)
                         break;
                     if (!resolve(*conflict_clause)) 
@@ -3728,6 +3862,4 @@ namespace nlsat {
     void solver::collect_statistics(statistics & st) {
         return m_imp->collect_statistics(st);
     }
-
-
 };
