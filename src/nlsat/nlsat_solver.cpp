@@ -2305,14 +2305,14 @@ namespace nlsat {
                 new_cls = mk_clause(sz, m_lemma.data(), true, m_lemma_assumptions.get());
             }
             NLSAT_VERBOSE(display(verbose_stream(), *new_cls) << "\n";);
-            // if (!process_clause(*new_cls, true)) {
-            //     TRACE("nlsat", std::cout << "new clause triggered another conflict, restarting conflict resolution...\n";
-            //           display(std::cout, *new_cls) << "\n";
-            //           );
-            //     // we are still in conflict
-            //     conflict_clause = new_cls;
-            //     goto start;
-            // }
+            if (is_bool_lemma(new_cls->size(), new_cls->data()) && !process_clause(*new_cls, true)) {
+                TRACE("nlsat", std::cout << "new clause triggered another conflict, restarting conflict resolution...\n";
+                      display(std::cout, *new_cls) << "\n";
+                      );
+                // we are still in conflict
+                conflict_clause = new_cls;
+                goto start;
+            }
             TRACE("nlsat_resolve_done", display_assignment(std::cout););
             return true;
         }
