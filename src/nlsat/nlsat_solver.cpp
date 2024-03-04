@@ -1501,11 +1501,19 @@ namespace nlsat {
         }
 
         clause * process_bool_clauses(clause_vector const &cs) {
+            std::cout << "process bool clauses" << std::endl;
+            display_clauses(std::cout, cs) << std::endl;
+            std::cout << "display clauses done" << std::endl;
+
             for (clause *c: cs) {
+                std::cout << "process bool clause" << std::endl;
+                display(std::cout, *c) << std::endl;
                 if(!process_clause(*c, false)) {
+                    std::cout << "process bool done" << std::endl;
                     return c;
                 }
             }
+            std::cout << "process bool done" << std::endl;
             return nullptr;
         }
 
@@ -1542,6 +1550,7 @@ namespace nlsat {
 
         std::ostream & display_clauses(std::ostream & out, clause_vector const &cs) const {
             out << "display clauses" << std::endl;
+            out << "size: " << cs.size() << std::endl;
             for(clause *c: cs) {
                 display(out, *c) << std::endl;
             }
@@ -1549,30 +1558,30 @@ namespace nlsat {
         }
 
         clause * process_arith_clauses(clause_vector const &cs) {
-            // std::cout << "process arith clauses" << std::endl;
-            // display_clauses(std::cout, cs) << std::endl;
+            std::cout << "process arith clauses" << std::endl;
+            display_clauses(std::cout, cs) << std::endl;
 
 
             SASSERT(m_xk != null_var);
             interval_set_ref curr_set(m_ism);
             curr_set = get_clauses_infset(cs);
             curr_set = m_ism.mk_union(curr_set, m_infeasible[m_xk]);
-            // std::cout << "m_xk: " << m_xk << std::endl;
-            // m_display_var(std::cout, m_xk) << std::endl;
-            // std::cout << "infeasible set: ";
-            // m_ism.display(std::cout, curr_set) << std::endl;
+            std::cout << "m_xk: " << m_xk << std::endl;
+            m_display_var(std::cout, m_xk) << std::endl;
+            std::cout << "infeasible set: ";
+            m_ism.display(std::cout, curr_set) << std::endl;
 
             if(m_ism.is_full(curr_set)) { // full case
-                // std::cout << "full case" << std::endl;
+                std::cout << "full case" << std::endl;
                 appointed = false;
                 for(clause *c: cs) {
                     if(!process_clause(*c, false)) {
-                        // std::cout << "process done" << std::endl;
+                        std::cout << "process done" << std::endl;
                         return c;
                     }
                 }
             } else { // path case
-                // std::cout << "path case" << std::endl;
+                std::cout << "path case" << std::endl;
                 appointed = true;
                 m_ism.peek_in_complement(curr_set, m_is_int[m_xk], m_appointed_value, m_randomize); // cache current selected value
                 process_clauses_using_appointed_value(cs);
@@ -1681,6 +1690,9 @@ namespace nlsat {
                     return l_true;
                 }
                 while (true) {
+                    std::cout << "new while loop" << std::endl;
+
+
                     TRACE("nlsat_verbose", std::cout << "processing variable "; 
                           if (m_xk != null_var) {
                               m_display_var(std::cout, m_xk); std::cout << " " << m_watches[m_xk].size();
@@ -1691,6 +1703,8 @@ namespace nlsat {
                           std::cout << "\n";);
                     checkpoint();
                     clause * conflict_clause;
+                    std::cout << "m_bk: " << m_bk << std::endl;
+                    std::cout << "m_xk: " << m_xk << std::endl;
                     if (m_xk == null_var)
                         conflict_clause = process_bool_clauses(m_bwatches[m_bk]);
                     else 
@@ -2145,7 +2159,7 @@ namespace nlsat {
            \brief Return true if the conflict was solved.
         */
         bool resolve(clause const & conflict) {
-            // std::cout << "enter resolve..." << std::endl;
+            std::cout << "enter resolve..." << std::endl;
             clause const * conflict_clause = &conflict;
             m_lemma_assumptions = nullptr;
         start:
@@ -2239,6 +2253,7 @@ namespace nlsat {
 
             if (m_lemma.empty()) {
                 TRACE("nlsat", std::cout << "empty clause generated\n";);
+                std::cout << "resolve done" << std::endl;
                 return false; // problem is unsat, empty clause was generated
             }
 
@@ -2246,8 +2261,8 @@ namespace nlsat {
             TRACE("nlsat", std::cout << "new lemma:\n"; display(std::cout, m_lemma.size(), m_lemma.data()); std::cout << "\n";
                   std::cout << "found_decision: " << found_decision << "\n";);
 
-            // std::cout << "new lemma:\n"; display(std::cout, m_lemma.size(), m_lemma.data()); std::cout << "\n";
-            //       std::cout << "found_decision: " << found_decision << "\n";
+            std::cout << "new lemma:\n"; display(std::cout, m_lemma.size(), m_lemma.data()); std::cout << "\n";
+                  std::cout << "found_decision: " << found_decision << "\n";
             
             if (false && m_check_lemmas) {
                 check_lemma(m_lemma.size(), m_lemma.data(), false, m_lemma_assumptions.get());
@@ -2299,21 +2314,26 @@ namespace nlsat {
 
                 if (lemma_is_clause(*conflict_clause)) {
                     TRACE("nlsat", std::cout << "found decision literal in conflict clause\n";);
+
+
+                    std::cout << "found decision literal in conflict clause" << std::endl;
                     VERIFY(process_clause(*conflict_clause, true));
+                    std::cout << "resolve done" << std::endl;
                     return true;
                 }
                 new_cls = mk_clause(sz, m_lemma.data(), true, m_lemma_assumptions.get());
             }
             NLSAT_VERBOSE(display(verbose_stream(), *new_cls) << "\n";);
-            // if (!process_clause(*new_cls, true)) {
-            //     TRACE("nlsat", std::cout << "new clause triggered another conflict, restarting conflict resolution...\n";
-            //           display(std::cout, *new_cls) << "\n";
-            //           );
-            //     // we are still in conflict
-            //     conflict_clause = new_cls;
-            //     goto start;
-            // }
+            if (is_bool_lemma(new_cls->size(), new_cls->data()) && !process_clause(*new_cls, true)) {
+                TRACE("nlsat", std::cout << "new clause triggered another conflict, restarting conflict resolution...\n";
+                      display(std::cout, *new_cls) << "\n";
+                      );
+                // we are still in conflict
+                conflict_clause = new_cls;
+                goto start;
+            }
             TRACE("nlsat_resolve_done", display_assignment(std::cout););
+            std::cout << "resolve done" << std::endl;
             return true;
         }
 
