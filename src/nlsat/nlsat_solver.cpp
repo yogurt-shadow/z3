@@ -346,7 +346,7 @@ namespace nlsat {
             atom * a = m_atoms[b];
             if (a == nullptr)
                 return;
-            TRACE("ref", display(tout << "inc: " << b << " " << a->ref_count() << " ", *a) << "\n";);
+            TRACE("ref", display(std::cout << "inc: " << b << " " << a->ref_count() << " ", *a) << "\n";);
             a->inc_ref();
         }
         
@@ -362,7 +362,7 @@ namespace nlsat {
                 return;
             SASSERT(a->ref_count() > 0);
             a->dec_ref();
-            TRACE("ref", display(tout << "dec: " << b << " " << a->ref_count() << " ", *a) << "\n";);
+            TRACE("ref", display(std::cout << "dec: " << b << " " << a->ref_count() << " ", *a) << "\n";);
             if (a->ref_count() == 0)
                 del(a);
         }
@@ -553,7 +553,7 @@ namespace nlsat {
         }
 
         void del(ineq_atom * a) {
-            CTRACE("nlsat_solver", a->ref_count() > 0, display(tout, *a) << "\n";);
+            CTRACE("nlsat_solver", a->ref_count() > 0, display(std::cout, *a) << "\n";);
             // this triggers in too many benign cases:
             // SASSERT(a->ref_count() == 0);
             m_ineq_atoms.erase(a);
@@ -575,7 +575,7 @@ namespace nlsat {
         void del(atom * a) {
             if (a == nullptr)
                 return;
-            TRACE("nlsat_verbose", display(tout << "del: b" << a->m_bool_var << " " << a->ref_count() << " ", *a) << "\n";);
+            TRACE("nlsat_verbose", display(std::cout << "del: b" << a->m_bool_var << " " << a->ref_count() << " ", *a) << "\n";);
             if (a->is_ineq_atom())
                 del(to_ineq_atom(a));
             else
@@ -606,7 +606,7 @@ namespace nlsat {
                 if (curr_max > max || max == null_var)
                     max = curr_max;
                 uniq_ps.push_back(m_cache.mk_unique(p));
-                TRACE("nlsat_table_bug", tout << "p: " << p << ", uniq: " << uniq_ps.back() << "\n";);
+                TRACE("nlsat_table_bug", std::cout << "p: " << p << ", uniq: " << uniq_ps.back() << "\n";);
             }
             void * mem = m_allocator.allocate(ineq_atom::get_obj_size(sz));
             if (sign < 0)
@@ -614,8 +614,8 @@ namespace nlsat {
             ineq_atom * tmp_atom = new (mem) ineq_atom(k, sz, uniq_ps.data(), is_even, max);
             ineq_atom * atom = m_ineq_atoms.insert_if_not_there(tmp_atom);
             CTRACE("nlsat_table_bug", tmp_atom != atom, ineq_atom::hash_proc h; 
-                  tout << "mk_ineq_atom hash: " << h(tmp_atom) << "\n"; display(tout, *tmp_atom, m_display_var) << "\n";);
-            CTRACE("nlsat_table_bug", atom->max_var() != max, display(tout << "nonmax: ", *atom, m_display_var) << "\n";);
+                  std::cout << "mk_ineq_atom hash: " << h(tmp_atom) << "\n"; display(std::cout, *tmp_atom, m_display_var) << "\n";);
+            CTRACE("nlsat_table_bug", atom->max_var() != max, display(std::cout << "nonmax: ", *atom, m_display_var) << "\n";);
             SASSERT(atom->max_var() == max);
             is_new = (atom == tmp_atom);
             if (is_new) {
@@ -639,7 +639,7 @@ namespace nlsat {
                 bool_var b = mk_bool_var_core();
                 m_atoms[b] = atom;
                 atom->m_bool_var = b;
-                TRACE("nlsat_verbose", display(tout << "create: b" << atom->m_bool_var << " ", *atom) << "\n";);
+                TRACE("nlsat_verbose", display(std::cout << "create: b" << atom->m_bool_var << " ", *atom) << "\n";);
                 return b;
             }
         }
@@ -679,7 +679,7 @@ namespace nlsat {
             polynomial_ref p1(m_pm), uniq_p(m_pm);
             p1 = m_pm.flip_sign_if_lm_neg(p); // flipping the sign of the polynomial will not change its roots.
             uniq_p = m_cache.mk_unique(p1); 
-            TRACE("nlsat_solver", tout << x << " " << p1 << " " << uniq_p << "\n";);
+            TRACE("nlsat_solver", std::cout << x << " " << p1 << " " << uniq_p << "\n";);
             SASSERT(i > 0);
             SASSERT(x >= max_var(p));
             SASSERT(k == atom::ROOT_LT || k == atom::ROOT_GT || k == atom::ROOT_EQ || k == atom::ROOT_LE || k == atom::ROOT_GE);
@@ -814,8 +814,8 @@ namespace nlsat {
         };
 
         void check_lemma(unsigned n, literal const* cls, bool is_valid, assumption_set a) {
-            TRACE("nlsat", display(tout << "check lemma: ", n, cls) << "\n";
-                  display(tout););
+            TRACE("nlsat", display(std::cout << "check lemma: ", n, cls) << "\n";
+                  display(std::cout););
             IF_VERBOSE(0, display(verbose_stream() << "check lemma: ", n, cls) << "\n");
             for (clause* c : m_learned) IF_VERBOSE(1, display(verbose_stream() << "lemma: ", *c) << "\n"); 
             
@@ -884,7 +884,7 @@ namespace nlsat {
                 for (bool_var b : tr) {
                     literal lit(b, false);
                     IF_VERBOSE(0, checker.display(verbose_stream(), lit) << " := " << checker.value(lit) << "\n");
-                    TRACE("nlsat", checker.display(tout, lit) << " := " << checker.value(lit) << "\n";);
+                    TRACE("nlsat", checker.display(std::cout, lit) << " := " << checker.value(lit) << "\n";);
                 }
                 for (clause* c : m_learned) {
                     bool found = false;
@@ -894,7 +894,7 @@ namespace nlsat {
                     }
                     if (!found) {
                         IF_VERBOSE(0, display(verbose_stream() << "violdated clause: ", *c) << "\n");
-                        TRACE("nlsat", display(tout << "violdated clause: ", *c) << "\n";);
+                        TRACE("nlsat", display(std::cout << "violdated clause: ", *c) << "\n";);
                     }
                 }
                 for (clause* c : m_valids) {
@@ -905,7 +905,7 @@ namespace nlsat {
                     }
                     if (!found) {
                         IF_VERBOSE(0, display(verbose_stream() << "violdated tautology clause: ", *c) << "\n");
-                        TRACE("nlsat", display(tout << "violdated tautology clause: ", *c) << "\n";);
+                        TRACE("nlsat", display(std::cout << "violdated tautology clause: ", *c) << "\n";);
                     }                    
                 }
                 UNREACHABLE();
@@ -935,9 +935,14 @@ namespace nlsat {
             SASSERT(num_lits > 0);
             clause * cls = mk_clause_core(num_lits, lits, learned, a);
             ++m_lemma_count;
-            TRACE("nlsat_sort", display(tout << "mk_clause:\n", *cls) << "\n";);
+            TRACE("nlsat_sort", display(std::cout << "mk_clause:\n", *cls) << "\n";);
             std::sort(cls->begin(), cls->end(), lit_lt(*this));
-            TRACE("nlsat_sort", display(tout << "#" << m_lemma_count << " after sort:\n", *cls) << "\n";);
+
+
+            display(std::cout << "mk_clause:\n", *cls) << "\n";
+
+
+            TRACE("nlsat_sort", display(std::cout << "#" << m_lemma_count << " after sort:\n", *cls) << "\n";);
             if (learned && m_log_lemmas) {
                 log_lemma(verbose_stream(), *cls);
             }
@@ -1141,8 +1146,11 @@ namespace nlsat {
          */
         void assign(literal l, justification j) {
             TRACE("nlsat", 
-                  display(tout << "assigning literal: ", l); 
-                  display(tout << " <- ", j););
+                  display(std::cout << "assigning literal: ", l); 
+                  display(std::cout << " <- ", j););
+
+            display(std::cout << "assigning literal: ", l); 
+            display(std::cout << " <- ", j) << std::endl;
 
             SASSERT(assigned_value(l) == l_undef);
             SASSERT(j != null_justification);
@@ -1157,7 +1165,7 @@ namespace nlsat {
             m_justifications[b] = j;
             save_assign_trail(b);
             updt_eq(b, j);
-            TRACE("nlsat_assign", tout << "b" << b << " -> " << m_bvalues[b]  << "\n";);
+            TRACE("nlsat_assign", std::cout << "b" << b << " -> " << m_bvalues[b]  << "\n";);
         }
 
         /**
@@ -1174,25 +1182,25 @@ namespace nlsat {
         lbool value(literal l) {
             lbool val = assigned_value(l);
             if (val != l_undef) {            
-                TRACE("nlsat_verbose", display(tout << " assigned value " << val << " for ", l) << "\n";);
+                TRACE("nlsat_verbose", display(std::cout << " assigned value " << val << " for ", l) << "\n";);
                 return val;
             }
             bool_var b = l.var();
             atom * a = m_atoms[b];
             if (a == nullptr) {
-                TRACE("nlsat_verbose", display(tout << " no atom for ", l) << "\n";);
+                TRACE("nlsat_verbose", display(std::cout << " no atom for ", l) << "\n";);
                 return l_undef;
             }
             var max = a->max_var();
             if (!m_assignment.is_assigned(max)) {
-                TRACE("nlsat_verbose", display(tout << " maximal variable not assigned ", l) << "\n";);
+                TRACE("nlsat_verbose", display(std::cout << " maximal variable not assigned ", l) << "\n";);
                 return l_undef;
             }
             val = to_lbool(m_evaluator.eval(a, l.sign()));
-            TRACE("nlsat_verbose", display(tout << " evaluated value " << val << " for ", l) << "\n";);
-            TRACE("value_bug", tout << "value of: "; display(tout, l); tout << " := " << val << "\n"; 
-                  tout << "xk: " << m_xk << ", a->max_var(): " << a->max_var() << "\n";
-                  display_assignment(tout););            
+            TRACE("nlsat_verbose", display(std::cout << " evaluated value " << val << " for ", l) << "\n";);
+            TRACE("value_bug", std::cout << "value of: "; display(std::cout, l); std::cout << " := " << val << "\n"; 
+                  std::cout << "xk: " << m_xk << ", a->max_var(): " << a->max_var() << "\n";
+                  display_assignment(std::cout););            
             return val;
         }
 
@@ -1202,7 +1210,7 @@ namespace nlsat {
         bool is_satisfied(clause const & cls) const {
             for (literal l : cls) {
                 if (const_cast<imp*>(this)->value(l) == l_true) {
-                    TRACE("value_bug:", tout << l << " := true\n";);
+                    TRACE("value_bug:", std::cout << l << " := true\n";);
                     return true;
                 }
             }
@@ -1215,7 +1223,7 @@ namespace nlsat {
         bool is_inconsistent(unsigned sz, literal const * cls) {
             for (unsigned i = 0; i < sz; i++) {
                 if (value(cls[i]) != l_false) {
-                    TRACE("is_inconsistent", tout << "literal is not false:\n"; display(tout, cls[i]); tout << "\n";); 
+                    TRACE("is_inconsistent", std::cout << "literal is not false:\n"; display(std::cout, cls[i]); std::cout << "\n";); 
                     return false;
                 }
             }
@@ -1272,9 +1280,9 @@ namespace nlsat {
             interval_set * xk_set = m_infeasible[m_xk];
             save_set_updt_trail(xk_set);
             interval_set_ref new_set(m_ism);
-            TRACE("nlsat_inf_set", tout << "updating infeasible set\n"; m_ism.display(tout, xk_set) << "\n"; m_ism.display(tout, s) << "\n";);
+            TRACE("nlsat_inf_set", std::cout << "updating infeasible set\n"; m_ism.display(std::cout, xk_set) << "\n"; m_ism.display(std::cout, s) << "\n";);
             new_set = m_ism.mk_union(s, xk_set);
-            TRACE("nlsat_inf_set", tout << "new infeasible set:\n"; m_ism.display(tout, new_set) << "\n";);
+            TRACE("nlsat_inf_set", std::cout << "new infeasible set:\n"; m_ism.display(std::cout, new_set) << "\n";);
             SASSERT(!m_ism.is_full(new_set));
             m_ism.inc_ref(new_set);
             m_infeasible[m_xk] = new_set;
@@ -1307,9 +1315,9 @@ namespace nlsat {
             SASSERT(x != null_var);
             if (m_var2eq[x] != 0 && degree(m_var2eq[x]) <= degree(a))
                 return; // we only update m_var2eq if the new equality has smaller degree
-            TRACE("nlsat_simplify_core", tout << "Saving equality for "; m_display_var(tout, x) << " (x" << x << ") ";
-                  tout << "scope-lvl: " << scope_lvl() << "\n"; display(tout, literal(b, false)) << "\n";
-                  display(tout, j);
+            TRACE("nlsat_simplify_core", std::cout << "Saving equality for "; m_display_var(std::cout, x) << " (x" << x << ") ";
+                  std::cout << "scope-lvl: " << scope_lvl() << "\n"; display(std::cout, literal(b, false)) << "\n";
+                  display(std::cout, j);
                   );
             save_updt_eq_trail(m_var2eq[x]);
             m_var2eq[x] = a;
@@ -1322,7 +1330,7 @@ namespace nlsat {
         */
         bool process_arith_clause(clause const & cls, bool satisfy_learned) {
             if (!satisfy_learned && m_lazy >= 2 && cls.is_learned()) {
-                TRACE("nlsat", tout << "skip learned\n";);
+                TRACE("nlsat", std::cout << "skip learned\n";);
                 return true; // ignore lemmas in super lazy mode
             }
             SASSERT(m_xk == max_var(cls));
@@ -1338,9 +1346,9 @@ namespace nlsat {
                     continue;
                 if (value(l) == l_true)
                     return true;  // could happen if clause is a tautology
-                CTRACE("nlsat", max_var(l) != m_xk || value(l) != l_undef, display(tout); 
-                       tout << "xk: " << m_xk << ", max_var(l): " << max_var(l) << ", l: "; display(tout, l) << "\n";
-                       display(tout, cls) << "\n";);
+                CTRACE("nlsat", max_var(l) != m_xk || value(l) != l_undef, display(std::cout); 
+                       std::cout << "xk: " << m_xk << ", max_var(l): " << max_var(l) << ", l: "; display(std::cout, l) << "\n";
+                       display(std::cout, cls) << "\n";);
                 SASSERT(value(l) == l_undef);
                 SASSERT(max_var(l) == m_xk);
                 bool_var b = l.var();
@@ -1348,29 +1356,29 @@ namespace nlsat {
                 SASSERT(a != nullptr);
                 interval_set_ref curr_set(m_ism);
                 curr_set = m_evaluator.infeasible_intervals(a, l.sign(), &cls);
-                TRACE("nlsat_inf_set", tout << "infeasible set for literal: "; display(tout, l); tout << "\n"; m_ism.display(tout, curr_set); tout << "\n";
-                      display(tout, cls) << "\n";); 
+                TRACE("nlsat_inf_set", std::cout << "infeasible set for literal: "; display(std::cout, l); std::cout << "\n"; m_ism.display(std::cout, curr_set); std::cout << "\n";
+                      display(std::cout, cls) << "\n";); 
                 if (m_ism.is_empty(curr_set)) {
-                    TRACE("nlsat_inf_set", tout << "infeasible set is empty, found literal\n";);
+                    TRACE("nlsat_inf_set", std::cout << "infeasible set is empty, found literal\n";);
                     R_propagate(l, nullptr);
                     SASSERT(is_satisfied(cls));
                     return true;
                 }
                 if (m_ism.is_full(curr_set)) {
-                    TRACE("nlsat_inf_set", tout << "infeasible set is R, skip literal\n";);
+                    TRACE("nlsat_inf_set", std::cout << "infeasible set is R, skip literal\n";);
                     R_propagate(~l, nullptr);
                     continue;
                 }
                 if (m_ism.subset(curr_set, xk_set)) {
-                    TRACE("nlsat_inf_set", tout << "infeasible set is a subset of current set, found literal\n";);
+                    TRACE("nlsat_inf_set", std::cout << "infeasible set is a subset of current set, found literal\n";);
                     R_propagate(l, xk_set);
                     return true;
                 }
                 interval_set_ref tmp(m_ism);
                 tmp = m_ism.mk_union(curr_set, xk_set);
                 if (m_ism.is_full(tmp)) {
-                    TRACE("nlsat_inf_set", tout << "infeasible set + current set = R, skip literal\n";
-                          display(tout, cls) << "\n";);
+                    TRACE("nlsat_inf_set", std::cout << "infeasible set + current set = R, skip literal\n";
+                          display(std::cout, cls) << "\n";);
                     R_propagate(~l, tmp, false);
                     continue;
                 }
@@ -1380,7 +1388,7 @@ namespace nlsat {
                     first_undef_set = curr_set;
                 }
             }
-            TRACE("nlsat_inf_set", tout << "num_undef: " << num_undef << "\n";);
+            TRACE("nlsat_inf_set", std::cout << "num_undef: " << num_undef << "\n";);
             if (num_undef == 0) 
                 return false;
             SASSERT(first_undef != UINT_MAX);
@@ -1396,7 +1404,7 @@ namespace nlsat {
                 updt_infeasible(first_undef_set);
             }
             else {
-                TRACE("nlsat_lazy", tout << "skipping clause, satisfy_learned: " << satisfy_learned << ", cls.is_learned(): " << cls.is_learned()
+                TRACE("nlsat_lazy", std::cout << "skipping clause, satisfy_learned: " << satisfy_learned << ", cls.is_learned(): " << cls.is_learned()
                       << ", lazy: " << m_lazy << "\n";);
             }
             return true;
@@ -1417,9 +1425,9 @@ namespace nlsat {
                     continue;
                 if (value(l) == l_true)
                     return;  // could happen if clause is a tautology
-                CTRACE("nlsat", max_var(l) != m_xk || value(l) != l_undef, display(tout); 
-                       tout << "xk: " << m_xk << ", max_var(l): " << max_var(l) << ", l: "; display(tout, l) << "\n";
-                       display(tout, cls) << "\n";);
+                CTRACE("nlsat", max_var(l) != m_xk || value(l) != l_undef, display(std::cout); 
+                       std::cout << "xk: " << m_xk << ", max_var(l): " << max_var(l) << ", l: "; display(std::cout, l) << "\n";
+                       display(std::cout, cls) << "\n";);
                 SASSERT(value(l) == l_undef);
                 SASSERT(max_var(l) == m_xk);
                 bool_var b = l.var();
@@ -1427,29 +1435,29 @@ namespace nlsat {
                 SASSERT(a != nullptr);
                 interval_set_ref curr_set(m_ism);
                 curr_set = m_evaluator.infeasible_intervals(a, l.sign(), &cls);
-                TRACE("nlsat_inf_set", tout << "infeasible set for literal: "; display(tout, l); tout << "\n"; m_ism.display(tout, curr_set); tout << "\n";
-                      display(tout, cls) << "\n";); 
+                TRACE("nlsat_inf_set", std::cout << "infeasible set for literal: "; display(std::cout, l); std::cout << "\n"; m_ism.display(std::cout, curr_set); std::cout << "\n";
+                      display(std::cout, cls) << "\n";); 
                 if (m_ism.is_empty(curr_set)) {
-                    TRACE("nlsat_inf_set", tout << "infeasible set is empty, found literal\n";);
+                    TRACE("nlsat_inf_set", std::cout << "infeasible set is empty, found literal\n";);
                     R_propagate(l, nullptr);
                     SASSERT(is_satisfied(cls));
                     return;
                 }
                 if (m_ism.is_full(curr_set)) {
-                    TRACE("nlsat_inf_set", tout << "infeasible set is R, skip literal\n";);
+                    TRACE("nlsat_inf_set", std::cout << "infeasible set is R, skip literal\n";);
                     R_propagate(~l, nullptr);
                     continue;
                 }
                 if (m_ism.subset(curr_set, xk_set)) {
-                    TRACE("nlsat_inf_set", tout << "infeasible set is a subset of current set, found literal\n";);
+                    TRACE("nlsat_inf_set", std::cout << "infeasible set is a subset of current set, found literal\n";);
                     R_propagate(l, xk_set);
                     return;
                 }
                 interval_set_ref tmp(m_ism);
                 tmp = m_ism.mk_union(curr_set, xk_set);
                 if (m_ism.is_full(tmp)) {
-                    TRACE("nlsat_inf_set", tout << "infeasible set + current set = R, skip literal\n";
-                          display(tout, cls) << "\n";);
+                    TRACE("nlsat_inf_set", std::cout << "infeasible set + current set = R, skip literal\n";
+                          display(std::cout, cls) << "\n";);
                     R_propagate(~l, tmp, false);
                     continue;
                 }
@@ -1463,7 +1471,7 @@ namespace nlsat {
                     first_appointed_set = curr_set;
                 }
             }
-            TRACE("nlsat_inf_set", tout << "num_undef: " << num_undef << "\n";);
+            TRACE("nlsat_inf_set", std::cout << "num_undef: " << num_undef << "\n";);
             if (num_undef == 0) 
                 return;
             SASSERT(first_undef != UINT_MAX);
@@ -1532,17 +1540,28 @@ namespace nlsat {
             return res_st;
         }
 
+        std::ostream & display_clauses(std::ostream & out, clause_vector const &cs) const {
+            out << "display clauses" << std::endl;
+            for(clause *c: cs) {
+                display(out, *c) << std::endl;
+            }
+            return out;
+        }
+
         clause * process_arith_clauses(clause_vector const &cs) {
+            std::cout << "process arith clauses" << std::endl;
+            display_clauses(std::cout, cs) << std::endl;
+
+
             SASSERT(m_xk != null_var);
             interval_set_ref curr_set(m_ism);
             curr_set = get_clauses_infset(cs);
-            if(curr_set == nullptr) {
-                std::cout << "nullptr here" << std::endl;
-            } else {
-                std::cout << "not nullptr here" << std::endl;
-            }
+            std::cout << "m_xk: " << m_xk << std::endl;
+            m_display_var(std::cout, m_xk) << std::endl;
+            std::cout << "infeasible set: ";
+            m_ism.display(std::cout, curr_set) << std::endl;
 
-            if(m_ism.is_full(curr_set)) {
+            if(m_ism.is_full(curr_set)) { // full case
                 std::cout << "full case" << std::endl;
                 appointed = false;
                 for(clause *c: cs) {
@@ -1551,7 +1570,7 @@ namespace nlsat {
                         return c;
                     }
                 }
-            } else {
+            } else { // path case
                 std::cout << "path case" << std::endl;
                 appointed = true;
                 m_ism.peek_in_complement(curr_set, m_is_int[m_xk], m_appointed_value, m_randomize); // cache current selected value
@@ -1606,9 +1625,12 @@ namespace nlsat {
                 m_ism.peek_in_complement(m_infeasible[m_xk], m_is_int[m_xk], w, m_randomize);
             }
             TRACE("nlsat", 
-                tout << "infeasible intervals: "; m_ism.display(tout, m_infeasible[m_xk]); tout << "\n";
-                tout << "assigning "; m_display_var(tout, m_xk) << "(x" << m_xk << ") -> " << w << "\n";);
-            TRACE("nlsat_root", tout << "value as root object: "; m_am.display_root(tout, w); tout << "\n";);
+                std::cout << "infeasible intervals: "; m_ism.display(std::cout, m_infeasible[m_xk]); std::cout << "\n";
+                std::cout << "assigning "; m_display_var(std::cout, m_xk) << "(x" << m_xk << ") -> " << w << "\n";);
+            TRACE("nlsat_root", std::cout << "value as root object: "; m_am.display_root(std::cout, w); std::cout << "\n";);
+
+            std::cout << "infeasible intervals: "; m_ism.display(std::cout, m_infeasible[m_xk]); std::cout << "\n";
+                std::cout << "assigning "; m_display_var(std::cout, m_xk) << "(x" << m_xk << ") -> " << w << "\n";
             if (!m_am.is_rational(w))
                 m_irrational_assignments++;
             m_assignment.set_core(m_xk, w);
@@ -1618,7 +1640,7 @@ namespace nlsat {
 
         bool is_satisfied() {
             if (m_bk == null_bool_var && m_xk >= num_vars()) {
-                TRACE("nlsat", tout << "found model\n"; display_assignment(tout););
+                TRACE("nlsat", std::cout << "found model\n"; display_assignment(std::cout););
                 fix_patch();
                 SASSERT(check_satisfied(m_clauses));
                 return true; // all variables were assigned, and all clauses were satisfied.
@@ -1633,11 +1655,12 @@ namespace nlsat {
            \brief main procedure
         */
         lbool search() {
-            TRACE("nlsat", tout << "starting search...\n"; display(tout); tout << "\nvar order:\n"; display_vars(tout););
-            TRACE("nlsat_proof", tout << "ASSERTED\n"; display(tout););
-            TRACE("nlsat_proof_sk", tout << "ASSERTED\n"; display_abst(tout);); 
-            TRACE("nlsat_mathematica", display_mathematica(tout););
-            TRACE("nlsat", display_smt2(tout););
+            TRACE("nlsat", std::cout << "starting search...\n"; display(std::cout); std::cout << "\nvar order:\n"; display_vars(std::cout););
+            TRACE("nlsat_proof", std::cout << "ASSERTED\n"; display(std::cout););
+            TRACE("nlsat_proof_sk", std::cout << "ASSERTED\n"; display_abst(std::cout);); 
+            TRACE("nlsat_mathematica", display_mathematica(std::cout););
+            TRACE("nlsat", display_smt2(std::cout););
+            display_smt2(std::cout) << std::endl;
             m_bk = 0;
             m_xk = null_var;
             m_conflicts = 0;
@@ -1652,19 +1675,19 @@ namespace nlsat {
                 else {
                     new_stage(); // peek next arith var
                 }
-                TRACE("nlsat_bug", tout << "xk: x" << m_xk << " bk: b" << m_bk << "\n";);
+                TRACE("nlsat_bug", std::cout << "xk: x" << m_xk << " bk: b" << m_bk << "\n";);
                 if (is_satisfied()) {
                     return l_true;
                 }
                 while (true) {
-                    TRACE("nlsat_verbose", tout << "processing variable "; 
+                    TRACE("nlsat_verbose", std::cout << "processing variable "; 
                           if (m_xk != null_var) {
-                              m_display_var(tout, m_xk); tout << " " << m_watches[m_xk].size();
+                              m_display_var(std::cout, m_xk); std::cout << " " << m_watches[m_xk].size();
                           }
                           else {
-                              tout << m_bwatches[m_bk].size() << " boolean b" << m_bk;
+                              std::cout << m_bwatches[m_bk].size() << " boolean b" << m_bk;
                           }
-                          tout << "\n";);
+                          std::cout << "\n";);
                     checkpoint();
                     clause * conflict_clause;
                     if (m_xk == null_var)
@@ -1737,7 +1760,7 @@ namespace nlsat {
                     // perform branch and bound
                     clause * cls = mk_clause(m_lemma.size(), m_lemma.data(), false, nullptr);
                     if (cls) {
-                        TRACE("nlsat", display(tout << "conflict " << lo << " " << hi, *cls); tout << "\n";);
+                        TRACE("nlsat", display(std::cout << "conflict " << lo << " " << hi, *cls); std::cout << "\n";);
                     }
                 }
             }
@@ -1745,8 +1768,8 @@ namespace nlsat {
         }
 
         lbool check() {
-            TRACE("nlsat_smt2", display_smt2(tout););
-            TRACE("nlsat_fd", tout << "is_full_dimensional: " << is_full_dimensional() << "\n";);
+            TRACE("nlsat_smt2", display_smt2(std::cout););
+            TRACE("nlsat_fd", std::cout << "is_full_dimensional: " << is_full_dimensional() << "\n";);
             init_search();
             m_explain.set_full_dimensional(is_full_dimensional());
             bool reordered = false;
@@ -1769,12 +1792,12 @@ namespace nlsat {
             }
             sort_watched_clauses();
             lbool r = search_check();
-            CTRACE("nlsat_model", r == l_true, tout << "model before restore order\n"; display_assignment(tout););
+            CTRACE("nlsat_model", r == l_true, std::cout << "model before restore order\n"; display_assignment(std::cout););
             if (reordered) {
                 restore_order();
             }
-            CTRACE("nlsat_model", r == l_true, tout << "model\n"; display_assignment(tout););
-            CTRACE("nlsat", r == l_false, display(tout););
+            CTRACE("nlsat_model", r == l_true, std::cout << "model\n"; display_assignment(std::cout););
+            CTRACE("nlsat", r == l_false, display(std::cout););
             SASSERT(r != l_true || check_satisfied(m_clauses));
             return r;
         }
@@ -1904,14 +1927,14 @@ namespace nlsat {
         void process_antecedent(literal antecedent) {
             checkpoint();
             bool_var b  = antecedent.var();
-            TRACE("nlsat_resolve", display(tout << "resolving antecedent: ", antecedent) << "\n";);
+            TRACE("nlsat_resolve", display(std::cout << "resolving antecedent: ", antecedent) << "\n";);
             if (assigned_value(antecedent) == l_undef) {
                 checkpoint();
                 // antecedent must be false in the current arith interpretation
                 SASSERT(value(antecedent) == l_false || m_rlimit.is_canceled());
                 if (!is_marked(b)) {
                     SASSERT(is_arith_atom(b) && max_var(b) < m_xk); // must be in a previous stage
-                    TRACE("nlsat_resolve", tout << "literal is unassigned, but it is false in arithmetic interpretation, adding it to lemma\n";); 
+                    TRACE("nlsat_resolve", std::cout << "literal is unassigned, but it is false in arithmetic interpretation, adding it to lemma\n";); 
                     mark(b);
                     m_lemma.push_back(antecedent);
                 }
@@ -1919,24 +1942,24 @@ namespace nlsat {
             }
             
             unsigned b_lvl = m_levels[b];
-            TRACE("nlsat_resolve", tout << "b_lvl: " << b_lvl << ", is_marked(b): " << is_marked(b) << ", m_num_marks: " << m_num_marks << "\n";);
+            TRACE("nlsat_resolve", std::cout << "b_lvl: " << b_lvl << ", is_marked(b): " << is_marked(b) << ", m_num_marks: " << m_num_marks << "\n";);
             if (!is_marked(b)) {
                 mark(b);
                 if (b_lvl == scope_lvl() /* same level */ && max_var(b) == m_xk /* same stage */) {
-                    TRACE("nlsat_resolve", tout << "literal is in the same level and stage, increasing marks\n";);
+                    TRACE("nlsat_resolve", std::cout << "literal is in the same level and stage, increasing marks\n";);
                     m_num_marks++;
                 }
                 else {
-                    TRACE("nlsat_resolve", tout << "previous level or stage, adding literal to lemma\n";
-                          tout << "max_var(b): " << max_var(b) << ", m_xk: " << m_xk << ", lvl: " << b_lvl << ", scope_lvl: " << scope_lvl() << "\n";);
+                    TRACE("nlsat_resolve", std::cout << "previous level or stage, adding literal to lemma\n";
+                          std::cout << "max_var(b): " << max_var(b) << ", m_xk: " << m_xk << ", lvl: " << b_lvl << ", scope_lvl: " << scope_lvl() << "\n";);
                     m_lemma.push_back(antecedent);
                 }
             }
         }
 
         void resolve_clause(bool_var b, unsigned sz, literal const * c) {
-            TRACE("nlsat_proof", tout << "resolving "; if (b != null_bool_var) display_atom(tout, b) << "\n"; display(tout, sz, c); tout << "\n";);
-            TRACE("nlsat_proof_sk", tout << "resolving "; if (b != null_bool_var) tout << "b" << b; tout << "\n"; display_abst(tout, sz, c); tout << "\n";); 
+            TRACE("nlsat_proof", std::cout << "resolving "; if (b != null_bool_var) display_atom(std::cout, b) << "\n"; display(std::cout, sz, c); std::cout << "\n";);
+            TRACE("nlsat_proof_sk", std::cout << "resolving "; if (b != null_bool_var) std::cout << "b" << b; std::cout << "\n"; display_abst(std::cout, sz, c); std::cout << "\n";); 
 
             for (unsigned i = 0; i < sz; i++) {
                 if (c[i].var() != b)
@@ -1945,24 +1968,24 @@ namespace nlsat {
         }
 
         void resolve_clause(bool_var b, clause const & c) {
-            TRACE("nlsat_resolve", tout << "resolving clause for b: " << b << "\n"; display(tout, c) << "\n";);
+            TRACE("nlsat_resolve", std::cout << "resolving clause for b: " << b << "\n"; display(std::cout, c) << "\n";);
             resolve_clause(b, c.size(), c.data());
             m_lemma_assumptions = m_asm.mk_join(static_cast<_assumption_set>(c.assumptions()), m_lemma_assumptions);
         }
 
         void resolve_lazy_justification(bool_var b, lazy_justification const & jst) {
-            TRACE("nlsat_resolve", tout << "resolving lazy_justification for b" << b << "\n";);
+            TRACE("nlsat_resolve", std::cout << "resolving lazy_justification for b" << b << "\n";);
             unsigned sz = jst.num_lits();
 
             // Dump lemma as Mathematica formula that must be true,
             // if the current interpretation (really) makes the core in jst infeasible.
             TRACE("nlsat_mathematica", 
-                  tout << "assignment lemma\n";
+                  std::cout << "assignment lemma\n";
                   literal_vector core;
                   for (unsigned i = 0; i < sz; i++) {
                       core.push_back(~jst.lit(i));
                   }
-                  display_mathematica_lemma(tout, core.size(), core.data(), true););
+                  display_mathematica_lemma(std::cout, core.size(), core.data(), true););
 
             m_lazy_clause.reset();
             m_explain(jst.num_lits(), jst.lits(), m_lazy_clause);
@@ -1970,12 +1993,12 @@ namespace nlsat {
                 m_lazy_clause.push_back(~jst.lit(i));
             
             // lazy clause is a valid clause
-            TRACE("nlsat_mathematica", display_mathematica_lemma(tout, m_lazy_clause.size(), m_lazy_clause.data()););            
-            TRACE("nlsat_proof_sk", tout << "theory lemma\n"; display_abst(tout, m_lazy_clause.size(), m_lazy_clause.data()); tout << "\n";); 
+            TRACE("nlsat_mathematica", display_mathematica_lemma(std::cout, m_lazy_clause.size(), m_lazy_clause.data()););            
+            TRACE("nlsat_proof_sk", std::cout << "theory lemma\n"; display_abst(std::cout, m_lazy_clause.size(), m_lazy_clause.data()); std::cout << "\n";); 
             TRACE("nlsat_resolve", 
-                  tout << "m_xk: " << m_xk << ", "; m_display_var(tout, m_xk) << "\n";
-                  tout << "new valid clause:\n";
-                  display(tout, m_lazy_clause.size(), m_lazy_clause.data()) << "\n";);
+                  std::cout << "m_xk: " << m_xk << ", "; m_display_var(std::cout, m_xk) << "\n";
+                  std::cout << "new valid clause:\n";
+                  display(std::cout, m_lazy_clause.size(), m_lazy_clause.data()) << "\n";);
 
             if (m_check_lemmas) {
                 m_valids.push_back(mk_clause_core(m_lazy_clause.size(), m_lazy_clause.data(), false, nullptr));
@@ -2000,7 +2023,7 @@ namespace nlsat {
 
             for (unsigned i = 0; i < jst.num_clauses(); ++i) {
                 clause const& c = jst.clause(i);
-                TRACE("nlsat", display(tout << "adding clause assumptions ", c) << "\n";);
+                TRACE("nlsat", display(std::cout << "adding clause assumptions ", c) << "\n";);
                 m_lemma_assumptions = m_asm.mk_join(static_cast<_assumption_set>(c.assumptions()), m_lemma_assumptions);
             }
         }
@@ -2049,7 +2072,7 @@ namespace nlsat {
            \pre This method assumes value(ls[i]) is l_false for i in [0, num)
         */
         void remove_literals_from_lvl(scoped_literal_vector & lemma, unsigned lvl) {
-            TRACE("nlsat_resolve", tout << "removing literals from lvl: " << lvl << " and stage " << m_xk << "\n";);
+            TRACE("nlsat_resolve", std::cout << "removing literals from lvl: " << lvl << " and stage " << m_xk << "\n";);
             unsigned sz = lemma.size();
             unsigned j  = 0;
             for (unsigned i = 0; i < sz; i++) {
@@ -2104,7 +2127,7 @@ namespace nlsat {
             }
             SASSERT(!found_lvl || new_lvl < scope_lvl());
             if (!found_lvl) {
-                TRACE("nlsat_resolve", tout << "fail to find new lvl, using previous one\n";);
+                TRACE("nlsat_resolve", std::cout << "fail to find new lvl, using previous one\n";);
                 new_lvl = scope_lvl() - 1;
             }
             return new_lvl;
@@ -2121,17 +2144,23 @@ namespace nlsat {
            \brief Return true if the conflict was solved.
         */
         bool resolve(clause const & conflict) {
+            std::cout << "enter resolve..." << std::endl;
             clause const * conflict_clause = &conflict;
             m_lemma_assumptions = nullptr;
         start:
             SASSERT(check_marks());
-            TRACE("nlsat_proof", tout << "STARTING RESOLUTION\n";);
-            TRACE("nlsat_proof_sk", tout << "STARTING RESOLUTION\n";);
+            TRACE("nlsat_proof", std::cout << "STARTING RESOLUTION\n";);
+            TRACE("nlsat_proof_sk", std::cout << "STARTING RESOLUTION\n";);
             m_conflicts++;
-            TRACE("nlsat", tout << "resolve, conflicting clause:\n"; display(tout, *conflict_clause) << "\n";
-                  tout << "xk: "; if (m_xk != null_var) m_display_var(tout, m_xk); else tout << "<null>"; tout << "\n";
-                  tout << "scope_lvl: " << scope_lvl() << "\n";
-                  tout << "current assignment\n"; display_assignment(tout););
+            TRACE("nlsat", std::cout << "resolve, conflicting clause:\n"; display(std::cout, *conflict_clause) << "\n";
+                  std::cout << "xk: "; if (m_xk != null_var) m_display_var(std::cout, m_xk); else std::cout << "<null>"; std::cout << "\n";
+                  std::cout << "scope_lvl: " << scope_lvl() << "\n";
+                  std::cout << "current assignment\n"; display_assignment(std::cout););
+
+            std::cout << "resolve, conflicting clause:\n"; display(std::cout, *conflict_clause) << "\n";
+                  std::cout << "xk: "; if (m_xk != null_var) m_display_var(std::cout, m_xk); else std::cout << "<null>"; std::cout << "\n";
+                  std::cout << "scope_lvl: " << scope_lvl() << "\n";
+                  std::cout << "current assignment\n"; display_assignment(std::cout);
             
             m_num_marks = 0;
             m_lemma.reset();
@@ -2151,7 +2180,7 @@ namespace nlsat {
                     if (t.m_kind == trail::BVAR_ASSIGNMENT) {
                         bool_var b = t.m_b;
                         if (is_marked(b)) {
-                            TRACE("nlsat_resolve", tout << "found marked: b" << b << "\n"; display_atom(tout, b) << "\n";);
+                            TRACE("nlsat_resolve", std::cout << "found marked: b" << b << "\n"; display_atom(std::cout, b) << "\n";);
                             m_num_marks--;
                             reset_mark(b);
                             justification jst = m_justifications[b];
@@ -2165,7 +2194,7 @@ namespace nlsat {
                             case justification::DECISION:
                                 SASSERT(m_num_marks == 0);
                                 found_decision = true;
-                                TRACE("nlsat_resolve", tout << "found decision\n";);
+                                TRACE("nlsat_resolve", std::cout << "found decision\n";);
                                 m_lemma.push_back(literal(b, m_bvalues[b] == l_true));
                                 break;
                             default:
@@ -2195,26 +2224,29 @@ namespace nlsat {
                 //    - and continue conflict resolution from there
                 //    - we must bump m_num_marks for literals removed from m_lemma
                 unsigned max_lvl = max_scope_lvl(m_lemma.size(), m_lemma.data());
-                TRACE("nlsat_resolve", tout << "conflict does not depend on current decision, backtracking to level: " << max_lvl << "\n";);
+                TRACE("nlsat_resolve", std::cout << "conflict does not depend on current decision, backtracking to level: " << max_lvl << "\n";);
                 SASSERT(max_lvl < scope_lvl());
                 remove_literals_from_lvl(m_lemma, max_lvl);
                 undo_until_level(max_lvl);
                 top = m_trail.size();
-                TRACE("nlsat_resolve", tout << "scope_lvl: " << scope_lvl() << " num marks: " << m_num_marks << "\n";);
+                TRACE("nlsat_resolve", std::cout << "scope_lvl: " << scope_lvl() << " num marks: " << m_num_marks << "\n";);
                 SASSERT(scope_lvl() == max_lvl);
             }
 
-            TRACE("nlsat_proof", tout << "New lemma\n"; display(tout, m_lemma); tout << "\n=========================\n";);
-            TRACE("nlsat_proof_sk", tout << "New lemma\n"; display_abst(tout, m_lemma); tout << "\n=========================\n";);
+            TRACE("nlsat_proof", std::cout << "New lemma\n"; display(std::cout, m_lemma); std::cout << "\n=========================\n";);
+            TRACE("nlsat_proof_sk", std::cout << "New lemma\n"; display_abst(std::cout, m_lemma); std::cout << "\n=========================\n";);
 
             if (m_lemma.empty()) {
-                TRACE("nlsat", tout << "empty clause generated\n";);
+                TRACE("nlsat", std::cout << "empty clause generated\n";);
                 return false; // problem is unsat, empty clause was generated
             }
 
             reset_marks(); // remove marks from the literals in m_lemmas.
-            TRACE("nlsat", tout << "new lemma:\n"; display(tout, m_lemma.size(), m_lemma.data()); tout << "\n";
-                  tout << "found_decision: " << found_decision << "\n";);
+            TRACE("nlsat", std::cout << "new lemma:\n"; display(std::cout, m_lemma.size(), m_lemma.data()); std::cout << "\n";
+                  std::cout << "found_decision: " << found_decision << "\n";);
+
+            std::cout << "new lemma:\n"; display(std::cout, m_lemma.size(), m_lemma.data()); std::cout << "\n";
+                  std::cout << "found_decision: " << found_decision << "\n";
             
             if (false && m_check_lemmas) {
                 check_lemma(m_lemma.size(), m_lemma.data(), false, m_lemma_assumptions.get());
@@ -2240,12 +2272,12 @@ namespace nlsat {
                 // We just have to find the maximal variable in m_lemma, and return to that stage
                 // Remark: the lemma may contain only boolean literals, in this case new_max_var == null_var;
                 var new_max_var = max_var(sz, m_lemma.data());
-                TRACE("nlsat_resolve", tout << "backtracking to stage: " << new_max_var << ", curr: " << m_xk << "\n";);
+                TRACE("nlsat_resolve", std::cout << "backtracking to stage: " << new_max_var << ", curr: " << m_xk << "\n";);
                 undo_until_stage(new_max_var);
                 SASSERT(m_xk == new_max_var);
                 new_cls = mk_clause(sz, m_lemma.data(), true, m_lemma_assumptions.get());
-                TRACE("nlsat", tout << "new_level: " << scope_lvl() << "\nnew_stage: " << new_max_var << "\n"; 
-                      if (new_max_var != null_var) m_display_var(tout, new_max_var) << "\n";);
+                TRACE("nlsat", std::cout << "new_level: " << scope_lvl() << "\nnew_stage: " << new_max_var << "\n"; 
+                      if (new_max_var != null_var) m_display_var(std::cout, new_max_var) << "\n";);
             }
             else {
                 SASSERT(scope_lvl() >= 1);
@@ -2260,28 +2292,27 @@ namespace nlsat {
                     // are at the same stage. If all these literals are from previous stages,
                     // we just backtrack the current level.
                     unsigned new_lvl = find_new_level_arith_lemma(m_lemma.size(), m_lemma.data());
-                    TRACE("nlsat", tout << "backtracking to new level: " << new_lvl << ", curr: " << m_scope_lvl << "\n";);
+                    TRACE("nlsat", std::cout << "backtracking to new level: " << new_lvl << ", curr: " << m_scope_lvl << "\n";);
                     undo_until_level(new_lvl);
                 }
 
                 if (lemma_is_clause(*conflict_clause)) {
-                    TRACE("nlsat", tout << "found decision literal in conflict clause\n";);
+                    TRACE("nlsat", std::cout << "found decision literal in conflict clause\n";);
                     VERIFY(process_clause(*conflict_clause, true));
                     return true;
                 }
                 new_cls = mk_clause(sz, m_lemma.data(), true, m_lemma_assumptions.get());
-                
             }
             NLSAT_VERBOSE(display(verbose_stream(), *new_cls) << "\n";);
-            if (!process_clause(*new_cls, true)) {
-                TRACE("nlsat", tout << "new clause triggered another conflict, restarting conflict resolution...\n";
-                      display(tout, *new_cls) << "\n";
-                      );
-                // we are still in conflict
-                conflict_clause = new_cls;
-                goto start;
-            }
-            TRACE("nlsat_resolve_done", display_assignment(tout););
+            // if (!process_clause(*new_cls, true)) {
+            //     TRACE("nlsat", std::cout << "new clause triggered another conflict, restarting conflict resolution...\n";
+            //           display(std::cout, *new_cls) << "\n";
+            //           );
+            //     // we are still in conflict
+            //     conflict_clause = new_cls;
+            //     goto start;
+            // }
+            TRACE("nlsat_resolve_done", display_assignment(std::cout););
             return true;
         }
 
@@ -2337,7 +2368,7 @@ namespace nlsat {
             for (unsigned i = 0; i < sz; i++) {
                 clause const & c = *(cs[i]);
                 if (!is_satisfied(c)) {
-                    TRACE("nlsat", tout << "not satisfied\n"; display(tout, c); tout << "\n";); 
+                    TRACE("nlsat", std::cout << "not satisfied\n"; display(std::cout, c); std::cout << "\n";); 
                     return false;
                 }
             }
@@ -2345,7 +2376,7 @@ namespace nlsat {
         }
 
         bool check_satisfied() const {
-            TRACE("nlsat", tout << "bk: b" << m_bk << ", xk: x" << m_xk << "\n"; if (m_xk != null_var) { m_display_var(tout, m_xk); tout << "\n"; });
+            TRACE("nlsat", std::cout << "bk: b" << m_bk << ", xk: x" << m_xk << "\n"; if (m_xk != null_var) { m_display_var(std::cout, m_xk); std::cout << "\n"; });
             unsigned num = m_atoms.size();
             if (m_bk != null_bool_var)
                 num = m_bk;
@@ -2482,14 +2513,14 @@ namespace nlsat {
             var_info_collector collector(m_pm, m_atoms, num);
             collector.collect(m_clauses);
             collector.collect(m_learned);
-            TRACE("nlsat_reorder", collector.display(tout, m_display_var););
+            TRACE("nlsat_reorder", collector.display(std::cout, m_display_var););
             var_vector new_order;
             for (var x = 0; x < num; x++) {
                 new_order.push_back(x);
             }
             std::sort(new_order.begin(), new_order.end(), reorder_lt(collector));
             TRACE("nlsat_reorder", 
-                  tout << "new order: "; for (unsigned i = 0; i < num; i++) tout << new_order[i] << " "; tout << "\n";);
+                  std::cout << "new order: "; for (unsigned i = 0; i < num; i++) std::cout << new_order[i] << " "; std::cout << "\n";);
             var_vector perm;
             perm.resize(num, 0);
             for (var x = 0; x < num; x++) {
@@ -2527,13 +2558,13 @@ namespace nlsat {
         void reorder(unsigned sz, var const * p) {
             remove_learned_roots();
             SASSERT(can_reorder());
-            TRACE("nlsat_reorder", tout << "solver before variable reorder\n"; display(tout);
-                  display_vars(tout);
-                  tout << "\npermutation:\n";
-                  for (unsigned i = 0; i < sz; i++) tout << p[i] << " "; tout << "\n";                  
+            TRACE("nlsat_reorder", std::cout << "solver before variable reorder\n"; display(std::cout);
+                  display_vars(std::cout);
+                  std::cout << "\npermutation:\n";
+                  for (unsigned i = 0; i < sz; i++) std::cout << p[i] << " "; std::cout << "\n";                  
                   );
             SASSERT(num_vars() == sz);
-            TRACE("nlsat_bool_assignment_bug", tout << "before reset watches\n"; display_bool_assignment(tout););
+            TRACE("nlsat_bool_assignment_bug", std::cout << "before reset watches\n"; display_bool_assignment(std::cout););
             reset_watches();
             assignment new_assignment(m_am);
             for (var x = 0; x < num_vars(); x++) {
@@ -2573,12 +2604,12 @@ namespace nlsat {
                 }
             });
             m_pm.rename(sz, p);
-            TRACE("nlsat_bool_assignment_bug", tout << "before reinit cache\n"; display_bool_assignment(tout););
+            TRACE("nlsat_bool_assignment_bug", std::cout << "before reinit cache\n"; display_bool_assignment(std::cout););
             reinit_cache();
             m_assignment.swap(new_assignment);
             reattach_arith_clauses(m_clauses);
             reattach_arith_clauses(m_learned);
-            TRACE("nlsat_reorder", tout << "solver after variable reorder\n"; display(tout); display_vars(tout););
+            TRACE("nlsat_reorder", std::cout << "solver after variable reorder\n"; display(std::cout); display_vars(std::cout););
         }
 
         
@@ -2710,7 +2741,7 @@ namespace nlsat {
         void sort_clauses_by_degree(unsigned sz, clause ** cs) {
             if (sz <= 1)
                 return;
-            TRACE("nlsat_reorder_clauses", tout << "before:\n"; for (unsigned i = 0; i < sz; i++) { display(tout, *(cs[i])); tout << "\n"; });
+            TRACE("nlsat_reorder_clauses", std::cout << "before:\n"; for (unsigned i = 0; i < sz; i++) { display(std::cout, *(cs[i])); std::cout << "\n"; });
             m_cs_degrees.reset();
             m_cs_p.reset();
             for (unsigned i = 0; i < sz; i++) {
@@ -2718,9 +2749,9 @@ namespace nlsat {
                 m_cs_degrees.push_back(degree(*(cs[i])));
             }
             std::sort(m_cs_p.begin(), m_cs_p.end(), degree_lt(m_cs_degrees));
-            TRACE("nlsat_reorder_clauses", tout << "permutation: "; ::display(tout, m_cs_p.begin(), m_cs_p.end()); tout << "\n";);
+            TRACE("nlsat_reorder_clauses", std::cout << "permutation: "; ::display(std::cout, m_cs_p.begin(), m_cs_p.end()); std::cout << "\n";);
             apply_permutation(sz, cs, m_cs_p.data());
-            TRACE("nlsat_reorder_clauses", tout << "after:\n"; for (unsigned i = 0; i < sz; i++) { display(tout, *(cs[i])); tout << "\n"; });
+            TRACE("nlsat_reorder_clauses", std::cout << "after:\n"; for (unsigned i = 0; i < sz; i++) { display(std::cout, *(cs[i])); std::cout << "\n"; });
         }
 
         void sort_watched_clauses() {
@@ -2815,14 +2846,14 @@ namespace nlsat {
                 for (clause* c : m_clauses) {
                     if (solve_var(*c, v, p, q)) {
                         q = -q;
-                        TRACE("nlsat", tout << "p: " << p << "\nq: " << q << "\n x" << v << "\n";);
+                        TRACE("nlsat", std::cout << "p: " << p << "\nq: " << q << "\n x" << v << "\n";);
                         m_patch_var.push_back(v);
                         m_patch_num.push_back(q);
                         m_patch_denom.push_back(p);
                         del_clause(c, m_clauses);
                         if (!substitute_var(v, p, q))
                             return false;
-                        TRACE("nlsat", display(tout << "simplified\n"););
+                        TRACE("nlsat", display(std::cout << "simplified\n"););
                         change = true;
                         break;
                     }
@@ -2842,9 +2873,9 @@ namespace nlsat {
                 SASSERT(!m_am.is_zero(pv));
                 val = qv / pv;
                 TRACE("nlsat", 
-                      m_display_var(tout << "patch v" << v << " ", v) << "\n";
-                      if (m_assignment.is_assigned(v)) m_am.display(tout << "previous value: ", m_assignment.value(v)); tout << "\n";
-                      m_am.display(tout << "updated value: ", val); tout << "\n";
+                      m_display_var(std::cout << "patch v" << v << " ", v) << "\n";
+                      if (m_assignment.is_assigned(v)) m_am.display(std::cout << "previous value: ", m_assignment.value(v)); std::cout << "\n";
+                      m_am.display(std::cout << "updated value: ", val); std::cout << "\n";
                       );
                 m_assignment.set_core(v, val);
             }
@@ -2872,7 +2903,7 @@ namespace nlsat {
                         poly * po = a1.p(i);
                         m_pm.substitute(po, x, q, p, pr);
                         change |= pr != po;
-                        TRACE("nlsat", tout << pr << "\n";);
+                        TRACE("nlsat", std::cout << pr << "\n";);
                         if (m_pm.is_zero(pr)) {
                             ps.reset();
                             even.reset();
@@ -3751,11 +3782,11 @@ namespace nlsat {
                 vs[b] = m_imp->m_bvalues[b];
             }
         }
-        TRACE("nlsat", display(tout););
+        TRACE("nlsat", display(std::cout););
     }
 
     void solver::set_bvalues(svector<lbool> const& vs) {
-        TRACE("nlsat", display(tout););
+        TRACE("nlsat", display(std::cout););
         for (bool_var b = 0; b < vs.size(); ++b) {
             if (vs[b] != l_undef) {
                 m_imp->m_bvalues[b] = vs[b];
@@ -3774,7 +3805,7 @@ namespace nlsat {
             }
         }
 #endif
-        TRACE("nlsat", display(tout););
+        TRACE("nlsat", display(std::cout););
     }
     
     var solver::mk_var(bool is_int) {
