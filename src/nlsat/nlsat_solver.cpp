@@ -1556,6 +1556,7 @@ namespace nlsat {
             SASSERT(m_xk != null_var);
             interval_set_ref curr_set(m_ism);
             curr_set = get_clauses_infset(cs);
+            curr_set = m_ism.mk_union(curr_set, m_infeasible[m_xk]);
             // std::cout << "m_xk: " << m_xk << std::endl;
             // m_display_var(std::cout, m_xk) << std::endl;
             // std::cout << "infeasible set: ";
