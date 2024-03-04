@@ -939,7 +939,7 @@ namespace nlsat {
             std::sort(cls->begin(), cls->end(), lit_lt(*this));
 
 
-            display(std::cout << "mk_clause:\n", *cls) << "\n";
+            // display(std::cout << "mk_clause:\n", *cls) << "\n";
 
 
             TRACE("nlsat_sort", display(std::cout << "#" << m_lemma_count << " after sort:\n", *cls) << "\n";);
@@ -1149,8 +1149,8 @@ namespace nlsat {
                   display(std::cout << "assigning literal: ", l); 
                   display(std::cout << " <- ", j););
 
-            display(std::cout << "assigning literal: ", l); 
-            display(std::cout << " <- ", j) << std::endl;
+            // display(std::cout << "assigning literal: ", l); 
+            // display(std::cout << " <- ", j) << std::endl;
 
             SASSERT(assigned_value(l) == l_undef);
             SASSERT(j != null_justification);
@@ -1529,13 +1529,13 @@ namespace nlsat {
         }
 
         interval_set* get_clauses_infset(clause_vector const &cs) {
-            std::cout << "get clauses inf start" << std::endl;
+            // std::cout << "get clauses inf start" << std::endl;
             interval_set_ref curr_st(m_ism), res_st(m_ism);
             for(clause *c: cs) {
                 curr_st = get_clause_infset(*c);
                 res_st = m_ism.mk_union(curr_st, res_st);
             }
-            std::cout << "get clauses inf done" << std::endl;
+            // std::cout << "get clauses inf done" << std::endl;
             m_ism.inc_ref(res_st);
             return res_st;
         }
@@ -1549,29 +1549,29 @@ namespace nlsat {
         }
 
         clause * process_arith_clauses(clause_vector const &cs) {
-            std::cout << "process arith clauses" << std::endl;
-            display_clauses(std::cout, cs) << std::endl;
+            // std::cout << "process arith clauses" << std::endl;
+            // display_clauses(std::cout, cs) << std::endl;
 
 
             SASSERT(m_xk != null_var);
             interval_set_ref curr_set(m_ism);
             curr_set = get_clauses_infset(cs);
-            std::cout << "m_xk: " << m_xk << std::endl;
-            m_display_var(std::cout, m_xk) << std::endl;
-            std::cout << "infeasible set: ";
-            m_ism.display(std::cout, curr_set) << std::endl;
+            // std::cout << "m_xk: " << m_xk << std::endl;
+            // m_display_var(std::cout, m_xk) << std::endl;
+            // std::cout << "infeasible set: ";
+            // m_ism.display(std::cout, curr_set) << std::endl;
 
             if(m_ism.is_full(curr_set)) { // full case
-                std::cout << "full case" << std::endl;
+                // std::cout << "full case" << std::endl;
                 appointed = false;
                 for(clause *c: cs) {
                     if(!process_clause(*c, false)) {
-                        std::cout << "process done" << std::endl;
+                        // std::cout << "process done" << std::endl;
                         return c;
                     }
                 }
             } else { // path case
-                std::cout << "path case" << std::endl;
+                // std::cout << "path case" << std::endl;
                 appointed = true;
                 m_ism.peek_in_complement(curr_set, m_is_int[m_xk], m_appointed_value, m_randomize); // cache current selected value
                 process_clauses_using_appointed_value(cs);
@@ -1580,11 +1580,11 @@ namespace nlsat {
         }
 
         void process_clauses_using_appointed_value(clause_vector const &cs) {
-            std::cout << "process clauses app start" << std::endl;
+            // std::cout << "process clauses app start" << std::endl;
             for(clause *c: cs) {
                 process_clause_using_appointed_value(*c);
             }
-            std::cout << "process clauses app done" << std::endl;
+            // std::cout << "process clauses app done" << std::endl;
         }
 
         /**
@@ -1629,8 +1629,8 @@ namespace nlsat {
                 std::cout << "assigning "; m_display_var(std::cout, m_xk) << "(x" << m_xk << ") -> " << w << "\n";);
             TRACE("nlsat_root", std::cout << "value as root object: "; m_am.display_root(std::cout, w); std::cout << "\n";);
 
-            std::cout << "infeasible intervals: "; m_ism.display(std::cout, m_infeasible[m_xk]); std::cout << "\n";
-                std::cout << "assigning "; m_display_var(std::cout, m_xk) << "(x" << m_xk << ") -> " << w << "\n";
+            // std::cout << "infeasible intervals: "; m_ism.display(std::cout, m_infeasible[m_xk]); std::cout << "\n";
+            // std::cout << "assigning "; m_display_var(std::cout, m_xk) << "(x" << m_xk << ") -> " << w << "\n";
             if (!m_am.is_rational(w))
                 m_irrational_assignments++;
             m_assignment.set_core(m_xk, w);
@@ -1660,7 +1660,7 @@ namespace nlsat {
             TRACE("nlsat_proof_sk", std::cout << "ASSERTED\n"; display_abst(std::cout);); 
             TRACE("nlsat_mathematica", display_mathematica(std::cout););
             TRACE("nlsat", display_smt2(std::cout););
-            display_smt2(std::cout) << std::endl;
+            // display_smt2(std::cout) << std::endl;
             m_bk = 0;
             m_xk = null_var;
             m_conflicts = 0;
@@ -2144,7 +2144,7 @@ namespace nlsat {
            \brief Return true if the conflict was solved.
         */
         bool resolve(clause const & conflict) {
-            std::cout << "enter resolve..." << std::endl;
+            // std::cout << "enter resolve..." << std::endl;
             clause const * conflict_clause = &conflict;
             m_lemma_assumptions = nullptr;
         start:
@@ -2157,10 +2157,10 @@ namespace nlsat {
                   std::cout << "scope_lvl: " << scope_lvl() << "\n";
                   std::cout << "current assignment\n"; display_assignment(std::cout););
 
-            std::cout << "resolve, conflicting clause:\n"; display(std::cout, *conflict_clause) << "\n";
-                  std::cout << "xk: "; if (m_xk != null_var) m_display_var(std::cout, m_xk); else std::cout << "<null>"; std::cout << "\n";
-                  std::cout << "scope_lvl: " << scope_lvl() << "\n";
-                  std::cout << "current assignment\n"; display_assignment(std::cout);
+            // std::cout << "resolve, conflicting clause:\n"; display(std::cout, *conflict_clause) << "\n";
+            //       std::cout << "xk: "; if (m_xk != null_var) m_display_var(std::cout, m_xk); else std::cout << "<null>"; std::cout << "\n";
+            //       std::cout << "scope_lvl: " << scope_lvl() << "\n";
+            //       std::cout << "current assignment\n"; display_assignment(std::cout);
             
             m_num_marks = 0;
             m_lemma.reset();
@@ -2245,8 +2245,8 @@ namespace nlsat {
             TRACE("nlsat", std::cout << "new lemma:\n"; display(std::cout, m_lemma.size(), m_lemma.data()); std::cout << "\n";
                   std::cout << "found_decision: " << found_decision << "\n";);
 
-            std::cout << "new lemma:\n"; display(std::cout, m_lemma.size(), m_lemma.data()); std::cout << "\n";
-                  std::cout << "found_decision: " << found_decision << "\n";
+            // std::cout << "new lemma:\n"; display(std::cout, m_lemma.size(), m_lemma.data()); std::cout << "\n";
+            //       std::cout << "found_decision: " << found_decision << "\n";
             
             if (false && m_check_lemmas) {
                 check_lemma(m_lemma.size(), m_lemma.data(), false, m_lemma_assumptions.get());
