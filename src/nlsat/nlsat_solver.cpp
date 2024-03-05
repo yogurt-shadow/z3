@@ -121,6 +121,7 @@ namespace nlsat {
         bool_vector          m_is_int;     // m_is_int[x] is true if variable is integer
         vector<clause_vector>  m_watches;    // var -> clauses where variable is maximal
         interval_set_vector    m_infeasible; // var -> to a set of interval where the variable cannot be assigned to.
+        interval_set_vector    m_clause_infeasible;
         atom_vector            m_var2eq;     // var -> to asserted equality
         var_vector             m_perm;       // var -> var permutation of the variables
         var_vector             m_inv_perm;
@@ -180,18 +181,21 @@ namespace nlsat {
 
         struct bvar_assignment {};
         struct stage {};
+        struct path_finder {};
         struct trail {
-            enum kind { BVAR_ASSIGNMENT, INFEASIBLE_UPDT, NEW_LEVEL, NEW_STAGE, UPDT_EQ };
+            enum kind { BVAR_ASSIGNMENT, INFEASIBLE_UPDT, NEW_LEVEL, NEW_STAGE, UPDT_EQ, PATH_FINDER };
             kind   m_kind;
             union {
                 bool_var m_b;
                 interval_set * m_old_set;
                 atom         * m_old_eq;
+                var      m_x;
             };
             trail(bool_var b, bvar_assignment):m_kind(BVAR_ASSIGNMENT), m_b(b) {}
             trail(interval_set * old_set):m_kind(INFEASIBLE_UPDT), m_old_set(old_set) {}
             trail(bool s, stage):m_kind(s ? NEW_STAGE : NEW_LEVEL) {}
             trail(atom * a):m_kind(UPDT_EQ), m_old_eq(a) {}
+            trail(path_finder, var x): m_kind(PATH_FINDER), m_x(x) {}
         };
         svector<trail>         m_trail;
 
@@ -476,6 +480,7 @@ namespace nlsat {
             m_justifications.setx(b, null_justification, null_justification);
             m_bwatches      .setx(b, clause_vector(), clause_vector());
             m_dead          .setx(b, false, true);
+            m_atom_set_cached.setx(b, nullptr, nullptr);
             return b;
         }
 
@@ -493,11 +498,13 @@ namespace nlsat {
             m_is_int.    push_back(is_int);
             m_watches.   push_back(clause_vector());
             m_infeasible.push_back(0);
+            m_clause_infeasible.push_back(0);
             m_var2eq.    push_back(nullptr);
             m_perm.      push_back(x);
             m_inv_perm.  push_back(x);
             SASSERT(m_is_int.size() == m_watches.size());
             SASSERT(m_is_int.size() == m_infeasible.size());
+            SASSERT(m_is_int.size() == m_clause_infeasible.size());
             SASSERT(m_is_int.size() == m_var2eq.size());
             SASSERT(m_is_int.size() == m_perm.size());
             SASSERT(m_is_int.size() == m_inv_perm.size());
@@ -978,6 +985,11 @@ namespace nlsat {
             m_trail.push_back(trail(b, bvar_assignment()));
         }
 
+        void save_path_finder_trail() {
+            DTRACE(std::cout << "save path finder trail for var " << m_xk << std::endl;);
+            m_trail.push_back(trail(path_finder(), m_xk));
+        }
+
         void save_set_updt_trail(interval_set * old_set) {
             m_trail.push_back(trail(old_set));
         }
@@ -1053,6 +1065,8 @@ namespace nlsat {
                 case trail::UPDT_EQ:
                     undo_updt_eq(t.m_old_eq);
                     break;
+                case trail::PATH_FINDER:
+                    break;
                 default:
                     break;
                 }
@@ -1083,6 +1097,36 @@ namespace nlsat {
         // Keep undoing until stage is new_xk
         void undo_until_stage(var new_xk) {
             undo_until(stage_pred(m_xk, new_xk));
+        }
+
+        void undo_until_path_finder(var v) {
+            while(!m_trail.empty()) {
+                trail & t = m_trail.back();
+                if (t.m_kind == trail::PATH_FINDER && t.m_x == v) {
+                    m_trail.pop_back();
+                    return;
+                }
+                switch (t.m_kind) {
+                case trail::BVAR_ASSIGNMENT:
+                    undo_bvar_assignment(t.m_b);
+                    break;
+                case trail::INFEASIBLE_UPDT:
+                    undo_set_updt(t.m_old_set);
+                    break;
+                case trail::NEW_STAGE:
+                    undo_new_stage();
+                    break;
+                case trail::NEW_LEVEL:
+                    undo_new_level();
+                    break;
+                case trail::UPDT_EQ:
+                    undo_updt_eq(t.m_old_eq);
+                    break;
+                default:
+                    break;
+                }
+                m_trail.pop_back();
+            }
         }
 
         struct level_pred {
@@ -1148,9 +1192,10 @@ namespace nlsat {
             TRACE("nlsat", 
                   display(std::cout << "assigning literal: ", l); 
                   display(std::cout << " <- ", j););
-
-            // display(std::cout << "assigning literal: ", l); 
-            // display(std::cout << " <- ", j) << std::endl;
+            DTRACE(
+                display(std::cout << "assigning literal: ", l); 
+                display(std::cout << " <- ", j) << std::endl;
+            );
 
             SASSERT(assigned_value(l) == l_undef);
             SASSERT(j != null_justification);
@@ -1355,7 +1400,10 @@ namespace nlsat {
                 atom * a   = m_atoms[b];
                 SASSERT(a != nullptr);
                 interval_set_ref curr_set(m_ism);
-                curr_set = m_evaluator.infeasible_intervals(a, l.sign(), &cls);
+                curr_set = m_atom_set_cached[b];
+                if(l.sign()) {
+                    curr_set = m_ism.mk_complement(curr_set);
+                }
                 TRACE("nlsat_inf_set", std::cout << "infeasible set for literal: "; display(std::cout, l); std::cout << "\n"; m_ism.display(std::cout, curr_set); std::cout << "\n";
                       display(std::cout, cls) << "\n";); 
                 if (m_ism.is_empty(curr_set)) {
@@ -1434,7 +1482,10 @@ namespace nlsat {
                 atom * a   = m_atoms[b];
                 SASSERT(a != nullptr);
                 interval_set_ref curr_set(m_ism);
-                curr_set = m_evaluator.infeasible_intervals(a, l.sign(), &cls);
+                curr_set = m_atom_set_cached[b];
+                if(l.sign()) {
+                    curr_set = m_ism.mk_complement(curr_set);
+                }
                 TRACE("nlsat_inf_set", std::cout << "infeasible set for literal: "; display(std::cout, l); std::cout << "\n"; m_ism.display(std::cout, curr_set); std::cout << "\n";
                       display(std::cout, cls) << "\n";); 
                 if (m_ism.is_empty(curr_set)) {
@@ -1510,6 +1561,9 @@ namespace nlsat {
         }
 
         interval_set* get_clause_infset(clause const &c) {
+            DTRACE(std::cout << "get infeasible set for clause ";
+                display(std::cout, c) << std::endl;
+            );
             interval_set_ref res_st(m_ism);
             res_st = m_ism.mk_full();
             for(literal l: c) {
@@ -1521,21 +1575,30 @@ namespace nlsat {
                 }
                 atom * a   = m_atoms[l.var()];
                 interval_set_ref curr_st(m_ism);
-                curr_st = m_evaluator.infeasible_intervals(a, l.sign(), &c);
+                curr_st = m_evaluator.infeasible_intervals(a, false, &c);
+                m_ism.inc_ref(curr_st);
+                m_atom_set_cached[l.var()] = curr_st;
+                if(l.sign()) {
+                    curr_st = m_ism.mk_complement(curr_st);
+                }
                 res_st = m_ism.mk_intersection(res_st, curr_st);
             }
+            DTRACE(
+                std::cout << "infeasible set for clause ";
+                display(std::cout, c) << " is ";
+                m_ism.display(std::cout, res_st) << std::endl;);
             m_ism.inc_ref(res_st);
             return res_st;
         }
 
         interval_set* get_clauses_infset(clause_vector const &cs) {
-            // std::cout << "get clauses inf start" << std::endl;
+            DTRACE(std::cout << "get clauses inf start" << std::endl;);
             interval_set_ref curr_st(m_ism), res_st(m_ism);
             for(clause *c: cs) {
                 curr_st = get_clause_infset(*c);
                 res_st = m_ism.mk_union(curr_st, res_st);
             }
-            // std::cout << "get clauses inf done" << std::endl;
+            DTRACE(std::cout << "get clauses inf done" << std::endl;);
             m_ism.inc_ref(res_st);
             return res_st;
         }
@@ -1548,44 +1611,54 @@ namespace nlsat {
             return out;
         }
 
-        clause * process_arith_clauses(clause_vector const &cs) {
-            // std::cout << "process arith clauses" << std::endl;
-            // display_clauses(std::cout, cs) << std::endl;
+        interval_set_vector                      m_atom_set_cached;
 
+        clause * process_arith_clauses(clause_vector const &cs) {
+            DTRACE(
+                std::cout << "process arith clauses" << std::endl;
+                display_clauses(std::cout, cs) << std::endl;
+            );
 
             SASSERT(m_xk != null_var);
             interval_set_ref curr_set(m_ism);
             curr_set = get_clauses_infset(cs);
-            curr_set = m_ism.mk_union(curr_set, m_infeasible[m_xk]);
-            // std::cout << "m_xk: " << m_xk << std::endl;
-            // m_display_var(std::cout, m_xk) << std::endl;
-            // std::cout << "infeasible set: ";
-            // m_ism.display(std::cout, curr_set) << std::endl;
+            // curr_set = m_ism.mk_union(curr_set, m_infeasible[m_xk]);
+            DTRACE(
+                std::cout << "m_xk: " << m_xk << std::endl;
+                m_display_var(std::cout, m_xk) << std::endl;
+                std::cout << "infeasible set: ";
+                m_ism.display(std::cout, curr_set) << std::endl;
+            );
 
             if(m_ism.is_full(curr_set)) { // full case
-                // std::cout << "full case" << std::endl;
+                DTRACE(std::cout << "full case" << std::endl;);
                 appointed = false;
                 for(clause *c: cs) {
-                    if(!process_clause(*c, false)) {
-                        // std::cout << "process done" << std::endl;
+                    if(!process_arith_clause(*c, false)) {
+                        DTRACE(std::cout << "process done" << std::endl;);
                         return c;
                     }
                 }
             } else { // path case
-                // std::cout << "path case" << std::endl;
+                DTRACE(std::cout << "path case" << std::endl;);
                 appointed = true;
                 m_ism.peek_in_complement(curr_set, m_is_int[m_xk], m_appointed_value, m_randomize); // cache current selected value
+                DTRACE(std::cout << "choose appointed value: ";
+                        m_am.display(std::cout, m_appointed_value) << std::endl;);
+                save_path_finder_trail();
+                m_ism.inc_ref(curr_set);
+                m_clause_infeasible[m_xk] = curr_set;
                 process_clauses_using_appointed_value(cs);
                 return nullptr;
             }
         }
 
         void process_clauses_using_appointed_value(clause_vector const &cs) {
-            // std::cout << "process clauses app start" << std::endl;
+            DTRACE(std::cout << "process clauses app start" << std::endl;);
             for(clause *c: cs) {
                 process_clause_using_appointed_value(*c);
             }
-            // std::cout << "process clauses app done" << std::endl;
+            DTRACE(std::cout << "process clauses app done" << std::endl;);
         }
 
         /**
@@ -1629,15 +1702,15 @@ namespace nlsat {
                 std::cout << "infeasible intervals: "; m_ism.display(std::cout, m_infeasible[m_xk]); std::cout << "\n";
                 std::cout << "assigning "; m_display_var(std::cout, m_xk) << "(x" << m_xk << ") -> " << w << "\n";);
             TRACE("nlsat_root", std::cout << "value as root object: "; m_am.display_root(std::cout, w); std::cout << "\n";);
-
-            // std::cout << "infeasible intervals: "; m_ism.display(std::cout, m_infeasible[m_xk]); std::cout << "\n";
-            // std::cout << "assigning "; m_display_var(std::cout, m_xk) << "(x" << m_xk << ") -> " << w << "\n";
+            DTRACE(
+                std::cout << "infeasible intervals: "; m_ism.display(std::cout, m_infeasible[m_xk]); std::cout << "\n";
+                std::cout << "clause infeasible intervals: "; m_ism.display(std::cout, m_clause_infeasible[m_xk]); std::cout << std::endl;
+                std::cout << "assigning "; m_display_var(std::cout, m_xk) << "(x" << m_xk << ") -> " << w << "\n";
+            );
             if (!m_am.is_rational(w))
                 m_irrational_assignments++;
             m_assignment.set_core(m_xk, w);
         }
-
-        
 
         bool is_satisfied() {
             if (m_bk == null_bool_var && m_xk >= num_vars()) {
@@ -1648,6 +1721,17 @@ namespace nlsat {
             }
             else {
                 return false;
+            }
+        }
+
+        void pick_next_var() {
+            if (m_xk == null_var) {
+                peek_next_bool_var();
+                if (m_bk == null_bool_var) 
+                    new_stage(); // move to arith vars
+            }
+            else {
+                new_stage(); // peek next arith var
             }
         }
 
@@ -1668,53 +1752,42 @@ namespace nlsat {
 
             while (true) {
                 CASSERT("nlsat", check_satisfied());
-                if (m_xk == null_var) {
-                    peek_next_bool_var();
-                    if (m_bk == null_bool_var) 
-                        new_stage(); // move to arith vars
-                }
-                else {
-                    new_stage(); // peek next arith var
-                }
+                pick_next_var();
                 TRACE("nlsat_bug", std::cout << "xk: x" << m_xk << " bk: b" << m_bk << "\n";);
                 if (is_satisfied()) {
                     return l_true;
                 }
-                while (true) {
-                    TRACE("nlsat_verbose", std::cout << "processing variable "; 
-                          if (m_xk != null_var) {
-                              m_display_var(std::cout, m_xk); std::cout << " " << m_watches[m_xk].size();
-                          }
-                          else {
-                              std::cout << m_bwatches[m_bk].size() << " boolean b" << m_bk;
-                          }
-                          std::cout << "\n";);
-                    checkpoint();
-                    clause * conflict_clause;
-                    if (m_xk == null_var)
-                        conflict_clause = process_bool_clauses(m_bwatches[m_bk]);
-                    else 
-                        conflict_clause = process_arith_clauses(m_watches[m_xk]);
-                    if (conflict_clause == nullptr)
-                        break;
-                    if (!resolve(*conflict_clause)) 
-                        return l_false;                    
+                checkpoint();
+                clause * conflict_clause;
+                if(m_xk == null_var) {
+                    conflict_clause = process_bool_clauses(m_bwatches[m_bk]);
+                } else {
+                    conflict_clause = process_arith_clauses(m_watches[m_xk]);
+                }
+                if (conflict_clause == nullptr) {
+                    choose_value();
+                } else {
+                    if (!resolve(*conflict_clause)) {
+                        return l_false;              
+                    } else {
+                        choose_value();
+                    }      
                     if (m_conflicts >= m_max_conflicts)
                         return l_undef;
-                }
-               
-                if (m_xk == null_var) {
-                    if (m_bvalues[m_bk] == l_undef) {
-                        decide(literal(m_bk, true));
-                        m_bk++;
-                    }
-                }
-                else {
-                    select_witness();
                 }
             }
         }
 
+        void choose_value() {
+            if (m_xk == null_var) {
+                if (m_bvalues[m_bk] == l_undef) {
+                    decide(literal(m_bk, true));
+                    m_bk++;
+                }
+            } else {
+                select_witness();
+            }
+        }
 
         lbool search_check() {
             lbool r = l_undef;
@@ -1792,6 +1865,8 @@ namespace nlsat {
                 reordered = true;
             }
             sort_watched_clauses();
+            DTRACE(display_clauses(std::cout, m_clauses) << std::endl;);
+
             lbool r = search_check();
             CTRACE("nlsat_model", r == l_true, std::cout << "model before restore order\n"; display_assignment(std::cout););
             if (reordered) {
@@ -2145,7 +2220,7 @@ namespace nlsat {
            \brief Return true if the conflict was solved.
         */
         bool resolve(clause const & conflict) {
-            // std::cout << "enter resolve..." << std::endl;
+            DTRACE(std::cout << "enter resolve..." << std::endl;);
             clause const * conflict_clause = &conflict;
             m_lemma_assumptions = nullptr;
         start:
@@ -2157,11 +2232,13 @@ namespace nlsat {
                   std::cout << "xk: "; if (m_xk != null_var) m_display_var(std::cout, m_xk); else std::cout << "<null>"; std::cout << "\n";
                   std::cout << "scope_lvl: " << scope_lvl() << "\n";
                   std::cout << "current assignment\n"; display_assignment(std::cout););
-
-            // std::cout << "resolve, conflicting clause:\n"; display(std::cout, *conflict_clause) << "\n";
-            //       std::cout << "xk: "; if (m_xk != null_var) m_display_var(std::cout, m_xk); else std::cout << "<null>"; std::cout << "\n";
-            //       std::cout << "scope_lvl: " << scope_lvl() << "\n";
-            //       std::cout << "current assignment\n"; display_assignment(std::cout);
+            
+            DTRACE(
+            std::cout << "resolve, conflicting clause:\n"; display(std::cout, *conflict_clause) << "\n";
+                  std::cout << "xk: "; if (m_xk != null_var) m_display_var(std::cout, m_xk); else std::cout << "<null>"; std::cout << "\n";
+                  std::cout << "scope_lvl: " << scope_lvl() << "\n";
+                  std::cout << "current assignment\n"; display_assignment(std::cout);
+            );
             
             m_num_marks = 0;
             m_lemma.reset();
@@ -2245,9 +2322,11 @@ namespace nlsat {
             reset_marks(); // remove marks from the literals in m_lemmas.
             TRACE("nlsat", std::cout << "new lemma:\n"; display(std::cout, m_lemma.size(), m_lemma.data()); std::cout << "\n";
                   std::cout << "found_decision: " << found_decision << "\n";);
-
-            // std::cout << "new lemma:\n"; display(std::cout, m_lemma.size(), m_lemma.data()); std::cout << "\n";
-            //       std::cout << "found_decision: " << found_decision << "\n";
+            
+            DTRACE(
+            std::cout << "new lemma:\n"; display(std::cout, m_lemma.size(), m_lemma.data()); std::cout << "\n";
+                  std::cout << "found_decision: " << found_decision << "\n";
+            );
             
             if (false && m_check_lemmas) {
                 check_lemma(m_lemma.size(), m_lemma.data(), false, m_lemma_assumptions.get());
@@ -2305,13 +2384,47 @@ namespace nlsat {
                 new_cls = mk_clause(sz, m_lemma.data(), true, m_lemma_assumptions.get());
             }
             NLSAT_VERBOSE(display(verbose_stream(), *new_cls) << "\n";);
-            if (is_bool_lemma(new_cls->size(), new_cls->data()) && !process_clause(*new_cls, true)) {
-                TRACE("nlsat", std::cout << "new clause triggered another conflict, restarting conflict resolution...\n";
-                      display(std::cout, *new_cls) << "\n";
-                      );
-                // we are still in conflict
-                conflict_clause = new_cls;
-                goto start;
+            if (is_bool_lemma(new_cls->size(), new_cls->data())) { // bool lemma
+                if(!process_boolean_clause(*new_cls)) {
+                    TRACE("nlsat", std::cout << "new clause triggered another conflict, restarting conflict resolution...\n";
+                        display(std::cout, *new_cls) << "\n";
+                        );
+                    // we are still in conflict
+                    conflict_clause = new_cls;
+                    goto start;
+                }
+            } else { // arith lemma
+                // m_xk has been undo
+                // we need to backtrack path finding, and re-consider the new lemma
+                undo_until_path_finder(m_xk);
+                interval_set_ref curr_st(m_ism);
+                curr_st = get_clause_infset(*new_cls);
+                DTRACE(std::cout << "repeat set here";
+                    m_ism.display(std::cout, curr_st) << std::endl;
+                );
+                curr_st = m_ism.mk_union(curr_st, m_clause_infeasible[m_xk]);
+                DTRACE(std::cout << "show lemma's infeasble:" << std::endl;
+                    m_ism.display(std::cout, curr_st) << std::endl;
+                );
+                if (m_ism.is_full(curr_st)) { // full case
+                    DTRACE(std::cout << "full case for lemma" << std::endl;);
+                    appointed = false;
+                    for(clause *c: m_watches[m_xk]) {
+                        process_arith_clause(*c, true);
+                    }
+                    conflict_clause = new_cls;
+                    goto start;
+                } else { // path case
+                    DTRACE(std::cout << "path case for lemma" << std::endl;);
+                    appointed = true;
+                    m_ism.peek_in_complement(curr_st, m_is_int[m_xk], m_appointed_value, m_randomize);
+                    DTRACE(std::cout << "choose appointed value: ";
+                        m_am.display(std::cout, m_appointed_value) << std::endl;);
+                    save_path_finder_trail();
+                    m_ism.inc_ref(curr_st);
+                    m_clause_infeasible[m_xk] = curr_st;
+                    process_clauses_using_appointed_value(m_watches[m_xk]);
+                }
             }
             TRACE("nlsat_resolve_done", display_assignment(std::cout););
             return true;
