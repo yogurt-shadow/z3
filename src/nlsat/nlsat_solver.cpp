@@ -490,11 +490,14 @@ namespace nlsat {
             return mk_bool_var_core();
         }
 
+        vector<lbool> m_var_path;
+
         var mk_var(bool is_int) {
             var x = m_pm.mk_var();
             register_var(x, is_int);
             return x;
         }
+
         void register_var(var x, bool is_int) {
             SASSERT(x == num_vars());
             m_is_int.    push_back(is_int);
@@ -504,12 +507,16 @@ namespace nlsat {
             m_var2eq.    push_back(nullptr);
             m_perm.      push_back(x);
             m_inv_perm.  push_back(x);
+            m_var_path.  push_back(l_false);
+            m_watched_vars.push_back(var_vector());
             SASSERT(m_is_int.size() == m_watches.size());
             SASSERT(m_is_int.size() == m_infeasible.size());
             SASSERT(m_is_int.size() == m_clause_infeasible.size());
             SASSERT(m_is_int.size() == m_var2eq.size());
             SASSERT(m_is_int.size() == m_perm.size());
             SASSERT(m_is_int.size() == m_inv_perm.size());
+            SASSERT(m_is_int.size() == m_var_path.size());
+            SASSERT(m_is_int.size() == m_watched_vars.size());
         }
 
         bool_vector m_found_vars;
@@ -708,10 +715,21 @@ namespace nlsat {
             return b;
         }
 
+        void update_watched_vars(clause const& cls, var x) {
+            var_vector vec;
+            collect_clause_vars(cls, vec);
+            for(var v: vec) {
+                if(!m_watched_vars[x].contains(v)) {
+                    m_watched_vars[x].push_back(v);
+                }
+            }
+        }
+
         void attach_clause(clause & cls) {
             var x      = max_var(cls);
             if (x != null_var) {
                 m_watches[x].push_back(&cls);
+                update_watched_vars(cls, x);
             }
             else {
                 bool_var b = max_bvar(cls);
@@ -988,11 +1006,13 @@ namespace nlsat {
         }
 
         void save_path_finder_trail() {
+            m_var_path[m_xk] = l_true;
             DTRACE(std::cout << "save path finder trail for var " << m_xk << std::endl;);
             m_trail.push_back(trail(path_finder(), m_xk));
         }
 
         void save_path_block_trail() {
+            m_var_path[m_xk] = l_false;
             DTRACE(std::cout << "save path block trail for var " << m_xk << std::endl;);
             m_trail.push_back(trail(path_block(), m_xk));
         }
@@ -1073,6 +1093,10 @@ namespace nlsat {
                     undo_updt_eq(t.m_old_eq);
                     break;
                 case trail::PATH_FINDER:
+                    undo_path_finder(t.m_x);
+                    break;
+                case trail::PATH_BLOCK:
+                    undo_path_block(t.m_x);
                     break;
                 default:
                     break;
@@ -1111,6 +1135,7 @@ namespace nlsat {
                 trail & t = m_trail.back();
                 if (t.m_kind == trail::PATH_BLOCK && t.m_x == v) {
                     m_trail.pop_back();
+                    undo_path_block(v);
                     return;
                 }
                 switch (t.m_kind) {
@@ -1128,6 +1153,12 @@ namespace nlsat {
                     break;
                 case trail::UPDT_EQ:
                     undo_updt_eq(t.m_old_eq);
+                    break;
+                case trail::PATH_FINDER:
+                    undo_path_finder(t.m_x);
+                    break;
+                case trail::PATH_BLOCK:
+                    undo_path_block(t.m_x);
                     break;
                 default:
                     break;
@@ -1136,11 +1167,20 @@ namespace nlsat {
             }
         }
 
+        void undo_path_finder(var v) {
+            m_var_path[v] = l_undef;
+        }
+
+        void undo_path_block(var v) {
+            m_var_path[v] = l_undef;
+        }
+
         void undo_until_path_finder(var v) {
             while(!m_trail.empty()) {
                 trail & t = m_trail.back();
                 if (t.m_kind == trail::PATH_FINDER && t.m_x == v) {
                     m_trail.pop_back();
+                    undo_path_finder(v);
                     return;
                 }
                 switch (t.m_kind) {
@@ -1158,6 +1198,12 @@ namespace nlsat {
                     break;
                 case trail::UPDT_EQ:
                     undo_updt_eq(t.m_old_eq);
+                    break;
+                case trail::PATH_FINDER:
+                    undo_path_finder(t.m_x);
+                    break;
+                case trail::PATH_BLOCK:
+                    undo_path_block(t.m_x);
                     break;
                 default:
                     break;
@@ -1596,42 +1642,15 @@ namespace nlsat {
             return nullptr;
         }
 
-        bool is_single_var(literal l, var x) const {
-            if(m_atoms[l.var()] == nullptr) {
-                return false;
-            }
-            atom const* a = m_atoms[l.var()];
-            if(a->is_ineq_atom()) {
-                var_vector vec;
-                ineq_atom const *ia = to_ineq_atom(a);
-                for(unsigned i = 0; i < ia->size(); i++) {
-                    poly *p = ia->p(i);
-                    m_pm.vars(p, vec);
-                    if(vec.size() > 1 || (vec.size() == 1 && vec[0] != x)) {
-                        return false;
-                    }
-                }
-                return true;
-            } else {
-                var_vector vec;
-                m_pm.vars(to_root_atom(a)->p(), vec);
-                return vec.size() == 1 && vec[0] == x;;
-            }
-        }
-
-        interval_set* get_clause_infset(clause const &c, bool& single_var) {
+        interval_set* get_clause_infset(clause const &c) {
             DTRACE(std::cout << "get infeasible set for clause ";
                 display(std::cout, c) << std::endl;
                 m_assignment.display(std::cout);
                 std::cout << std::endl;
             );
-            single_var = true;
             interval_set_ref res_st(m_ism);
             res_st = m_ism.mk_full();
             for(literal l: c) {
-                if(!is_single_var(l, m_xk)) {
-                    single_var = false;
-                }
                 if(value(l) == l_true) {
                     return nullptr;
                 }
@@ -1656,17 +1675,12 @@ namespace nlsat {
             return res_st;
         }
 
-        interval_set* get_clauses_infset(clause_vector const &cs, bool &single_var) {
+        interval_set* get_clauses_infset(clause_vector const &cs) {
             DTRACE(std::cout << "get clauses inf start" << std::endl;);
             interval_set_ref curr_st(m_ism), res_st(m_ism);
-            single_var = true;
             for(clause *c: cs) {
-                bool curr_single_var;
-                curr_st = get_clause_infset(*c, curr_single_var);
+                curr_st = get_clause_infset(*c);
                 res_st = m_ism.mk_union(curr_st, res_st);
-                if(!curr_single_var) {
-                    single_var = false;
-                }
             }
             DTRACE(std::cout << "get clauses inf done" << std::endl;);
             m_ism.inc_ref(res_st);
@@ -1691,8 +1705,7 @@ namespace nlsat {
             is_unsat = false;
             SASSERT(m_xk != null_var);
             interval_set_ref curr_set(m_ism);
-            bool single_var;
-            curr_set = get_clauses_infset(cs, single_var);
+            curr_set = get_clauses_infset(cs);
             // curr_set = m_ism.mk_union(curr_set, m_infeasible[m_xk]);
             DTRACE(
                 std::cout << "m_xk: " << m_xk << std::endl;
@@ -1703,7 +1716,7 @@ namespace nlsat {
 
             if(m_ism.is_full(curr_set)) { // full case
                 DTRACE(std::cout << "full case" << std::endl;);
-                if(single_var) { // shortcut for unsat case, no other variables appear in clauses
+                if(m_watched_vars[m_xk].size() == 1) { // shortcut for unsat case, no other variables appear in clauses
                     DTRACE(std::cout << "shortcut case for single var full" << std::endl;);
                     is_unsat = true;
                     return nullptr;
@@ -1965,6 +1978,66 @@ namespace nlsat {
             return r;
         }
 
+        vector<var_vector>    m_watched_vars; // var -> var's watched's containing vars
+
+        void collect_literal_vars(literal const& l, var_vector &vec) const {
+            vec.clear();
+            atom const *a = m_atoms[l.var()];
+            if(a == nullptr) {
+                return;
+            }
+            if(a->is_ineq_atom()) {
+                ineq_atom const *ia = to_ineq_atom(a);
+                for(unsigned i = 0; i < ia->size(); i++) {
+                    var_vector curr;
+                    poly *p = ia->p(i);
+                    m_pm.vars(p, curr);
+                    for(var v: curr) {
+                        if(!vec.contains(v)) {
+                            vec.push_back(v);
+                        }
+                    }
+                }
+            } else {
+                m_pm.vars(to_root_atom(a)->p(), vec);
+            }
+        }
+
+        void collect_clause_vars(clause const& cls, var_vector & vec) const {
+            vec.clear();
+            for(literal l: cls) {
+                var_vector curr;
+                collect_literal_vars(l, curr);
+                for(var v: curr) {
+                    if(!vec.contains(v)) {
+                        vec.push_back(v);
+                    }
+                }
+            }
+        }
+
+        void collect_clauses_vars(clause_vector const &cls, var_vector & vec) const {
+            vec.clear();
+            for(clause const* c: cls) {
+                var_vector curr;
+                collect_clause_vars(*c, curr);
+                for(var v: curr) {
+                    if(!vec.contains(v)) {
+                        vec.push_back(v);
+                    }
+                }
+            }
+        }
+
+        void collect_watched_vars() {
+            m_watched_vars.clear();
+            for(var v = 0; v < num_vars(); v++) {
+                var_vector vec;
+                collect_clauses_vars(m_watches[v], vec);
+                m_watched_vars.push_back(vec);
+            }
+        }
+
         void init_search() {
             undo_until_empty();
             while (m_scope_lvl > 0) {
@@ -1975,6 +2048,7 @@ namespace nlsat {
                 m_bvalues[i] = l_undef;
             }
             m_assignment.reset();
+            collect_watched_vars();
         }
 
         lbool check(literal_vector& assumptions) {
@@ -2491,9 +2565,19 @@ namespace nlsat {
                 }
             } else { // arith lemma
                 // m_xk has been undo
-                if(!found_decision) { // not found decision, we just take lemma into consideration
+                var new_max_var = max_var(new_cls->size(), new_cls->data());
+                DTRACE(
+                    std::cout << "new max var: " << new_max_var << std::endl;
+                    m_display_var(std::cout, new_max_var) << std::endl;
+                );
+                if(m_var_path[new_max_var] != l_false) { // path case or unknown case
                     // we need to backtrack path finding, and re-consider the new lemma
-                    undo_until_path_finder(m_xk);
+                    DTRACE(std::cout << "before undo until path finder" << std::endl;
+                            std::cout << "m_xk = " << m_xk << std::endl;
+                            display_assignment(std::cout) << std::endl;
+                            display_trails(std::cout) << std::endl;
+                    );
+                    undo_until_path_finder(new_max_var);
                     DTRACE(
                         std::cout << "after undo until path finder" << std::endl;
                         std::cout << "m_xk = " << m_xk << std::endl;
@@ -2501,14 +2585,17 @@ namespace nlsat {
                         display_trails(std::cout) << std::endl;
                     );
                     interval_set_ref curr_st(m_ism);
-                    bool single_var;
-                    curr_st = get_clause_infset(*new_cls, single_var);
-                    curr_st = m_ism.mk_union(curr_st, m_clause_infeasible[m_xk]);
+                    curr_st = get_clause_infset(*new_cls);
+                    curr_st = m_ism.mk_union(curr_st, m_clause_infeasible[new_max_var]);
                     DTRACE(std::cout << "show lemma's infeasble:" << std::endl;
                         m_ism.display(std::cout, curr_st) << std::endl;
                     );
                     if (m_ism.is_full(curr_st)) { // full case
                         DTRACE(std::cout << "full case for lemma" << std::endl;);
+                        if(m_watched_vars[new_max_var].size() == 1) { // single var
+                            DTRACE(std::cout << "single var case for lemma" << std::endl;);
+                            return false;
+                        }
                         save_path_block_trail();
                         appointed = false;
                         for(clause *c: m_watches[m_xk]) {
@@ -2527,10 +2614,19 @@ namespace nlsat {
                         m_clause_infeasible[m_xk] = curr_st;
                         process_clauses_using_appointed_value(m_watches[m_xk]);
                     }
-                } else { // found decision
+                } else { // full case
                     // we need to backtrack path block, and retaken another decision choice (currently, 
                     // actually, other choices will fail )
-                    undo_until_block_finder(m_xk);
+                    DTRACE(std::cout << "before undo until path block" << std::endl;
+                            std::cout << "m_xk = " << m_xk << std::endl;
+                            display_assignment(std::cout) << std::endl;
+                            display_trails(std::cout) << std::endl;
+                    );
+                    if(m_watched_vars[new_max_var].size() == 1) { // shortcut for single var
+                        DTRACE(std::cout << "single var case for lemma" << std::endl;);
+                        return false;
+                    }
+                    undo_until_block_finder(new_max_var);
                     DTRACE(
                         std::cout << "after undo until path block" << std::endl;
                         std::cout << "m_xk = " << m_xk << std::endl;
@@ -2572,7 +2668,8 @@ namespace nlsat {
                 out << "new level";
                 break;
             case trail::PATH_FINDER:
-                out << "path finder for var " << t.m_x;
+                out << "path finder for var " << t.m_x << " ";
+                m_display_var(out, t.m_x);
                 break;
             case trail::INFEASIBLE_UPDT:
                 out << "infeasible update";
@@ -2581,7 +2678,8 @@ namespace nlsat {
                 out << "update eq";
                 break;
             case trail::PATH_BLOCK:
-                out << "path block for var " << t.m_x;
+                out << "path block for var " << t.m_x << " ";
+                m_display_var(out, t.m_x);
                 break;
             default:
                 UNREACHABLE();
