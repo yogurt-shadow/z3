@@ -14,4 +14,7 @@ Two-Level Path:
 当前process的clauses只还有一个变量(max var)，并且组成的satisfying interval为空集，直接返回unsat
 ## common case (仍然含有多个变量，此时应该怎么学习子句？)
 ![](https://cdn.nlark.com/yuque/0/2024/jpeg/26979990/1709711558096-a333b6ea-42ac-4a68-906d-4f05e825b95a.jpeg)
-
+目前做法：
+在found decision之后，回退到block状态，然后继续尝试其他选择，以生成完整的多path下的lemma
+undo_until_block()
+## 尝试改进full case下的path方法
