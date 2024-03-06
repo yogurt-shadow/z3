@@ -1560,13 +1560,42 @@ namespace nlsat {
             return nullptr;
         }
 
-        interval_set* get_clause_infset(clause const &c) {
+        bool is_single_var(literal l, var x) const {
+            if(m_atoms[l.var()] == nullptr) {
+                return false;
+            }
+            atom const* a = m_atoms[l.var()];
+            if(a->is_ineq_atom()) {
+                var_vector vec;
+                ineq_atom const *ia = to_ineq_atom(a);
+                for(unsigned i = 0; i < ia->size(); i++) {
+                    poly *p = ia->p(i);
+                    m_pm.vars(p, vec);
+                    if(vec.size() > 1 || (vec.size() == 1 && vec[0] != x)) {
+                        return false;
+                    }
+                }
+                return true;
+            } else {
+                var_vector vec;
+                m_pm.vars(to_root_atom(a)->p(), vec);
+                return vec.size() == 1 && vec[0] == x;;
+            }
+        }
+
+        interval_set* get_clause_infset(clause const &c, bool& single_var) {
             DTRACE(std::cout << "get infeasible set for clause ";
                 display(std::cout, c) << std::endl;
+                m_assignment.display(std::cout);
+                std::cout << std::endl;
             );
+            single_var = true;
             interval_set_ref res_st(m_ism);
             res_st = m_ism.mk_full();
             for(literal l: c) {
+                if(!is_single_var(l, m_xk)) {
+                    single_var = false;
+                }
                 if(value(l) == l_true) {
                     return nullptr;
                 }
@@ -1591,12 +1620,17 @@ namespace nlsat {
             return res_st;
         }
 
-        interval_set* get_clauses_infset(clause_vector const &cs) {
+        interval_set* get_clauses_infset(clause_vector const &cs, bool &single_var) {
             DTRACE(std::cout << "get clauses inf start" << std::endl;);
             interval_set_ref curr_st(m_ism), res_st(m_ism);
+            single_var = true;
             for(clause *c: cs) {
-                curr_st = get_clause_infset(*c);
+                bool curr_single_var;
+                curr_st = get_clause_infset(*c, curr_single_var);
                 res_st = m_ism.mk_union(curr_st, res_st);
+                if(!curr_single_var) {
+                    single_var = false;
+                }
             }
             DTRACE(std::cout << "get clauses inf done" << std::endl;);
             m_ism.inc_ref(res_st);
@@ -1613,15 +1647,16 @@ namespace nlsat {
 
         interval_set_vector                      m_atom_set_cached;
 
-        clause * process_arith_clauses(clause_vector const &cs) {
+        clause * process_arith_clauses(clause_vector const &cs, bool &is_unsat) {
             DTRACE(
                 std::cout << "process arith clauses" << std::endl;
                 display_clauses(std::cout, cs) << std::endl;
             );
-
+            is_unsat = false;
             SASSERT(m_xk != null_var);
             interval_set_ref curr_set(m_ism);
-            curr_set = get_clauses_infset(cs);
+            bool single_var;
+            curr_set = get_clauses_infset(cs, single_var);
             // curr_set = m_ism.mk_union(curr_set, m_infeasible[m_xk]);
             DTRACE(
                 std::cout << "m_xk: " << m_xk << std::endl;
@@ -1632,6 +1667,12 @@ namespace nlsat {
 
             if(m_ism.is_full(curr_set)) { // full case
                 DTRACE(std::cout << "full case" << std::endl;);
+                if(single_var) { // shortcut for unsat case, no other variables appear in clauses
+                    DTRACE(std::cout << "shortcut case for single var full" << std::endl;);
+                    is_unsat = true;
+                    return nullptr;
+                }
+                // not single var case
                 appointed = false;
                 for(clause *c: cs) {
                     if(!process_arith_clause(*c, false)) {
@@ -1735,6 +1776,18 @@ namespace nlsat {
             }
         }
 
+        clause * conflict_clause;
+
+        bool process_clauses() {
+            if(m_xk == null_var) {
+                conflict_clause = process_bool_clauses(m_bwatches[m_bk]);
+                return false;
+            } else {
+                bool is_unsat;
+                conflict_clause = process_arith_clauses(m_watches[m_xk], is_unsat);
+                return is_unsat;
+            }
+        }
 
         /**
            \brief main procedure
@@ -1758,20 +1811,17 @@ namespace nlsat {
                     return l_true;
                 }
                 checkpoint();
-                clause * conflict_clause;
-                if(m_xk == null_var) {
-                    conflict_clause = process_bool_clauses(m_bwatches[m_bk]);
-                } else {
-                    conflict_clause = process_arith_clauses(m_watches[m_xk]);
-                }
-                if (conflict_clause == nullptr) {
+                bool is_unsat = process_clauses();
+                if(is_unsat) {
+                    return l_false;
+                } else if (conflict_clause == nullptr) { // consistent
                     choose_value();
-                } else {
+                } else { // conflict
                     if (!resolve(*conflict_clause)) {
                         return l_false;              
-                    } else {
+                    } else { // choose value for max var of lemma
                         choose_value();
-                    }      
+                    }
                     if (m_conflicts >= m_max_conflicts)
                         return l_undef;
                 }
@@ -1853,17 +1903,17 @@ namespace nlsat {
                     return l_false;
             }
             
-            if (!can_reorder()) {
+            // if (!can_reorder()) {
 
-            }
-            else if (m_random_order) {
-                shuffle_vars();
-                reordered = true;
-            }
-            else if (m_reorder) {
-                heuristic_reorder();
-                reordered = true;
-            }
+            // }
+            // else if (m_random_order) {
+            //     shuffle_vars();
+            //     reordered = true;
+            // }
+            // else if (m_reorder) {
+            //     heuristic_reorder();
+            //     reordered = true;
+            // }
             sort_watched_clauses();
             DTRACE(display_clauses(std::cout, m_clauses) << std::endl;);
 
@@ -2398,7 +2448,8 @@ namespace nlsat {
                 // we need to backtrack path finding, and re-consider the new lemma
                 undo_until_path_finder(m_xk);
                 interval_set_ref curr_st(m_ism);
-                curr_st = get_clause_infset(*new_cls);
+                bool single_var;
+                curr_st = get_clause_infset(*new_cls, single_var);
                 DTRACE(std::cout << "repeat set here";
                     m_ism.display(std::cout, curr_st) << std::endl;
                 );

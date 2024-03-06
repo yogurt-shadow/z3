@@ -73,12 +73,17 @@ namespace nlsat {
             std::swap(m_values[x], m_values[y]);
         }
         void display(std::ostream& out) const {
+            unsigned num_assigned = 0;
             for (unsigned i = 0; i < m_assigned.size(); ++i) {
                 if (m_assigned[i]) {
+                    num_assigned++;
                     out << "x" << i << " := ";
                     m_values.m().display(out, m_values[i]);
                     out << "\n";
                 }
+            }
+            if(num_assigned == 0) {
+                out << "no assigned arith variable" << std::endl;
             }
         }
     };
