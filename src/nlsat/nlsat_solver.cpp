@@ -2402,6 +2402,7 @@ namespace nlsat {
                   std::cout << "xk: "; if (m_xk != null_var) m_display_var(std::cout, m_xk); else std::cout << "<null>"; std::cout << "\n";
                   std::cout << "scope_lvl: " << scope_lvl() << "\n";
                   std::cout << "current assignment\n"; display_assignment(std::cout);
+                  std::cout << "curr stage: " << m_xk << std::endl;
             );
             
             m_num_marks = 0;
@@ -2517,10 +2518,14 @@ namespace nlsat {
                 // Remark: the lemma may contain only boolean literals, in this case new_max_var == null_var;
                 var new_max_var = max_var(sz, m_lemma.data());
                 TRACE("nlsat_resolve", std::cout << "backtracking to stage: " << new_max_var << ", curr: " << m_xk << "\n";);
+                DTRACE(std::cout << "backtracking to stage: " << new_max_var << ", curr: " << m_xk << "\n";);
+                DTRACE(std::cout << "undo until stage to new var " << new_max_var << std::endl;);
                 undo_until_stage(new_max_var);
                 SASSERT(m_xk == new_max_var);
                 new_cls = mk_clause(sz, m_lemma.data(), true, m_lemma_assumptions.get());
                 TRACE("nlsat", std::cout << "new_level: " << scope_lvl() << "\nnew_stage: " << new_max_var << "\n"; 
+                      if (new_max_var != null_var) m_display_var(std::cout, new_max_var) << "\n";);
+                DTRACE(std::cout << "new_level: " << scope_lvl() << "\nnew_stage: " << new_max_var << "\n"; 
                       if (new_max_var != null_var) m_display_var(std::cout, new_max_var) << "\n";);
             }
             else { // found decision
