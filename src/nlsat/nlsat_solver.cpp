@@ -1725,6 +1725,8 @@ namespace nlsat {
                 // not single var case
                 appointed = false;
                 for(clause *c: cs) {
+                    DTRACE(std::cout << "process clause:" << std::endl;
+                            display(std::cout, *c) << std::endl;);
                     if(!process_arith_clause(*c, false)) {
                         DTRACE(std::cout << "process done" << std::endl;);
                         return c;
@@ -1806,6 +1808,7 @@ namespace nlsat {
         bool is_satisfied() {
             if (m_bk == null_bool_var && m_xk >= num_vars()) {
                 TRACE("nlsat", std::cout << "found model\n"; display_assignment(std::cout););
+                DTRACE(std::cout << "found model\n"; display_assignment(std::cout) << std::endl;);
                 fix_patch();
                 SASSERT(check_satisfied(m_clauses));
                 return true; // all variables were assigned, and all clauses were satisfied.
@@ -2527,8 +2530,14 @@ namespace nlsat {
                     // boolean lemma, we just backtrack until the last literal is unassigned.
                     bool_var max_bool_var = m_lemma[m_lemma.size()-1].var();
                     undo_until_unassigned(max_bool_var);
+                    if(lemma_is_clause(*conflict_clause)) {
+                        TRACE("nlsat", std::cout << "found decision literal in conflict clause\n";);
+                        DTRACE(std::cout << "we enter verify here" << std::endl;);
+                        VERIFY(process_clause(*conflict_clause, true));
+                        return true;
+                    }
                 }
-                else {
+                else { // arith lemma and found decision
                     // We must find the maximal decision level in literals in the first sz-1 positions that 
                     // are at the same stage. If all these literals are from previous stages,
                     // we just backtrack the current level.
@@ -2544,12 +2553,15 @@ namespace nlsat {
                             display_assignment(std::cout) << std::endl;
                             display_trails(std::cout) << std::endl;
                     );
-                }
-
-                if (lemma_is_clause(*conflict_clause)) {
-                    TRACE("nlsat", std::cout << "found decision literal in conflict clause\n";);
-                    VERIFY(process_clause(*conflict_clause, true));
-                    return true;
+                    new_cls = mk_clause(sz, m_lemma.data(), true, m_lemma_assumptions.get());
+                    // this helps us avoid being in the same path
+                    process_arith_clause(*new_cls, true);
+                    for(clause *c: m_watches[m_xk]) {
+                        if(!process_arith_clause(*c, true)) {
+                            conflict_clause = c;
+                            goto start;
+                        }
+                    }
                 }
                 new_cls = mk_clause(sz, m_lemma.data(), true, m_lemma_assumptions.get());
             }
