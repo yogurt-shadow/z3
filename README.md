@@ -17,9 +17,10 @@ Two-Level Path:
 目前做法：
 在found decision之后，回退到block状态，然后继续尝试其他选择，以生成完整的多path下的lemma
 undo_until_block()
-## 第一版算法
+## 第一版算法(with bug)
 ### Search:
 ![](https://cdn.nlark.com/yuque/0/2024/jpeg/26979990/1709718473151-d10851cd-1d5a-4922-b4a2-114e2bc83a1c.jpeg)
+
 ### Conflict Analysis
 这里主要有四种分类
 
@@ -38,3 +39,26 @@ undo_until_block()
 2. 算术冲突
    1. 存在semantic decision，此时的lemma应该含有一个decision literal，回退到decision level，然后process lemma，为了得到decision literal否定的赋值
    2. 不存在semantic decision，回退到stage，然后根据新的lemma从新计算clause-infeasible，继续path case和full case的分支
+### Search with lemma:
+当新的lemma生成之后，分两种情况
+
+1. 之前是path case，用clause infeasible去计算和lemma的不可行区域union
+   1. path case，赋值并继续search
+   2. full case，重新process并回到resolve
+2. 之前是full case
+
+重新process并回到resolve
+## 冲突分析时的几种情况
+### only previous stage
+![](https://cdn.nlark.com/yuque/__latex/06c5464eabd97ffce1721708772d7ab2.svg#card=math&code=x%5E2%20-%209x%2B20%20%5Cle%200%5C%5C%0Ay%5E2%20%5Cle%20-x%20-%201&id=Tu1Bw)
+var order: [x, y]
+[x -> 4.5, !(x + 1 > 0), empty lemma]
+### conflict is caused by curr decision
+![](https://cdn.nlark.com/yuque/__latex/f2ef7e4ad6dbf3b83ef603eb7471c48d.svg#card=math&code=x%5E2%20-%209x%2B20%20%5Cle%200%20%5Cvee%20x%5E2%20-5x%2B6%5Cle0%5C%5C%0Ay%5E2%20%5Cle%20-x%20-%201&id=AYmaH)
+### conflict is not caused by curr decision, but still in curr stage
+### 
+## Debug (/home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/20180501-Economics-Mulligan/MulliganEconomicsModel0055c.smt2)
+
+
+
+
