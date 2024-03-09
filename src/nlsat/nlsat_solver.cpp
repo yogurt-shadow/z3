@@ -2560,7 +2560,7 @@ namespace nlsat {
                       if (new_max_var != null_var) m_display_var(std::cout, new_max_var) << "\n";);
                 if(is_bool_lemma(m_lemma.size(), m_lemma.data())) { // boolean lemma
                     DTRACE(std::cout << "lemma is boolean, we process clause" << std::endl;);
-                    if(!process_boolean_clause(*new_cls, true)) {
+                    if(!process_boolean_clause(*new_cls)) {
                         DTRACE(std::cout << "still conflict for new clause" << std::endl;);
                         conflict_clause = new_cls;
                         goto start;

@@ -27,7 +27,7 @@ Revision History:
 
 namespace nlsat {
 
-   #define _DTRACE
+   // #define _DTRACE
 
    #ifdef _DTRACE
    #define DTRACE(X) { X } ((void) 0)
