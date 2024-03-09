@@ -1974,17 +1974,17 @@ namespace nlsat {
                     return l_false;
             }
             
-            // if (!can_reorder()) {
+            if (!can_reorder()) {
 
-            // }
-            // else if (m_random_order) {
-            //     shuffle_vars();
-            //     reordered = true;
-            // }
-            // else if (m_reorder) {
-            //     heuristic_reorder();
-            //     reordered = true;
-            // }
+            }
+            else if (m_random_order) {
+                shuffle_vars();
+                reordered = true;
+            }
+            else if (m_reorder) {
+                heuristic_reorder();
+                reordered = true;
+            }
             sort_watched_clauses();
             DTRACE(display_clauses(std::cout, m_clauses) << std::endl;);
 
