@@ -1748,11 +1748,11 @@ namespace nlsat {
         }
 
         void process_clauses_using_appointed_value(clause_vector const &cs) {
-            DTRACE(std::cout << "process clauses app start" << std::endl;);
+            DTRACE(std::cout << "process clauses appointed start" << std::endl;);
             for(clause *c: cs) {
                 process_clause_using_appointed_value(*c);
             }
-            DTRACE(std::cout << "process clauses app done" << std::endl;);
+            DTRACE(std::cout << "process clauses appointed done" << std::endl;);
         }
 
         /**
@@ -2541,217 +2541,120 @@ namespace nlsat {
                 check_lemma(m_lemma.size(), m_lemma.data(), false, m_lemma_assumptions.get());
             }
     
-            // There are two possibilities:
-            // 1) m_lemma contains only literals from previous stages, and they
-            //    are false in the current interpretation. We make progress 
-            //    by returning to a previous stage with additional information (new clause)
-            //    that forces us to select a new partial interpretation
-            //    >>> Return to some previous stage (we may also backjump many decisions and stages).
-            //    
-            // 2) m_lemma contains at most one literal from the current level (the last literal).
-            //    Moreover, this literal was a decision, but the new lemma forces it to 
-            //    be assigned to a different value.
-            //    >>> In this case, we remain in the same stage but, we add a new asserted literal
-            //        in a previous scope level. We may backjump many decisions.
-            //
             unsigned sz = m_lemma.size();
             clause * new_cls = nullptr;
-            if (!found_decision) {
-                // Case 1)
-                // We just have to find the maximal variable in m_lemma, and return to that stage
-                // Remark: the lemma may contain only boolean literals, in this case new_max_var == null_var;
+            if(!found_decision) {
+                // 1) m_lemma contains only literals from previous stages, and they
+                //    are false in the current interpretation. We make progress 
+                //    by returning to a previous stage with additional information (new clause)
+                //    that forces us to select a new partial interpretation
+                //    >>> Return to some previous stage (we may also backjump many decisions and stages).
+                //    
+                DTRACE(std::cout << "no decision found, just previous stages" << std::endl;);
                 var new_max_var = max_var(sz, m_lemma.data());
-                TRACE("nlsat_resolve", std::cout << "backtracking to stage: " << new_max_var << ", curr: " << m_xk << "\n";);
-                DTRACE(std::cout << "backtracking to stage: " << new_max_var << ", curr: " << m_xk << "\n";);
-                DTRACE(std::cout << "undo until stage to new var " << new_max_var << std::endl;);
+                DTRACE(std::cout << "we undo until stage to new var " << new_max_var << std::endl;);
                 undo_until_stage(new_max_var);
                 SASSERT(m_xk == new_max_var);
                 new_cls = mk_clause(sz, m_lemma.data(), true, m_lemma_assumptions.get());
-                TRACE("nlsat", std::cout << "new_level: " << scope_lvl() << "\nnew_stage: " << new_max_var << "\n"; 
-                      if (new_max_var != null_var) m_display_var(std::cout, new_max_var) << "\n";);
                 DTRACE(std::cout << "new_level: " << scope_lvl() << "\nnew_stage: " << new_max_var << "\n"; 
                       if (new_max_var != null_var) m_display_var(std::cout, new_max_var) << "\n";);
-            }
-            else { // found decision
-                SASSERT(scope_lvl() >= 1);
-                // Case 2)
-                if (is_bool_lemma(m_lemma.size(), m_lemma.data())) {
-                    // boolean lemma, we just backtrack until the last literal is unassigned.
-                    bool_var max_bool_var = m_lemma[m_lemma.size()-1].var();
-                    undo_until_unassigned(max_bool_var);
-                    if(lemma_is_clause(*conflict_clause)) {
-                        TRACE("nlsat", std::cout << "found decision literal in conflict clause\n";);
-                        DTRACE(std::cout << "we enter verify here" << std::endl;);
-                        VERIFY(process_clause(*conflict_clause, true));
+                if(is_bool_lemma(m_lemma.size(), m_lemma.data())) { // boolean lemma
+                    DTRACE(std::cout << "lemma is boolean, we process clause" << std::endl;);
+                    if(!process_boolean_clause(*new_cls, true)) {
+                        DTRACE(std::cout << "still conflict for new clause" << std::endl;);
+                        conflict_clause = new_cls;
+                        goto start;
+                    }
+                }
+                else { // arithmetic lemma
+                    DTRACE(std::cout << "lemma is arithmetic" << std::endl;);
+                    // new max var must have a path, otherwise it should be blocked
+                    SASSERT(m_var_path[new_max_var] == l_true);
+                    if(m_var_path[new_max_var] != l_true) {
+                        UNREACHABLE();
+                    }
+                    // we add the new lemma into consideration
+                    undo_until_path_finder(new_max_var);
+                    interval_set_ref curr_st(m_ism);
+                    curr_st = get_clause_infset(*new_cls);
+                    curr_st = m_ism.mk_union(curr_st, m_clause_infeasible[new_max_var]);
+                    if(m_ism.is_full(curr_st)) { // block case
+                        DTRACE(std::cout << "block case" << std::endl;);
+                        if(m_watched_vars[new_max_var].size() == 1) { // single var, shortcut
+                            DTRACE(std::cout << "single var case for lemma" << std::endl;);
+                            return false;
+                        }
+                        save_path_block_trail();
+                        appointed = false;
+                        for(clause *c: m_watches[new_max_var]) {
+                            if(!process_arith_clause(*c, true)) {
+                                conflict_clause = c;
+                                goto start;
+                            }
+                        }
+                        // unreachable, because must have a conflict clause when path blocked
+                        UNREACHABLE();
+                    } 
+                    else { // path case
+                        DTRACE(std::cout << "path case" << std::endl;);
+                        appointed = true;
+                        m_ism.peek_in_complement(curr_st, m_is_int[m_xk], m_appointed_value, m_randomize);
+                        DTRACE(std::cout << "choose appointed value: "; m_am.display(std::cout, m_appointed_value) << std::endl;);
+                        save_path_finder_trail();
+                        m_ism.inc_ref(curr_st);
+                        m_clause_infeasible[m_xk] = curr_st;
+                        process_clauses_using_appointed_value(m_watches[m_xk]);
                         return true;
                     }
                 }
-                else { // arith lemma and found decision
-                    // We must find the maximal decision level in literals in the first sz-1 positions that 
-                    // are at the same stage. If all these literals are from previous stages,
-                    // we just backtrack the current level.
-                    unsigned new_lvl = find_new_level_arith_lemma(m_lemma.size(), m_lemma.data());
-                    TRACE("nlsat", std::cout << "backtracking to new level: " << new_lvl << ", curr: " << m_scope_lvl << "\n";);
-
-                    DTRACE(std::cout << "backtracking to new level: " << new_lvl << ", curr: " <<       m_scope_lvl << std::endl;
-                            display_trails(std::cout) << std::endl;
-                    );
-                    undo_until_level(new_lvl);
-                    DTRACE(std::cout << "after undo until level" << std::endl;
-                            std::cout << "m_xk = " << m_xk << std::endl;
-                            display_assignment(std::cout) << std::endl;
-                            display_trails(std::cout) << std::endl;
-                    );
+            }
+            else { // found decision
+                // 2) m_lemma contains at most one literal from the current level (the last literal).
+                //    Moreover, this literal was a decision, but the new lemma forces it to 
+                //    be assigned to a different value.
+                //    >>> In this case, we remain in the same stage but, we add a new asserted literal
+                //        in a previous scope level. We may backjump many decisions.
+                //
+                DTRACE(std::cout << "found decision" << std::endl;);
+                DTRACE(std::cout << "the last literal in lemma should be a decided literal" << std::endl;);
+                if(is_bool_lemma(m_lemma.size(), m_lemma.data())) { // boolean lemma
+                    DTRACE(std::cout << "lemma is boolean" << std::endl;);
+                    bool_var max_bool_var = m_lemma[m_lemma.size() - 1].var();
+                    DTRACE(std::cout << "undo until b" << max_bool_var << " unassigned" << std::endl;);
+                    undo_until_unassigned(max_bool_var);
                     new_cls = mk_clause(sz, m_lemma.data(), true, m_lemma_assumptions.get());
-                    // this helps us avoid being in the same path
-                    process_arith_clause(*new_cls, true);
+                    if(!process_boolean_clause(*new_cls)) {
+                        DTRACE(std::cout << "still conflict for new clause" << std::endl;);
+                        conflict_clause = new_cls;
+                        goto start;
+                    }
+                    return true;
+                }
+                else { // arithmetic lemma
+                    DTRACE(std::cout << "lemma is arithmetic" << std::endl;);
+                    unsigned new_lvl = find_new_level_arith_lemma(m_lemma.size(), m_lemma.data());
+                    DTRACE(std::cout << "backtracking to new level: " << new_lvl << ", curr: " << m_scope_lvl << "\n";);
+                    undo_until_level(new_lvl);
+                    new_cls = mk_clause(sz, m_lemma.data(), true, m_lemma_assumptions.get());
+                    // we process new clause to re-assign the decided literal
+                    if(!process_arith_clause(*new_cls, true)) {
+                        UNREACHABLE();
+                    }
+                    // var path must be blocked, otherwise the decided path won't be denied
+                    SASSERT(m_var_path[m_xk] == l_false);
+                    if(m_var_path[m_xk] != l_false) {
+                        UNREACHABLE();
+                    }
+                    // re-process clauses
                     for(clause *c: m_watches[m_xk]) {
                         if(!process_arith_clause(*c, true)) {
                             conflict_clause = c;
                             goto start;
                         }
                     }
+                    UNREACHABLE();
                 }
-                new_cls = mk_clause(sz, m_lemma.data(), true, m_lemma_assumptions.get());
             }
-            NLSAT_VERBOSE(display(verbose_stream(), *new_cls) << "\n";);
-            if (is_bool_lemma(new_cls->size(), new_cls->data())) { // bool lemma
-                if(!process_boolean_clause(*new_cls)) {
-                    TRACE("nlsat", std::cout << "new clause triggered another conflict, restarting conflict resolution...\n";
-                        display(std::cout, *new_cls) << "\n";
-                        );
-                    // we are still in conflict
-                    conflict_clause = new_cls;
-                    goto start;
-                }
-            } else { // arith lemma
-                // m_xk has been undo
-                var new_max_var = max_var(new_cls->size(), new_cls->data());
-                DTRACE(
-                    std::cout << "new max var: " << new_max_var << std::endl;
-                    m_display_var(std::cout, new_max_var) << std::endl;
-                );
-                interval_set_ref curr_st(m_ism);
-                bool full_case;
-                if(m_var_path[new_max_var] == l_false) {
-                    full_case = true;
-                } else {
-                    // get infeasible set for new lemma
-                    curr_st = get_clause_infset(*new_cls);
-                    curr_st = m_ism.mk_union(curr_st, m_clause_infeasible[new_max_var]);
-                    if(m_ism.is_full(curr_st)) {
-                        full_case = true;
-                    } else {
-                        full_case = false;
-                    }
-                }
-                // 1. path case
-                if(!full_case) {
-                    undo_until_path_finder(new_max_var);
-                    appointed = true;
-                    m_ism.peek_in_complement(curr_st, m_is_int[m_xk], m_appointed_value, m_randomize);
-                    DTRACE(std::cout << "choose appointed value: ";
-                        m_am.display(std::cout, m_appointed_value) << std::endl;);
-                    save_path_finder_trail();
-                    m_ism.inc_ref(curr_st);
-                    m_clause_infeasible[m_xk] = curr_st;
-                    process_clauses_using_appointed_value(m_watches[m_xk]);
-                } 
-                // 2. full case, we instist on previous path
-                else {
-                    DTRACE(std::cout << "full case\n";);
-                    if(m_watched_vars[new_max_var].size() == 1) {
-                        DTRACE(std::cout << "single var case for lemma" << std::endl;);
-                        return false;
-                    }
-                    change_path_finder_into_block(new_max_var);
-                    appointed = false;
-                    if(process_arith_clause(*new_cls, true)) { // new cls should be next turn's conflict clause
-                        UNREACHABLE();
-                    }
-                    conflict_clause = new_cls;
-                    goto start;
-                }
-
-                // var new_max_var = max_var(new_cls->size(), new_cls->data());
-                // DTRACE(
-                //     std::cout << "new max var: " << new_max_var << std::endl;
-                //     m_display_var(std::cout, new_max_var) << std::endl;
-                // );
-                // if(m_var_path[new_max_var] != l_false) { // path case or unknown case
-                //     // we need to backtrack path finding, and re-consider the new lemma
-                //     DTRACE(std::cout << "before undo until path finder" << std::endl;
-                //             std::cout << "m_xk = " << m_xk << std::endl;
-                //             display_assignment(std::cout) << std::endl;
-                //             display_trails(std::cout) << std::endl;
-                //     );
-                //     undo_until_path_finder(new_max_var);
-                //     DTRACE(
-                //         std::cout << "after undo until path finder" << std::endl;
-                //         std::cout << "m_xk = " << m_xk << std::endl;
-                //         display_assignment(std::cout) << std::endl;
-                //         display_trails(std::cout) << std::endl;
-                //     );
-                //     interval_set_ref curr_st(m_ism);
-                //     curr_st = get_clause_infset(*new_cls);
-                //     curr_st = m_ism.mk_union(curr_st, m_clause_infeasible[new_max_var]);
-                //     DTRACE(std::cout << "show lemma's infeasble:" << std::endl;
-                //         m_ism.display(std::cout, curr_st) << std::endl;
-                //     );
-                //     if (m_ism.is_full(curr_st)) { // full case
-                //         DTRACE(std::cout << "full case for lemma" << std::endl;);
-                //         if(m_watched_vars[new_max_var].size() == 1) { // single var
-                //             DTRACE(std::cout << "single var case for lemma" << std::endl;);
-                //             return false;
-                //         }
-                //         save_path_block_trail();
-                //         appointed = false;
-                //         for(clause *c: m_watches[m_xk]) {
-                //             process_arith_clause(*c, true);
-                //         }
-                //         conflict_clause = new_cls;
-                //         goto start;
-                //     } else { // path case
-                //         DTRACE(std::cout << "path case for lemma" << std::endl;);
-                //         appointed = true;
-                //         m_ism.peek_in_complement(curr_st, m_is_int[m_xk], m_appointed_value, m_randomize);
-                //         DTRACE(std::cout << "choose appointed value: ";
-                //             m_am.display(std::cout, m_appointed_value) << std::endl;);
-                //         save_path_finder_trail();
-                //         m_ism.inc_ref(curr_st);
-                //         m_clause_infeasible[m_xk] = curr_st;
-                //         process_clauses_using_appointed_value(m_watches[m_xk]);
-                //     }
-                // } else { // full case
-                //     // we need to backtrack path block, and retaken another decision choice (currently, 
-                //     // actually, other choices will fail )
-                //     DTRACE(std::cout << "before undo until path block" << std::endl;
-                //             std::cout << "m_xk = " << m_xk << std::endl;
-                //             display_assignment(std::cout) << std::endl;
-                //             display_trails(std::cout) << std::endl;
-                //     );
-                //     if(m_watched_vars[new_max_var].size() == 1) { // shortcut for single var
-                //         DTRACE(std::cout << "single var case for lemma" << std::endl;);
-                //         return false;
-                //     }
-                //     undo_until_block_finder(new_max_var);
-                //     DTRACE(
-                //         std::cout << "after undo until path block" << std::endl;
-                //         std::cout << "m_xk = " << m_xk << std::endl;
-                //         display_assignment(std::cout) << std::endl;
-                //         display_trails(std::cout) << std::endl;
-                //     );
-                //     // just full case, no need to check
-                //     save_path_block_trail();
-                //     appointed = false;
-                //     for(clause *c: m_watches[m_xk]) {
-                //         process_arith_clause(*c, true);
-                //     }
-                //     conflict_clause = new_cls;
-                //     goto start;
-                // }
-            }
-            TRACE("nlsat_resolve_done", display_assignment(std::cout););
             return true;
         }
 
