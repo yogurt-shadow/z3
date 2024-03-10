@@ -729,7 +729,6 @@ namespace nlsat {
             var x      = max_var(cls);
             if (x != null_var) {
                 m_watches[x].push_back(&cls);
-                update_watched_vars(cls, x);
             }
             else {
                 bool_var b = max_bvar(cls);
@@ -981,6 +980,12 @@ namespace nlsat {
             else
                 m_clauses.push_back(cls);
             attach_clause(*cls);
+            if(learned) {
+                var x = max_var(*cls);
+                if(x != null_var) {
+                    update_watched_vars(*cls, x);
+                }
+            }
             return cls;
         }
 
@@ -1708,7 +1713,7 @@ namespace nlsat {
             if(m_ism.is_full(curr_set)) { // full case
                 DTRACE(std::cout << "full case" << std::endl;);
                 if(m_watched_vars[m_xk].size() == 1) { // shortcut for unsat case, no other variables appear in clauses
-                    SASSERT(m_watched_vars[m_xk][0] == m_xk);
+                    SASSERT(m_watched_vars[m_xk][0] == converted_arith_var(m_xk));
                     DTRACE(std::cout << "shortcut case for single var full" << std::endl;);
                     detect_unsat = true;
                     return nullptr;
@@ -1953,6 +1958,28 @@ namespace nlsat {
             return r;
         }
 
+        unsigned m_num_pure_bools;
+        bool_var_vector   m_pure_bools;
+        bool_var_vector   m_pure_bool_converts;
+
+        void collect_pure_bools() {
+            m_num_pure_bools = 0;
+            m_pure_bools.clear();
+            m_pure_bool_converts.clear();
+            m_pure_bool_converts.resize(m_atoms.size(), null_var);
+            for(bool_var b = 0; b < m_atoms.size(); b++) {
+                if(m_atoms[b] == nullptr) {
+                    m_num_pure_bools++;
+                    m_pure_bools.push_back(b);
+                    m_pure_bool_converts[b] = m_pure_bools.size() - 1;
+                }
+            }
+        }
+
+        inline var converted_arith_var(var v) const {
+            return v + m_num_pure_bools;
+        }
+
         lbool check() {
             TRACE("nlsat_smt2", display_smt2(std::cout););
             TRACE("nlsat_fd", std::cout << "is_full_dimensional: " << is_full_dimensional() << "\n";);
@@ -1977,6 +2004,7 @@ namespace nlsat {
                 reordered = true;
             }
             sort_watched_clauses();
+            collect_pure_bools();
             collect_watched_vars();
             DTRACE(display_clauses(std::cout, m_clauses) << std::endl;);
 
@@ -1997,6 +2025,7 @@ namespace nlsat {
             vec.clear();
             atom const *a = m_atoms[l.var()];
             if(a == nullptr) {
+                vec.push_back(m_pure_bool_converts[l.var()]);
                 return;
             }
             if(a->is_ineq_atom()) {
@@ -2006,13 +2035,21 @@ namespace nlsat {
                     poly *p = ia->p(i);
                     m_pm.vars(p, curr);
                     for(var v: curr) {
-                        if(!vec.contains(v)) {
-                            vec.push_back(v);
+                        var x = converted_arith_var(v);
+                        if(!vec.contains(x)) {
+                            vec.push_back(x);
                         }
                     }
                 }
             } else {
-                m_pm.vars(to_root_atom(a)->p(), vec);
+                var_vector curr;
+                m_pm.vars(to_root_atom(a)->p(), curr);
+                for(var v: curr) {
+                    var x = converted_arith_var(v);
+                    if(!vec.contains(x)) {
+                        vec.push_back(x);
+                    }
+                }
             }
         }
 
@@ -2034,7 +2071,11 @@ namespace nlsat {
                 std::cout << "vars for clause" << std::endl;
                 display(std::cout, cls) << std::endl;
                 for(var v: vec) {
-                    m_display_var(std::cout, v) << " ";
+                    if(v >= m_num_pure_bools) {
+                        m_display_var(std::cout, v - m_num_pure_bools) << " ";
+                    } else {
+                        std::cout << "b" << v << " ";
+                    }
                 }
                 std::cout << std::endl;
             );
