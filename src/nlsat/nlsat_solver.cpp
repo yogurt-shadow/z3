@@ -1369,7 +1369,9 @@ namespace nlsat {
             for (unsigned i = 0; i < sz; i++) {
                 literal l = cls[i];
                 SASSERT(m_atoms[l.var()] == nullptr);
-                SASSERT(value(l) != l_true);
+                if(value(l) == l_true) {
+                    return true;
+                }
                 if (value(l) == l_false)
                     continue;
                 SASSERT(value(l) == l_undef);
@@ -1619,22 +1621,11 @@ namespace nlsat {
             }
         }
 
-        /**
-           \brief Try to satisfy the given clause. Return true if succeeded.
-
-           If satisfy_learned is true, then (arithmetic) learned clauses are satisfied even if m_lazy > 0
-        */
-        bool process_clause(clause const & cls, bool satisfy_learned) {
-            if (is_satisfied(cls))
-                return true;
-            if (m_xk == null_var)
-                return process_boolean_clause(cls);
-            else
-                return process_arith_clause(cls, satisfy_learned);
-        }
-
         clause * process_boolean_clauses(clause_vector const &cs) {
             for (clause *c: cs) {
+                if(is_satisfied(*c)) {
+                    continue;
+                }
                 if(!process_boolean_clause(*c)) {
                     return c;
                 }
@@ -1986,6 +1977,7 @@ namespace nlsat {
                 reordered = true;
             }
             sort_watched_clauses();
+            collect_watched_vars();
             DTRACE(display_clauses(std::cout, m_clauses) << std::endl;);
 
             lbool r = search_check();
@@ -2025,6 +2017,9 @@ namespace nlsat {
         }
 
         void collect_clause_vars(clause const& cls, var_vector & vec) const {
+            DTRACE(std::cout << "collect vars for clause" << std::endl;
+                display(std::cout, cls) << std::endl;
+            );
             vec.clear();
             for(literal l: cls) {
                 var_vector curr;
@@ -2035,6 +2030,14 @@ namespace nlsat {
                     }
                 }
             }
+            DTRACE(
+                std::cout << "vars for clause" << std::endl;
+                display(std::cout, cls) << std::endl;
+                for(var v: vec) {
+                    m_display_var(std::cout, v) << " ";
+                }
+                std::cout << std::endl;
+            );
         }
 
         void collect_clauses_vars(clause_vector const &cls, var_vector & vec) const {
@@ -2050,6 +2053,17 @@ namespace nlsat {
             }
         }
 
+        std::ostream& display_watched_vars(std::ostream &out) const {
+            for(unsigned i = 0; i < m_watched_vars.size(); i++) {
+                out << "watched vars for " << i << ": ";
+                for(var v: m_watched_vars[i]) {
+                    out << v << " ";
+                }
+                out << std::endl;
+            }
+            return out;
+        }
+
         void collect_watched_vars() {
             m_watched_vars.clear();
             for(var v = 0; v < num_vars(); v++) {
@@ -2057,6 +2071,10 @@ namespace nlsat {
                 collect_clauses_vars(m_watches[v], vec);
                 m_watched_vars.push_back(vec);
             }
+            DTRACE(
+                std::cout << "after collection of watched vars" << std::endl;
+                display_watched_vars(std::cout) << std::endl;
+            );
         }
 
         void init_search() {
@@ -2069,7 +2087,6 @@ namespace nlsat {
                 m_bvalues[i] = l_undef;
             }
             m_assignment.reset();
-            collect_watched_vars();
         }
 
         lbool check(literal_vector& assumptions) {
@@ -2448,6 +2465,7 @@ namespace nlsat {
             unsigned top = m_trail.size();
             bool found_decision;
             while (true) {
+                DTRACE(std::cout << "top: " << top << std::endl;);
                 found_decision = false;
                 while (m_num_marks > 0) {
                     checkpoint();
@@ -2463,12 +2481,15 @@ namespace nlsat {
                             justification jst = m_justifications[b];
                             switch (jst.get_kind()) {
                             case justification::CLAUSE:
+                                DTRACE(std::cout << "clause justification" << std::endl;);
                                 resolve_clause(b, *(jst.get_clause()));
                                 break;
                             case justification::LAZY:
+                                DTRACE(std::cout << "lazy justification" << std::endl;);
                                 resolve_lazy_justification(b, *(jst.get_lazy()));
                                 break;
                             case justification::DECISION:
+                                DTRACE(std::cout << "decision justification" << std::endl;);
                                 SASSERT(m_num_marks == 0);
                                 found_decision = true;
                                 TRACE("nlsat_resolve", std::cout << "found decision\n";);
