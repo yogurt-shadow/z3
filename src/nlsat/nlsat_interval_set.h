@@ -19,10 +19,23 @@ Revision History:
 #pragma once
 
 #include "nlsat/nlsat_types.h"
+#include "math/polynomial/algebraic_numbers.h"
 
 namespace nlsat {
 
+    struct interval {
+        unsigned  m_lower_open:1;
+        unsigned  m_upper_open:1;
+        unsigned  m_lower_inf:1;
+        unsigned  m_upper_inf:1;
+        anum      m_lower;
+        anum      m_upper;
+        literal   m_justification; // unsat literal
+        clause const*  m_clause; // where the literal came from
+    };
+
     class interval_set;
+    using interval_set_vector = ptr_vector<interval_set>;
 
     class interval_set_manager {
         anum_manager &           m_am;
@@ -40,6 +53,8 @@ namespace nlsat {
            \brief Return the empty set.
         */
         interval_set * mk_empty() { return nullptr; }
+
+        interval_set * mk_full();
         
         /**
            \brief Return a set of composed of a single interval.
@@ -102,12 +117,19 @@ namespace nlsat {
         */
         interval_set * get_interval(interval_set const * s, unsigned idx) const;
         
+        interval_set* mk_complement(interval_set const *s);
+
+        interval_set* mk_intersection(interval_set const *s1, interval_set const *s2);
+
         /**
            \brief Select a witness w in the complement of s.
            
            \pre !is_full(s)
         */
         void peek_in_complement(interval_set const * s, bool is_int, anum & w, bool randomize);
+        
+        bool contains_value(interval const &inter, anum const &w) const;
+        bool contains_value(interval_set const *s, anum const &w) const;
     };
 
     typedef obj_ref<interval_set, interval_set_manager> interval_set_ref;

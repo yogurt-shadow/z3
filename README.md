@@ -1,8 +1,66 @@
-# Z3
+# Clause-Level MCSAT
+## 目前焦点
+![](https://cdn.nlark.com/yuque/0/2024/jpeg/26979990/1709640289984-3ff1fc0b-e3d5-49b7-bcc4-3c3d88924eaf.jpeg)
 
-Z3 is a theorem prover from Microsoft Research. 
-It is licensed under the [MIT license](LICENSE.txt).
+在选择到path case之后，仍然需要decide literal，但是这个时候的decide是伪decide （任何一种选择不会产生path）。
+z3原生产生子句后，会回退到decide层面的trail，然后尝试选择其他literal,这一点在cls-lvl可以避免。
+问题是cls-lvl要回退到哪一层？
+## Set Path for Arithmetic Variable
+One-Level Path:
+![](https://cdn.nlark.com/yuque/0/2024/jpeg/26979990/1709705681160-97a5da0a-8928-4fc0-a9f9-cdb31343de04.jpeg)
+Two-Level Path:
+![](https://cdn.nlark.com/yuque/0/2024/jpeg/26979990/1709706890966-efe234ff-7a09-49cd-b749-e4797d3f9e1a.jpeg)
+## shortcut for unsat (只有一个变量)
+当前process的clauses只还有一个变量(max var)，并且组成的satisfying interval为空集，直接返回unsat
+## common case (仍然含有多个变量，此时应该怎么学习子句？)
+![](https://cdn.nlark.com/yuque/0/2024/jpeg/26979990/1709711558096-a333b6ea-42ac-4a68-906d-4f05e825b95a.jpeg)
+目前做法：
+在found decision之后，回退到block状态，然后继续尝试其他选择，以生成完整的多path下的lemma
+undo_until_block()
+## 第一版算法(with bug)
+### Search:
+![](https://cdn.nlark.com/yuque/0/2024/jpeg/26979990/1709718473151-d10851cd-1d5a-4922-b4a2-114e2bc83a1c.jpeg)
 
+### Conflict Analysis
+这里主要有四种分类
+
+- 布尔冲突
+   - 之前有decide
+   - 之前没有decide
+- 算术冲突
+   - 存在semantic decision
+   - 不存在semantic decision （完全由arithmetic value造成）
+
+此时应该对应四种算法，假定我们目前和z3一样，尝试回退到decision level，然后选择其他路径（虽然这在cls-lvl的做法中是不被提倡的）
+
+1. 布尔冲突
+   1. 之前有decide: 回退到decision level，然后尝试process clause
+   2. 之前没有decide?
+2. 算术冲突
+   1. 存在semantic decision，此时的lemma应该含有一个decision literal，回退到decision level，然后process lemma，为了得到decision literal否定的赋值
+   2. 不存在semantic decision，回退到stage，然后根据新的lemma从新计算clause-infeasible，继续path case和full case的分支
+### Search with lemma:
+当新的lemma生成之后，分两种情况
+
+1. 之前是path case，用clause infeasible去计算和lemma的不可行区域union
+   1. path case，赋值并继续search
+   2. full case，重新process并回到resolve
+2. 之前是full case
+
+重新process并回到resolve
+## 冲突分析时的几种情况
+### only previous stage
+![](https://cdn.nlark.com/yuque/__latex/06c5464eabd97ffce1721708772d7ab2.svg#card=math&code=x%5E2%20-%209x%2B20%20%5Cle%200%5C%5C%0Ay%5E2%20%5Cle%20-x%20-%201&id=Tu1Bw)
+var order: [x, y]
+[x -> 4.5, !(x + 1 > 0), empty lemma]
+### conflict is caused by curr decision
+![](https://cdn.nlark.com/yuque/__latex/f2ef7e4ad6dbf3b83ef603eb7471c48d.svg#card=math&code=x%5E2%20-%209x%2B20%20%5Cle%200%20%5Cvee%20x%5E2%20-5x%2B6%5Cle0%5C%5C%0Ay%5E2%20%5Cle%20-x%20-%201&id=AYmaH)
+### conflict is not caused by curr decision, but still in curr stage
+### 
+## Debug (/home/wangzh/z3/build/z3 /pub/data/wangzh/smt_benchmark/QF_NRA/20180501-Economics-Mulligan/MulliganEconomicsModel0055c.smt2)
+
+
+<<<<<<< HEAD
 If you are not familiar with Z3, you can start [here](https://github.com/Z3Prover/z3/wiki#background).
 
 Pre-built binaries for stable and nightly releases are available from [here](https://github.com/Z3Prover/z3/releases).
@@ -235,5 +293,7 @@ to Z3's C API. For more information, see [MachineArithmetic/README.md](https://g
 * OCaml
 * [Julia](https://github.com/ahumenberger/Z3.jl)
 * [Smalltalk](https://github.com/shingarov/MachineArithmetic/blob/pure-z3/MachineArithmetic/README.md) (supports Pharo and Smalltalk/X)
+=======
+>>>>>>> 6bc3af889a5eb4d73c0c0674dc12cca55887e2b5
 
 
