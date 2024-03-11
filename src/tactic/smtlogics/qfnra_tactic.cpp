@@ -51,7 +51,14 @@ tactic * mk_qfnra_tactic(ast_manager & m, params_ref const& p) {
     //                         mk_qfnra_sat_solver(m, p, 6),
     //                         mk_qfnra_nlsat_tactic(m, p2)));
 
+<<<<<<< Updated upstream
 
+=======
+<<<<<<< HEAD
+=======
+
+>>>>>>> 6bc3af889a5eb4d73c0c0674dc12cca55887e2b5
+>>>>>>> Stashed changes
     return and_then(
         mk_simplify_tactic(m, p),
         mk_propagate_values_tactic(m, p),
