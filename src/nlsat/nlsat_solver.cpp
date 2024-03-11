@@ -502,17 +502,8 @@ namespace nlsat {
             SASSERT(x == num_vars());
             m_is_int.    push_back(is_int);
             m_watches.   push_back(clause_vector());
-<<<<<<< Updated upstream
-<<<<<<< HEAD
-            m_infeasible.push_back(nullptr);
-=======
             m_infeasible.push_back(0);
             m_clause_infeasible.push_back(0);
->>>>>>> 6bc3af889a5eb4d73c0c0674dc12cca55887e2b5
-=======
-            m_infeasible.push_back(0);
-            m_clause_infeasible.push_back(0);
->>>>>>> Stashed changes
             m_var2eq.    push_back(nullptr);
             m_perm.      push_back(x);
             m_inv_perm.  push_back(x);
@@ -849,21 +840,9 @@ namespace nlsat {
         };
 
         void check_lemma(unsigned n, literal const* cls, bool is_valid, assumption_set a) {
-<<<<<<< Updated upstream
-<<<<<<< HEAD
-            TRACE("nlsat", display(tout << "check lemma: ", n, cls) << "\n";
-                  display(tout););
-            IF_VERBOSE(2, display(verbose_stream() << "check lemma " << (is_valid?"valid: ":"consequence: "), n, cls) << "\n");
-=======
             TRACE("nlsat", display(std::cout << "check lemma: ", n, cls) << "\n";
                   display(std::cout););
             IF_VERBOSE(0, display(verbose_stream() << "check lemma: ", n, cls) << "\n");
->>>>>>> 6bc3af889a5eb4d73c0c0674dc12cca55887e2b5
-=======
-            TRACE("nlsat", display(std::cout << "check lemma: ", n, cls) << "\n";
-                  display(std::cout););
-            IF_VERBOSE(0, display(verbose_stream() << "check lemma: ", n, cls) << "\n");
->>>>>>> Stashed changes
             for (clause* c : m_learned) IF_VERBOSE(1, display(verbose_stream() << "lemma: ", *c) << "\n"); 
             
             solver solver2(m_ctx);
@@ -981,30 +960,15 @@ namespace nlsat {
         clause * mk_clause(unsigned num_lits, literal const * lits, bool learned, _assumption_set a) {
             SASSERT(num_lits > 0);
             clause * cls = mk_clause_core(num_lits, lits, learned, a);
-<<<<<<< Updated upstream
-<<<<<<< HEAD
-            TRACE("nlsat_sort", display(tout << "mk_clause:\n", *cls) << "\n";);
-            std::sort(cls->begin(), cls->end(), lit_lt(*this));
-            TRACE("nlsat", display(tout << " after sort:\n", *cls) << "\n";);
-=======
             ++m_lemma_count;
             TRACE("nlsat_sort", display(std::cout << "mk_clause:\n", *cls) << "\n";);
             std::sort(cls->begin(), cls->end(), lit_lt(*this));
-=======
-            ++m_lemma_count;
-            TRACE("nlsat_sort", display(std::cout << "mk_clause:\n", *cls) << "\n";);
-            std::sort(cls->begin(), cls->end(), lit_lt(*this));
->>>>>>> Stashed changes
 
 
             // display(std::cout << "mk_clause:\n", *cls) << "\n";
 
 
             TRACE("nlsat_sort", display(std::cout << "#" << m_lemma_count << " after sort:\n", *cls) << "\n";);
-<<<<<<< Updated upstream
->>>>>>> 6bc3af889a5eb4d73c0c0674dc12cca55887e2b5
-=======
->>>>>>> Stashed changes
             if (learned && m_log_lemmas) {
                 log_lemma(verbose_stream(), *cls);
             }
@@ -1313,14 +1277,6 @@ namespace nlsat {
            \brief Assign literal using the given justification
          */
         void assign(literal l, justification j) {
-<<<<<<< Updated upstream
-<<<<<<< HEAD
-            TRACE("nlsat_assign", 
-                  display(tout << "assigning literal: ", l); 
-                  display(tout << " <- ", j););
-=======
-=======
->>>>>>> Stashed changes
             TRACE("nlsat", 
                   display(std::cout << "assigning literal: ", l); 
                   display(std::cout << " <- ", j););
@@ -1328,10 +1284,6 @@ namespace nlsat {
                 display(std::cout << "assigning literal: ", l); 
                 display(std::cout << " <- ", j) << std::endl;
             );
-<<<<<<< Updated upstream
->>>>>>> 6bc3af889a5eb4d73c0c0674dc12cca55887e2b5
-=======
->>>>>>> Stashed changes
 
             SASSERT(assigned_value(l) == l_undef);
             SASSERT(j != null_justification);
@@ -1563,20 +1515,8 @@ namespace nlsat {
                 interval_set_ref tmp(m_ism);
                 tmp = m_ism.mk_union(curr_set, xk_set);
                 if (m_ism.is_full(tmp)) {
-<<<<<<< Updated upstream
-<<<<<<< HEAD
-                    TRACE("nlsat_inf_set", tout << "infeasible set + current set = R, skip literal\n";
-                          display(tout, cls) << "\n";
-                          m_ism.display(tout, tmp); tout << "\n";
-                          );
-=======
                     TRACE("nlsat_inf_set", std::cout << "infeasible set + current set = R, skip literal\n";
                           display(std::cout, cls) << "\n";);
->>>>>>> 6bc3af889a5eb4d73c0c0674dc12cca55887e2b5
-=======
-                    TRACE("nlsat_inf_set", std::cout << "infeasible set + current set = R, skip literal\n";
-                          display(std::cout, cls) << "\n";);
->>>>>>> Stashed changes
                     R_propagate(~l, tmp, false);
                     continue;
                 }
@@ -1694,7 +1634,6 @@ namespace nlsat {
                 if(!process_boolean_clause(*c)) {
                     return c;
                 }
-<<<<<<< Updated upstream
             }
             return nullptr;
         }
@@ -1809,122 +1748,6 @@ namespace nlsat {
             for(clause *c: cs) {
                 process_clause_using_appointed_value(*c);
             }
-=======
-            }
-            return nullptr;
-        }
-
-        interval_set* get_clause_infset(clause const &c) {
-            DTRACE(std::cout << "get infeasible set for clause ";
-                display(std::cout, c) << std::endl;
-                // m_assignment.display(std::cout);
-                // std::cout << std::endl;
-            );
-            interval_set_ref res_st(m_ism);
-            res_st = m_ism.mk_full();
-            for(literal l: c) {
-                if(value(l) == l_true) {
-                    return nullptr;
-                }
-                if(value(l) == l_false) {
-                    continue;
-                }
-                atom * a   = m_atoms[l.var()];
-                interval_set_ref curr_st(m_ism);
-                curr_st = m_evaluator.infeasible_intervals(a, false, &c);
-                m_ism.inc_ref(curr_st);
-                m_atom_set_cached[l.var()] = curr_st;
-                if(l.sign()) {
-                    curr_st = m_ism.mk_complement(curr_st);
-                }
-                res_st = m_ism.mk_intersection(res_st, curr_st);
-            }
-            DTRACE(
-                std::cout << "infeasible set for clause ";
-                display(std::cout, c) << " is ";
-                m_ism.display(std::cout, res_st) << std::endl;);
-            m_ism.inc_ref(res_st);
-            return res_st;
-        }
-
-        interval_set* get_clauses_infeasible_set(clause_vector const &cs) {
-            DTRACE(std::cout << "get clauses inf start" << std::endl;);
-            interval_set_ref curr_st(m_ism), res_st(m_ism);
-            for(clause *c: cs) {
-                curr_st = get_clause_infset(*c);
-                res_st = m_ism.mk_union(curr_st, res_st);
-            }
-            DTRACE(std::cout << "get clauses inf done" << std::endl;);
-            m_ism.inc_ref(res_st);
-            return res_st;
-        }
-
-        std::ostream & display_clauses(std::ostream & out, clause_vector const &cs) const {
-            out << "display clauses" << std::endl;
-            for(clause *c: cs) {
-                display(out, *c) << std::endl;
-            }
-            return out;
-        }
-
-        interval_set_vector                      m_atom_set_cached;
-
-        clause * process_arith_clauses(clause_vector const &cs) {
-            DTRACE(
-                std::cout << "process arith clauses" << std::endl;
-                display_clauses(std::cout, cs) << std::endl;
-            );
-            detect_unsat = false;
-            SASSERT(m_xk != null_var);
-            interval_set_ref curr_set(m_ism);
-            curr_set = get_clauses_infeasible_set(cs);
-            // curr_set = m_ism.mk_union(curr_set, m_infeasible[m_xk]);
-            DTRACE(
-                std::cout << "m_xk: " << m_xk << std::endl;
-                m_display_var(std::cout, m_xk) << std::endl;
-                std::cout << "infeasible set: ";
-                m_ism.display(std::cout, curr_set) << std::endl;
-            );
-
-            if(m_ism.is_full(curr_set)) { // full case
-                DTRACE(std::cout << "full case" << std::endl;);
-                if(m_watched_vars[m_xk].size() == 1) { // shortcut for unsat case, no other variables appear in clauses
-                    SASSERT(m_watched_vars[m_xk][0] == converted_arith_var(m_xk));
-                    DTRACE(std::cout << "shortcut case for single var full" << std::endl;);
-                    detect_unsat = true;
-                    return nullptr;
-                }
-                save_path_block_trail();
-                // not single var case
-                appointed = false;
-                for(clause *c: cs) { // reprocess clauses
-                    DTRACE(std::cout << "process clause:" << std::endl;
-                            display(std::cout, *c) << std::endl;);
-                    if(!process_arith_clause(*c, false)) {
-                        DTRACE(std::cout << "process done" << std::endl;);
-                        return c;
-                    }
-                }
-            } else { // path case
-                DTRACE(std::cout << "path case" << std::endl;);
-                appointed = true;
-                m_ism.peek_in_complement(curr_set, m_is_int[m_xk], m_appointed_value, m_randomize); // cache current selected value
-                DTRACE(std::cout << "choose appointed value: ";
-                        m_am.display(std::cout, m_appointed_value) << std::endl;);
-                save_path_finder_trail();
-                m_ism.inc_ref(curr_set);
-                m_clause_infeasible[m_xk] = curr_set;
-                process_clauses_using_appointed_value(cs);
-                return nullptr;
-            }
-        }
-
-        void process_clauses_using_appointed_value(clause_vector const &cs) {
-            DTRACE(std::cout << "process clauses appointed start" << std::endl;);
-            for(clause *c: cs) {
-                process_clause_using_appointed_value(*c);
-            }
->>>>>>> Stashed changes
             DTRACE(std::cout << "process clauses appointed done" << std::endl;);
         }
 
@@ -1959,23 +1782,12 @@ namespace nlsat {
         */
         void select_witness() {
             scoped_anum w(m_am);
-<<<<<<< Updated upstream
-<<<<<<< HEAD
-            SASSERT(!m_ism.is_full(m_infeasible[m_xk]));
-            m_ism.peek_in_complement(m_infeasible[m_xk], is_int(m_xk), w, m_randomize);
-=======
-=======
->>>>>>> Stashed changes
             if(appointed) {
                 m_am.set(w, m_appointed_value);
             } else {
                 SASSERT(!m_ism.is_full(m_infeasible[m_xk]));
                 m_ism.peek_in_complement(m_infeasible[m_xk], m_is_int[m_xk], w, m_randomize);
             }
-<<<<<<< Updated upstream
->>>>>>> 6bc3af889a5eb4d73c0c0674dc12cca55887e2b5
-=======
->>>>>>> Stashed changes
             TRACE("nlsat", 
                 std::cout << "infeasible intervals: "; m_ism.display(std::cout, m_infeasible[m_xk]); std::cout << "\n";
                 std::cout << "assigning "; m_display_var(std::cout, m_xk) << "(x" << m_xk << ") -> " << w << "\n";);
@@ -2079,38 +1891,10 @@ namespace nlsat {
                     }
                     if (m_conflicts >= m_max_conflicts)
                         return l_undef;
-<<<<<<< Updated upstream
-                    log();
-=======
->>>>>>> Stashed changes
                 }
             }
         }
 
-<<<<<<< Updated upstream
-<<<<<<< HEAD
-        unsigned m_next_conflict = 100;
-        void log() {
-            if (m_conflicts < m_next_conflict)
-                return;
-            m_next_conflict += 100;
-            IF_VERBOSE(2, verbose_stream() << "(nlsat :conflicts " << m_conflicts << " :decisions " << m_decisions << " :propagations " << m_propagations << " :clauses " << m_clauses.size() << " :learned " << m_learned.size() << ")\n");
-        }
-
-=======
-        void choose_value() {
-            if (m_xk == null_var) {
-                if (m_bvalues[m_bk] == l_undef) {
-                    decide(literal(m_bk, true));
-                    m_bk++;
-                }
-            } else {
-                select_witness();
-            }
-        }
->>>>>>> 6bc3af889a5eb4d73c0c0674dc12cca55887e2b5
-
-=======
         void choose_value() {
             if (m_xk == null_var) {
                 if (m_bvalues[m_bk] == l_undef) {
@@ -2122,7 +1906,6 @@ namespace nlsat {
             }
         }
 
->>>>>>> Stashed changes
         lbool search_check() {
             lbool r = l_undef;
             while (true) {
@@ -2230,18 +2013,8 @@ namespace nlsat {
             if (reordered) {
                 restore_order();
             }
-<<<<<<< Updated upstream
-<<<<<<< HEAD
-            CTRACE("nlsat_model", r == l_true, tout << "model\n"; display_assignment(tout););
-            CTRACE("nlsat", r == l_false, display(tout << "unsat\n"););
-=======
             CTRACE("nlsat_model", r == l_true, std::cout << "model\n"; display_assignment(std::cout););
             CTRACE("nlsat", r == l_false, display(std::cout););
->>>>>>> 6bc3af889a5eb4d73c0c0674dc12cca55887e2b5
-=======
-            CTRACE("nlsat_model", r == l_true, std::cout << "model\n"; display_assignment(std::cout););
-            CTRACE("nlsat", r == l_false, display(std::cout););
->>>>>>> Stashed changes
             SASSERT(r != l_true || check_satisfied(m_clauses));
             return r;
         }
@@ -2511,15 +2284,7 @@ namespace nlsat {
         }
 
         void resolve_clause(bool_var b, clause const & c) {
-<<<<<<< Updated upstream
-<<<<<<< HEAD
-            TRACE("nlsat_resolve", tout << "resolving clause "; if (b != null_bool_var) tout << "for b: " << b << "\n"; display(tout, c) << "\n";);
-=======
             TRACE("nlsat_resolve", std::cout << "resolving clause for b: " << b << "\n"; display(std::cout, c) << "\n";);
->>>>>>> 6bc3af889a5eb4d73c0c0674dc12cca55887e2b5
-=======
-            TRACE("nlsat_resolve", std::cout << "resolving clause for b: " << b << "\n"; display(std::cout, c) << "\n";);
->>>>>>> Stashed changes
             resolve_clause(b, c.size(), c.data());
             m_lemma_assumptions = m_asm.mk_join(static_cast<_assumption_set>(c.assumptions()), m_lemma_assumptions);
         }
@@ -2550,13 +2315,6 @@ namespace nlsat {
                   std::cout << "m_xk: " << m_xk << ", "; m_display_var(std::cout, m_xk) << "\n";
                   std::cout << "new valid clause:\n";
                   display(std::cout, m_lazy_clause.size(), m_lazy_clause.data()) << "\n";);
-<<<<<<< Updated upstream
-
-            
-            if (m_log_lemmas)
-                log_lemma(verbose_stream(), m_lazy_clause.size(), m_lazy_clause.data(), true);
-=======
->>>>>>> Stashed changes
 
             if (m_check_lemmas) {
                 m_valids.push_back(mk_clause_core(m_lazy_clause.size(), m_lazy_clause.data(), false, nullptr));
@@ -2835,14 +2593,6 @@ namespace nlsat {
             reset_marks(); // remove marks from the literals in m_lemmas.
             TRACE("nlsat", std::cout << "new lemma:\n"; display(std::cout, m_lemma.size(), m_lemma.data()); std::cout << "\n";
                   std::cout << "found_decision: " << found_decision << "\n";);
-<<<<<<< Updated upstream
-            
-            DTRACE(
-            std::cout << "new lemma:\n"; display(std::cout, m_lemma.size(), m_lemma.data()); std::cout << "\n";
-                  std::cout << "found_decision: " << found_decision << "\n";
-            );
-=======
->>>>>>> Stashed changes
             
             DTRACE(
             std::cout << "new lemma:\n"; display(std::cout, m_lemma.size(), m_lemma.data()); std::cout << "\n";
