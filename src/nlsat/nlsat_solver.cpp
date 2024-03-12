@@ -939,11 +939,24 @@ namespace nlsat {
         }
 
         void log_lemma(std::ostream& out, clause const& cls) {
-            display_smt2(out);
-            out << "(assert (not ";
-            display_smt2(out, cls) << "))\n";
-            display(out << "(echo \"#" << m_lemma_count << " ", cls) << "\")\n";
+            log_lemma(out, cls.size(), cls.data(), false);
+        }
+
+        void log_lemma(std::ostream& out, unsigned n, literal const* cls, bool is_valid) {
+            ++m_lemma_count;
+            out << "(set-logic NRA)\n";
+            if (is_valid) {
+                display_smt2_bool_decls(out);
+                display_smt2_arith_decls(out);
+            }
+            else             
+                display_smt2(out);            
+            for (unsigned i = 0; i < n; ++i) 
+                display_smt2(out << "(assert ", ~cls[i]) << ")\n";
+            display(out << "(echo \"#" << m_lemma_count << " ", n, cls) << "\")\n";
             out << "(check-sat)\n(reset)\n";
+
+            TRACE("nlsat", display(tout << "(echo \"#" << m_lemma_count << " ", n, cls) << "\")\n");
         }
 
         clause * mk_clause_core(unsigned num_lits, literal const * lits, bool learned, _assumption_set a) {
@@ -1905,17 +1918,6 @@ namespace nlsat {
             }
         }
 
-        void choose_value() {
-            if (m_xk == null_var) {
-                if (m_bvalues[m_bk] == l_undef) {
-                    decide(literal(m_bk, true));
-                    m_bk++;
-                }
-            } else {
-                select_witness();
-            }
-        }
-
         lbool search_check() {
             lbool r = l_undef;
             while (true) {
@@ -2803,7 +2805,7 @@ namespace nlsat {
         }
 
         bool check_bwatches() const {
-            DEBUG_CODE(
+#ifdef Z3DEBUG
                 for (bool_var b = 0; b < m_bwatches.size(); b++) {
                     clause_vector const & cs = m_bwatches[b];
                     unsigned sz = cs.size();
