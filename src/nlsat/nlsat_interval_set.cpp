@@ -21,18 +21,6 @@ Revision History:
 #include "util/buffer.h"
 
 namespace nlsat {
-
-    struct interval {
-        unsigned  m_lower_open:1;
-        unsigned  m_upper_open:1;
-        unsigned  m_lower_inf:1;
-        unsigned  m_upper_inf:1;
-        literal   m_justification;
-        clause const* m_clause;
-        anum      m_lower;
-        anum      m_upper;
-    };
-
     class interval_set {
     public:
         static unsigned get_obj_size(unsigned num) { return sizeof(interval_set) + num*sizeof(interval); }
@@ -98,13 +86,12 @@ namespace nlsat {
     
     // Check if the intervals are valid, ordered, and are disjoint.
     bool check_interval_set(anum_manager & am, unsigned sz, interval const * ints) {
-#ifdef Z3DEBUG
-        for (unsigned i = 0; i < sz; i++) {
-            interval const & curr = ints[i];
-            SASSERT(check_interval(am, curr));
-            SASSERT(i >= sz - 1 || check_no_overlap(am, curr, ints[i+1]));                
-        }
-#endif            
+        DEBUG_CODE(
+            for (unsigned i = 0; i < sz; i++) {
+                interval const & curr = ints[i];
+                SASSERT(check_interval(am, curr));
+                SASSERT(i >= sz - 1 || check_no_overlap(am, curr, ints[i+1]));                
+            });
         return true;
     }
 
@@ -130,6 +117,9 @@ namespace nlsat {
     }
 
     void interval_set_manager::dec_ref(interval_set * s) {
+        if(s == nullptr) {
+            return;
+        }
         SASSERT(s->m_ref_count > 0);
         s->m_ref_count--;
         if (s->m_ref_count == 0)
@@ -137,6 +127,9 @@ namespace nlsat {
     }
 
     void interval_set_manager::inc_ref(interval_set * s) {
+        if(s == nullptr) {
+            return;
+        }
         s->m_ref_count++;
     }
     
@@ -653,6 +646,11 @@ namespace nlsat {
         return true;
     }
 
+    interval_set * interval_set_manager::mk_full(){
+        anum zero;
+        return mk(true, true, zero, true, true, zero, null_literal, nullptr);
+    }
+
     void interval_set_manager::get_justifications(interval_set const * s, literal_vector & js, ptr_vector<clause>& clauses) {
         js.reset();
         clauses.reset();
@@ -664,8 +662,9 @@ namespace nlsat {
                 continue;
             m_already_visited.setx(lidx, true, false);
             js.push_back(l);
-            if (s->m_intervals[i].m_clause) 
+            if (s->m_intervals[i].m_clause) {
                 clauses.push_back(const_cast<clause*>(s->m_intervals[i].m_clause));
+            }
         }
         for (unsigned i = 0; i < num; i++) {
             literal l     = s->m_intervals[i].m_justification;
@@ -695,11 +694,12 @@ namespace nlsat {
                 scoped_mpq _w(m_am.qm());
                 m_am.qm().set(_w, num, den);
                 m_am.set(w, _w);
+                return;
             }
             else {
                 m_am.set(w, 0);
+                return;
             }
-            return;
         }
         
         unsigned n = 0;
@@ -740,7 +740,7 @@ namespace nlsat {
         for (unsigned i = 1; i < num; i++) {
             if (s->m_intervals[i-1].m_upper_open && s->m_intervals[i].m_lower_open) {
                 SASSERT(m_am.eq(s->m_intervals[i-1].m_upper, s->m_intervals[i].m_lower)); // otherwise we would have found it in the previous step
-                if (m_am.is_rational(s->m_intervals[i-1].m_upper)) {                    
+                if (m_am.is_rational(s->m_intervals[i-1].m_upper)) {
                     m_am.set(w, s->m_intervals[i-1].m_upper);
                     return;
                 }
@@ -753,6 +753,91 @@ namespace nlsat {
         SASSERT(s->m_intervals[irrational_i].m_upper_open && s->m_intervals[irrational_i+1].m_lower_open);
         m_am.set(w, s->m_intervals[irrational_i].m_upper);
     }
+
+    bool interval_set_manager::contains_value(interval const &inter, anum const &w) const {
+        bool left = inter.m_lower_inf || m_am.lt(inter.m_lower, w) || (m_am.eq(inter.m_lower, w) && !inter.m_lower_open);
+        bool right = inter.m_upper_inf || m_am.gt(inter.m_upper, w) || (m_am.eq(inter.m_upper, w) && !inter.m_upper_open);
+        return left && right;
+    }
+
+    interval_set * interval_set_manager::mk_complement(interval_set const * s){
+        if(s == nullptr){
+            return mk_full();
+        }
+        if(s->m_full){
+            return nullptr;
+        }
+        anum zero;
+        unsigned num = num_intervals(s);
+        interval_buffer result;
+        // (-oo, x
+        if(!s->m_intervals[0].m_lower_inf){
+            interval inter;
+            inter.m_lower = zero;
+            inter.m_upper = s->m_intervals[0].m_lower;
+            inter.m_lower_inf = true;
+            inter.m_upper_inf = false;
+            inter.m_lower_open = true;
+            inter.m_upper_open = !s->m_intervals[0].m_lower_open;
+            inter.m_justification = ~s->m_intervals[0].m_justification;
+            inter.m_clause = s->m_intervals[0].m_clause;
+            push_back(m_am, result, inter);
+        }
+        // middle area
+        for(unsigned i = 1; i < num; i++){
+            interval curr_inter = s->m_intervals[i];
+            interval inter;
+            inter.m_lower = s->m_intervals[i - 1].m_upper;
+            inter.m_upper = curr_inter.m_lower;
+            inter.m_lower_inf = false;
+            inter.m_upper_inf = false;
+            inter.m_lower_open = !s->m_intervals[i - 1].m_upper_open;
+            inter.m_upper_open = !curr_inter.m_lower_open;
+            inter.m_justification = ~curr_inter.m_justification;
+            inter.m_clause = curr_inter.m_clause;
+            push_back(m_am, result, inter);
+        }
+        // x, +oo)
+        if(!s->m_intervals[num - 1].m_upper_inf){
+            interval inter;
+            inter.m_lower = s->m_intervals[num - 1].m_upper;
+            inter.m_upper = zero;
+            inter.m_lower_inf = false;
+            inter.m_upper_inf = true;
+            inter.m_lower_open = !s->m_intervals[num - 1].m_upper_open;
+            inter.m_upper_open = true;
+            inter.m_justification = ~s->m_intervals[num - 1].m_justification;
+            inter.m_clause = s->m_intervals[num - 1].m_clause;
+            push_back(m_am, result, inter);
+        }
+        return mk_interval(m_allocator, result, false);
+    }
+
+    // s1 /\ s2 = !(!s1 \/ !s2)
+    interval_set * interval_set_manager::mk_intersection(interval_set const * s1, interval_set const * s2){
+        TRACE("wzh", tout << "[intersection] show s1 and s2" << std::endl;
+            display(tout, s1);
+            display(tout, s2);
+            tout << std::endl;
+        );
+        if(s1 == nullptr || s2 == nullptr){
+            return nullptr;
+        }
+        return mk_complement(mk_union(mk_complement(s1), mk_complement(s2)));
+    }
+
+    bool interval_set_manager::contains_value(interval_set const *s, anum const &w) const {
+        if(s == nullptr || s->m_num_intervals == 0) {
+            return false;
+        }
+        for(unsigned i = 0; i < s->m_num_intervals; i++) {
+            if(contains_value(s->m_intervals[i], w)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 
     std::ostream& interval_set_manager::display(std::ostream & out, interval_set const * s) const {
         if (s == nullptr) {
