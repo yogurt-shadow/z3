@@ -502,12 +502,12 @@ namespace nlsat {
             SASSERT(x == num_vars());
             m_is_int.    push_back(is_int);
             m_watches.   push_back(clause_vector());
-            m_infeasible.push_back(0);
-            m_clause_infeasible.push_back(0);
+            m_infeasible.push_back(nullptr);
+            m_clause_infeasible.push_back(nullptr);
             m_var2eq.    push_back(nullptr);
             m_perm.      push_back(x);
             m_inv_perm.  push_back(x);
-            m_var_path.  push_back(l_false);
+            m_var_path.  push_back(l_undef);
             m_watched_vars.push_back(var_vector());
             SASSERT(m_is_int.size() == m_watches.size());
             SASSERT(m_is_int.size() == m_infeasible.size());
@@ -982,9 +982,8 @@ namespace nlsat {
             attach_clause(*cls);
             if(learned) {
                 var x = max_var(*cls);
-                if(x != null_var) {
+                if(x != null_var)
                     update_watched_vars(*cls, x);
-                }
             }
             return cls;
         }
@@ -1906,6 +1905,17 @@ namespace nlsat {
             }
         }
 
+        void choose_value() {
+            if (m_xk == null_var) {
+                if (m_bvalues[m_bk] == l_undef) {
+                    decide(literal(m_bk, true));
+                    m_bk++;
+                }
+            } else {
+                select_witness();
+            }
+        }
+
         lbool search_check() {
             lbool r = l_undef;
             while (true) {
@@ -2315,6 +2325,9 @@ namespace nlsat {
                   std::cout << "m_xk: " << m_xk << ", "; m_display_var(std::cout, m_xk) << "\n";
                   std::cout << "new valid clause:\n";
                   display(std::cout, m_lazy_clause.size(), m_lazy_clause.data()) << "\n";);
+
+            if (m_log_lemmas)
+                log_lemma(verbose_stream(), m_lazy_clause.size(), m_lazy_clause.data(), true);
 
             if (m_check_lemmas) {
                 m_valids.push_back(mk_clause_core(m_lazy_clause.size(), m_lazy_clause.data(), false, nullptr));
@@ -2777,14 +2790,15 @@ namespace nlsat {
         // -----------------------
         
         bool check_watches() const {
-            DEBUG_CODE(
+#ifdef Z3DEBUG
                 for (var x = 0; x < num_vars(); x++) {
                     clause_vector const & cs = m_watches[x];
                     unsigned sz = cs.size();
                     for (unsigned i = 0; i < sz; i++) {
                         SASSERT(max_var(*(cs[i])) == x);
                     }
-                });
+                }
+#endif
             return true;
         }
 
@@ -2798,7 +2812,8 @@ namespace nlsat {
                         SASSERT(max_var(c) == null_var);
                         SASSERT(max_bvar(c) == b);
                     }
-                });
+                }
+#endif
             return true;
         }
 
@@ -3020,11 +3035,11 @@ namespace nlsat {
             new_inv_perm.resize(sz);
             undo_until_stage(null_var);
             m_cache.reset();               
-            DEBUG_CODE({
-                for (var x = 0; x < num_vars(); x++) {
-                    SASSERT(m_watches[x].empty());
-                }
-            });
+#ifdef Z3DEBUG
+            for (var x = 0; x < num_vars(); x++) {
+                SASSERT(m_watches[x].empty());
+            }
+#endif
             // update m_perm mapping
             for (unsigned ext_x = 0; ext_x < sz; ext_x++) {
                 // p: internal -> new pos
@@ -3040,12 +3055,12 @@ namespace nlsat {
                 SASSERT(m_infeasible[x] == 0);
             }
             m_inv_perm.swap(new_inv_perm);
-            DEBUG_CODE({
-                for (var x = 0; x < num_vars(); x++) {
-                    SASSERT(x == m_inv_perm[m_perm[x]]);
-                    SASSERT(m_watches[x].empty());
-                }
-            });
+#ifdef Z3DEBUG
+            for (var x = 0; x < num_vars(); x++) {
+                SASSERT(x == m_inv_perm[m_perm[x]]);
+                SASSERT(m_watches[x].empty());
+            }
+#endif
             m_pm.rename(sz, p);
             TRACE("nlsat_bool_assignment_bug", std::cout << "before reinit cache\n"; display_bool_assignment(std::cout););
             reinit_cache();
@@ -3065,13 +3080,13 @@ namespace nlsat {
             var_vector p;
             p.append(m_perm);
             reorder(p.size(), p.data());
-            DEBUG_CODE({
+#ifdef Z3DEBUG
                 for (var x = 0; x < num_vars(); x++) {
                     SASSERT(m_perm[x] == x);
                     SASSERT(m_inv_perm[x] == x);
                 }
-            });
-        }
+#endif
+    }
 
         /**
            \brief After variable reordering some lemmas containing root atoms may be ill-formed.
