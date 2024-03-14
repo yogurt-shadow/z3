@@ -24,6 +24,7 @@ Revision History:
 #include "util/params.h"
 #include "util/statistics.h"
 #include "util/rlimit.h"
+#include "util/hashtable.h"
 
 namespace nlsat {
 
@@ -34,6 +35,20 @@ namespace nlsat {
    #else
    #define DTRACE(X) ((void) 0)
    #endif
+
+   struct var_hash {
+      unsigned operator()(var x) const {
+         return x;
+      }
+   };
+
+   struct var_eq {
+      bool operator()(var x, var y) const {
+         return x == y;
+      }
+   };
+
+   using var_table = hashtable<var, var_hash, var_eq>;
 
     class evaluator;
     class explain;
