@@ -2454,6 +2454,8 @@ namespace nlsat {
             SASSERT(check_marks());
             TRACE("nlsat_proof", std::cout << "STARTING RESOLUTION\n";);
             TRACE("nlsat_proof_sk", std::cout << "STARTING RESOLUTION\n";);
+            m_sum_conflict_stages += m_xk;
+            m_sum_conflict_scopes += scope_lvl();
             m_conflicts++;
             TRACE("nlsat", std::cout << "resolve, conflicting clause:\n"; display(std::cout, *conflict_clause) << "\n";
                   std::cout << "xk: "; if (m_xk != null_var) m_display_var(std::cout, m_xk); else std::cout << "<null>"; std::cout << "\n";
@@ -2821,15 +2823,25 @@ namespace nlsat {
         //
         // -----------------------
 
+        // sum of stages when encountering a conflict
+        unsigned                         m_sum_conflict_stages;
+        unsigned                         m_sum_conflict_scopes;
+
+
         void collect_statistics(statistics & st) {
             st.update("nlsat conflicts", m_conflicts);
             st.update("nlsat propagations", m_propagations);
             st.update("nlsat decisions", m_decisions);
             st.update("nlsat stages", m_stages);
             st.update("nlsat irrational assignments", m_irrational_assignments);
+            st.update("nlsat sum conflict stages", m_sum_conflict_stages);
+            st.update("nlsat sum conflict scopes", m_sum_conflict_scopes);
+            st.update("nlsat conflict stage average", m_conflicts == 0 ? 0 : 1.0 * m_sum_conflict_stages / m_conflicts);
+            st.update("nlsat conflict scope average", m_conflicts == 0 ? 0 : 1.0 * m_sum_conflict_scopes / m_conflicts);
         }
 
         void reset_statistics() {
+            m_sum_conflict_stages    = 0;
             m_conflicts              = 0;
             m_propagations           = 0;
             m_decisions              = 0;
