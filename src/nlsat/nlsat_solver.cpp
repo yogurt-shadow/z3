@@ -1692,8 +1692,26 @@ namespace nlsat {
         }
 
         interval_set_vector                      m_atom_set_cached;
+        bool                                     m_enable_updated = false;
 
         clause * process_arith_clauses(clause_vector const &cs) {
+            DTRACE(
+                std::cout << "process arith clauses" << std::endl;
+            );
+            detect_unsat = false;
+            return m_enable_updated ? process_arith_clauses_updated(cs) : process_arith_clauses_origin(cs);
+        }
+
+        clause * process_arith_clauses_origin(clause_vector const &cs) {
+            for(clause *c: cs) {
+                if(!process_arith_clause(*c, false)) {
+                    return c;
+                }
+            }
+            return nullptr;
+        }
+
+        clause * process_arith_clauses_updated(clause_vector const &cs) {
             DTRACE(
                 std::cout << "process arith clauses" << std::endl;
             );
@@ -1842,6 +1860,8 @@ namespace nlsat {
         // we conclude unsat and return false for search function
         bool detect_unsat;
 
+        std::chrono::steady_clock::time_point m_start_time, m_end_time;
+
         /**
            \brief main procedure
         */
@@ -1858,6 +1878,8 @@ namespace nlsat {
             m_bk = 0;
             m_xk = null_var;
             m_conflicts = 0;
+            m_step = 0;
+            m_start_time = std::chrono::steady_clock::now();
 
             while (true) { // while loop for new variable processing
                 CASSERT("nlsat", check_satisfied());
@@ -1889,6 +1911,10 @@ namespace nlsat {
                     if (m_conflicts >= m_max_conflicts)
                         return l_undef;
                 }
+                m_step ++;
+                m_end_time = std::chrono::steady_clock::now();
+                std::chrono::duration<double> dura = m_end_time - m_start_time;
+                m_total_time = dura.count();
             }
         }
 
@@ -2442,11 +2468,196 @@ namespace nlsat {
             }
         }
 
+        bool resolve(clause const & conflict) {
+            return m_enable_updated ? resolve_updated(conflict) : resolve_origin(conflict);
+        }
+
+        bool resolve_origin(clause const & conflict) {
+            clause const * conflict_clause = &conflict;
+            m_lemma_assumptions = nullptr;
+        start:
+            SASSERT(check_marks());
+            TRACE("nlsat_proof", tout << "STARTING RESOLUTION\n";);
+            TRACE("nlsat_proof_sk", tout << "STARTING RESOLUTION\n";);
+            m_conflicts++;
+            TRACE("nlsat", tout << "resolve, conflicting clause:\n"; display(tout, *conflict_clause) << "\n";
+                  tout << "xk: "; if (m_xk != null_var) m_display_var(tout, m_xk); else tout << "<null>"; tout << "\n";
+                  tout << "scope_lvl: " << scope_lvl() << "\n";
+                  tout << "current assignment\n"; display_assignment(tout););
+
+            // std::cout << "resolve, conflicting clause:\n"; display(std::cout, *conflict_clause) << "\n";
+            // std::cout << "xk: "; if (m_xk != null_var) m_display_var(std::cout, m_xk); else std::cout << "<null>"; std::cout << "\n";
+            // std::cout << "scope_lvl: " << scope_lvl() << "\n";
+            // std::cout << "current assignment\n"; display_assignment(std::cout);
+            
+            m_num_marks = 0;
+            m_lemma.reset();
+            m_lemma_assumptions = nullptr;
+            scoped_reset_marks _sr(*this);
+            resolve_clause(null_bool_var, *conflict_clause);
+
+            unsigned top = m_trail.size();
+            bool found_decision;
+            while (true) {
+                found_decision = false;
+                while (m_num_marks > 0) {
+                    checkpoint();
+                    SASSERT(top > 0);
+                    trail & t = m_trail[top-1];
+                    SASSERT(t.m_kind != trail::NEW_STAGE); // we only mark literals that are in the same stage
+                    if (t.m_kind == trail::BVAR_ASSIGNMENT) {
+                        bool_var b = t.m_b;
+                        if (is_marked(b)) {
+                            TRACE("nlsat_resolve", tout << "found marked: b" << b << "\n"; display_atom(tout, b) << "\n";);
+                            m_num_marks--;
+                            reset_mark(b);
+                            justification jst = m_justifications[b];
+                            switch (jst.get_kind()) {
+                            case justification::CLAUSE:
+                                resolve_clause(b, *(jst.get_clause()));
+                                break;
+                            case justification::LAZY:
+                                resolve_lazy_justification(b, *(jst.get_lazy()));
+                                break;
+                            case justification::DECISION:
+                                SASSERT(m_num_marks == 0);
+                                found_decision = true;
+                                TRACE("nlsat_resolve", tout << "found decision\n";);
+                                m_lemma.push_back(literal(b, m_bvalues[b] == l_true));
+                                break;
+                            default:
+                                UNREACHABLE();
+                                break;
+                            }
+                        }
+                    }
+                    top--;
+                }
+
+                // m_lemma is an implicating clause after backtracking current scope level.
+                if (found_decision)
+                    break;
+
+                // If lemma only contains literals from previous stages, then we can stop.
+                // We make progress by returning to a previous stage with additional information (new lemma)
+                // that forces us to select a new partial interpretation
+                if (only_literals_from_previous_stages(m_lemma.size(), m_lemma.data()))
+                    break;
+                
+                // Conflict does not depend on the current decision, and it is still in the current stage.
+                // We should find
+                //    - the maximal scope level in the lemma
+                //    - remove literal assigned in the scope level from m_lemma
+                //    - backtrack to this level
+                //    - and continue conflict resolution from there
+                //    - we must bump m_num_marks for literals removed from m_lemma
+                unsigned max_lvl = max_scope_lvl(m_lemma.size(), m_lemma.data());
+                TRACE("nlsat_resolve", tout << "conflict does not depend on current decision, backtracking to level: " << max_lvl << "\n";);
+                SASSERT(max_lvl < scope_lvl());
+                remove_literals_from_lvl(m_lemma, max_lvl);
+                undo_until_level(max_lvl);
+                top = m_trail.size();
+                TRACE("nlsat_resolve", tout << "scope_lvl: " << scope_lvl() << " num marks: " << m_num_marks << "\n";);
+                SASSERT(scope_lvl() == max_lvl);
+            }
+
+            TRACE("nlsat_proof", tout << "New lemma\n"; display(tout, m_lemma); tout << "\n=========================\n";);
+            TRACE("nlsat_proof_sk", tout << "New lemma\n"; display_abst(tout, m_lemma); tout << "\n=========================\n";);
+
+            if (m_lemma.empty()) {
+                TRACE("nlsat", tout << "empty clause generated\n";);
+                return false; // problem is unsat, empty clause was generated
+            }
+
+            reset_marks(); // remove marks from the literals in m_lemmas.
+            TRACE("nlsat", tout << "new lemma:\n"; display(tout, m_lemma.size(), m_lemma.data()); tout << "\n";
+                  tout << "found_decision: " << found_decision << "\n";);
+            
+            if (m_check_lemmas) {
+                check_lemma(m_lemma.size(), m_lemma.data(), false, m_lemma_assumptions.get());
+            }
+
+            if (m_log_lemmas) 
+                log_lemma(verbose_stream(), m_lemma.size(), m_lemma.data(), false);
+    
+            // There are two possibilities:
+            // 1) m_lemma contains only literals from previous stages, and they
+            //    are false in the current interpretation. We make progress 
+            //    by returning to a previous stage with additional information (new clause)
+            //    that forces us to select a new partial interpretation
+            //    >>> Return to some previous stage (we may also backjump many decisions and stages).
+            //    
+            // 2) m_lemma contains at most one literal from the current level (the last literal).
+            //    Moreover, this literal was a decision, but the new lemma forces it to 
+            //    be assigned to a different value.
+            //    >>> In this case, we remain in the same stage but, we add a new asserted literal
+            //        in a previous scope level. We may backjump many decisions.
+            //
+            unsigned sz = m_lemma.size();
+            clause * new_cls = nullptr;
+            if (!found_decision) {
+                // Case 1)
+                // We just have to find the maximal variable in m_lemma, and return to that stage
+                // Remark: the lemma may contain only boolean literals, in this case new_max_var == null_var;
+                var new_max_var = max_var(sz, m_lemma.data());
+                TRACE("nlsat_resolve", tout << "backtracking to stage: " << new_max_var << ", curr: " << m_xk << "\n";);
+                undo_until_stage(new_max_var);
+                SASSERT(m_xk == new_max_var);
+                new_cls = mk_clause(sz, m_lemma.data(), true, m_lemma_assumptions.get());
+                TRACE("nlsat", tout << "new_level: " << scope_lvl() << "\nnew_stage: " << new_max_var << "\n"; 
+                      if (new_max_var != null_var) m_display_var(tout, new_max_var) << "\n";);
+            }
+            else {
+                SASSERT(scope_lvl() >= 1);
+                // Case 2)
+                if (is_bool_lemma(m_lemma.size(), m_lemma.data())) {
+                    // boolean lemma, we just backtrack until the last literal is unassigned.
+                    bool_var max_bool_var = m_lemma[m_lemma.size()-1].var();
+                    undo_until_unassigned(max_bool_var);
+                }
+                else {
+                    // We must find the maximal decision level in literals in the first sz-1 positions that 
+                    // are at the same stage. If all these literals are from previous stages,
+                    // we just backtrack the current level.
+                    unsigned new_lvl = find_new_level_arith_lemma(m_lemma.size(), m_lemma.data());
+                    TRACE("nlsat", tout << "backtracking to new level: " << new_lvl << ", curr: " << m_scope_lvl << "\n";);
+                    undo_until_level(new_lvl);
+                }
+
+                if (lemma_is_clause(*conflict_clause)) {
+                    TRACE("nlsat", tout << "found decision literal in conflict clause\n";);
+                    VERIFY(process_clause(*conflict_clause, true));
+                    return true;
+                }
+                new_cls = mk_clause(sz, m_lemma.data(), true, m_lemma_assumptions.get());
+                
+            }
+            NLSAT_VERBOSE(display(verbose_stream(), *new_cls) << "\n";);
+            if (!process_clause(*new_cls, true)) {
+                TRACE("nlsat", tout << "new clause triggered another conflict, restarting conflict resolution...\n";
+                      display(tout, *new_cls) << "\n";
+                      );
+                // we are still in conflict
+                conflict_clause = new_cls;
+                goto start;
+            }
+            TRACE("nlsat_resolve_done", display_assignment(tout););
+            return true;
+        }
+
+        bool process_clause(clause const & cls, bool learned) {
+            if (cls.size() == 0) {
+                return false;
+            }
+            var v = max_var(cls.size(), cls.data());
+            return v == null_var ? process_boolean_clause(cls) : process_arith_clause(cls, learned);
+        }
+
 
         /**
            \brief Return true if the conflict was solved.
         */
-        bool resolve(clause const & conflict) {
+        bool resolve_updated(clause const & conflict) {
             DTRACE(std::cout << "enter resolve..." << std::endl;);
             clause const * conflict_clause = &conflict;
             m_lemma_assumptions = nullptr;
@@ -2826,6 +3037,8 @@ namespace nlsat {
         // sum of stages when encountering a conflict
         unsigned                         m_sum_conflict_stages;
         unsigned                         m_sum_conflict_scopes;
+        unsigned                         m_step;
+        double                           m_total_time;
 
 
         void collect_statistics(statistics & st) {
@@ -2838,6 +3051,8 @@ namespace nlsat {
             st.update("nlsat sum conflict scopes", m_sum_conflict_scopes);
             st.update("nlsat conflict stage average", m_conflicts == 0 ? 0 : 1.0 * m_sum_conflict_stages / m_conflicts);
             st.update("nlsat conflict scope average", m_conflicts == 0 ? 0 : 1.0 * m_sum_conflict_scopes / m_conflicts);
+            st.update("nlsat steps", m_step);
+            st.update("nlsat average time", m_step == 0 ? 0 : m_total_time / m_step);
         }
 
         void reset_statistics() {

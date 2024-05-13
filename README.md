@@ -87,5 +87,22 @@ var order: [x, y]
 
 一定情况下开启updated model （避免拉长子句）
 
+### 目前版本和传统版本的冲突分析差异
+
+目前版本：得到学习子句后，首先判断是否存在decision （semantic或者boolean）
+1. 不存在decision，这说明冲突是由于choose value造成的，我们回退到stage
+   + 如果lemma是boolean，直接process
+   + 如果lemma是arithmetic，max_var一定是存在path的，我们回退到path finder，然后用之前缓存的`m_clause_infeasible`和当前的不可行域合并，得到新的不可行域，然后重新进入updated环节
+2. 存在decision
+   +  lemma是boolean，我们回退到max var（bool）unassigned状态，然后process
+   + lemma是arithmetic，我们回退到decision level，然后process一下学习子句（为了assign literal），这个时候学习子句一定是可满足的。max_var一定是block的，否则不会进入semantics decision，我们重新process所有的watches
+
+传统版本：得到学习子句后，判断是否存在decision
+1. 不存在decision，回退到stage，然后直接process
+2. 存在decision
+   + boolean，回退到unassigned，然后process
+   + arithmetical，回退到decision level，然后process
+
 ## 尝试增加traditional和updated的切换机制
 
+测试每次遇到conflict时候的progress （多少decision，多少stage）
