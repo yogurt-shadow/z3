@@ -1514,8 +1514,10 @@ namespace nlsat {
             m_xk = null_var;
             m_conflicts = 0;
             m_next_conflict = 100;
+            m_step = 0;
 
             while (true) {
+                m_step++;
                 CASSERT("nlsat", check_satisfied());
                 if (m_xk == null_var) {
                     peek_next_bool_var();
@@ -1649,6 +1651,7 @@ namespace nlsat {
                 heuristic_reorder();
                 reordered = true;
             }
+            collect_bool_vars();
             sort_watched_clauses();
             lbool r = search_check();
             CTRACE("nlsat_model", r == l_true, tout << "model before restore order\n"; display_assignment(tout););
@@ -2010,6 +2013,9 @@ namespace nlsat {
            \brief Return true if the conflict was solved.
         */
         bool resolve(clause const & conflict) {
+            if(m_first_conflict_stage == null_var) {
+                m_first_conflict_stage = m_xk;
+            }
             clause const * conflict_clause = &conflict;
             m_lemma_assumptions = nullptr;
         start:
@@ -2021,6 +2027,11 @@ namespace nlsat {
                   tout << "xk: "; if (m_xk != null_var) m_display_var(tout, m_xk); else tout << "<null>"; tout << "\n";
                   tout << "scope_lvl: " << scope_lvl() << "\n";
                   tout << "current assignment\n"; display_assignment(tout););
+
+            // std::cout << "resolve, conflicting clause:\n"; display(std::cout, *conflict_clause) << "\n";
+            // std::cout << "xk: "; if (m_xk != null_var) m_display_var(std::cout, m_xk); else std::cout << "<null>"; std::cout << "\n";
+            // std::cout << "scope_lvl: " << scope_lvl() << "\n";
+            // std::cout << "current assignment\n"; display_assignment(std::cout);
             
             m_num_marks = 0;
             m_lemma.reset();
@@ -2266,12 +2277,29 @@ namespace nlsat {
         //
         // -----------------------
 
+        unsigned nlsat_bool_vars;
+
+        unsigned              m_step, m_first_conflict_stage = null_var;
+
         void collect_statistics(statistics & st) {
             st.update("nlsat conflicts", m_conflicts);
             st.update("nlsat propagations", m_propagations);
             st.update("nlsat decisions", m_decisions);
             st.update("nlsat stages", m_stages);
             st.update("nlsat irrational assignments", m_irrational_assignments);
+            st.update("nlsat bool vars", nlsat_bool_vars);
+            st.update("nlsat arith vars", num_vars());
+            st.update("nlsat steps", m_step);
+            st.update("nlsat first conflict stage", m_first_conflict_stage);
+        }
+
+        void collect_bool_vars() {
+            nlsat_bool_vars = 0;
+            for(bool_var b = 0; b < m_atoms.size(); b++) {
+                if(m_atoms[b] == nullptr) {
+                    nlsat_bool_vars++;
+                }
+            }
         }
 
         void reset_statistics() {
