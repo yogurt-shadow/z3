@@ -33,6 +33,7 @@ Revision History:
 #include "nlsat/nlsat_evaluator.h"
 #include "nlsat/nlsat_explain.h"
 #include "nlsat/nlsat_params.hpp"
+#include "nlsat/nlsat_caching_system.h"
 #include <iostream>
 
 #define NLSAT_EXTRA_VERBOSE
@@ -226,6 +227,7 @@ namespace nlsat {
         
         bool                   appointed;
         scoped_anum            m_appointed_value;
+        nlsat_caching_system   m_csys;
 
         imp(solver& s, ctx& c):
             m_ctx(c),
@@ -251,7 +253,8 @@ namespace nlsat {
             m_lemma(s),
             m_lazy_clause(s),
             m_lemma_assumptions(m_asm),
-            m_appointed_value(m_am)
+            m_appointed_value(m_am),
+            m_csys(m_ism, m_pm, m_atoms, m_clauses)
             {
             updt_params(c.m_params);
             reset_statistics();
@@ -486,7 +489,8 @@ namespace nlsat {
             m_justifications.setx(b, null_justification, null_justification);
             m_bwatches      .setx(b, clause_vector(), clause_vector());
             m_dead          .setx(b, false, true);
-            m_atom_set_cached.setx(b, nullptr, nullptr);
+            // m_atom_set_cached.setx(b, nullptr, nullptr);
+            m_csys.enlarge_atom(b);
             return b;
         }
 
@@ -1073,6 +1077,7 @@ namespace nlsat {
             else if (m_xk != null_var) {
                 m_xk--;
                 m_assignment.reset(m_xk);
+                m_csys.disable_var_atoms(m_xk);
             }
         }
 
@@ -1467,6 +1472,22 @@ namespace nlsat {
             save_updt_eq_trail(m_var2eq[x]);
             m_var2eq[x] = a;
         }
+
+        interval_set * get_atom_infeasible_set(bool_var b, clause const &cls) {
+            // m_assignment.display(std::cout);
+            // std::cout << std::endl;
+            SASSERT(m_atoms[b] != nullptr);
+            interval_set_ref curr_st(m_ism);
+            if(m_csys.is_atom_enabled(b)) {
+                curr_st = m_csys.get_atom_set(b);
+            } else {
+                curr_st = m_evaluator.infeasible_intervals(m_atoms[b], false, &cls);
+                m_csys.cache_atom_set(b, curr_st);
+            }
+            // display_atom(std::cout, b); std::cout << std::endl;
+            // m_ism.display(std::cout, curr_st); std::cout << std::endl;
+            return curr_st;
+        }
         
         /**
            \brief Process a clause that contains nonlinear arithmetic literals
@@ -1500,7 +1521,7 @@ namespace nlsat {
                 atom * a   = m_atoms[b];
                 SASSERT(a != nullptr);
                 interval_set_ref curr_set(m_ism);
-                curr_set = m_atom_set_cached[b];
+                curr_set = get_atom_infeasible_set(b, cls);
                 if(l.sign()) {
                     curr_set = m_ism.mk_complement(curr_set);
                 }
@@ -1582,7 +1603,7 @@ namespace nlsat {
                 atom * a   = m_atoms[b];
                 SASSERT(a != nullptr);
                 interval_set_ref curr_set(m_ism);
-                curr_set = m_atom_set_cached[b];
+                curr_set = get_atom_infeasible_set(b, cls);
                 if(l.sign()) {
                     curr_set = m_ism.mk_complement(curr_set);
                 }
@@ -1660,14 +1681,14 @@ namespace nlsat {
                 }
                 atom * a   = m_atoms[l.var()];
                 interval_set_ref curr_st(m_ism);
-                curr_st = m_evaluator.infeasible_intervals(a, false, &c);
-                m_ism.inc_ref(curr_st);
-                m_ism.dec_ref(m_atom_set_cached[l.var()]);
-                m_atom_set_cached[l.var()] = curr_st;
+                curr_st = get_atom_infeasible_set(l.var(), c);
                 if(l.sign()) {
                     curr_st = m_ism.mk_complement(curr_st);
                 }
                 res_st = m_ism.mk_intersection(res_st, curr_st);
+                if(m_ism.is_empty(res_st)) {
+                    return res_st;
+                }
             }
             m_ism.inc_ref(res_st);
             return res_st;
@@ -1678,6 +1699,10 @@ namespace nlsat {
             for(clause *c: cs) {
                 curr_st = get_clause_infset(*c);
                 res_st = m_ism.mk_union(curr_st, res_st);
+                if(m_ism.is_full(res_st)) {
+                    m_ism.inc_ref(res_st);
+                    return res_st;
+                }
             }
             m_ism.inc_ref(res_st);
             return res_st;
@@ -1691,7 +1716,7 @@ namespace nlsat {
             return out;
         }
 
-        interval_set_vector                      m_atom_set_cached;
+        // interval_set_vector                      m_atom_set_cached;
 
         clause * process_arith_clauses(clause_vector const &cs) {
             DTRACE(
@@ -1724,6 +1749,7 @@ namespace nlsat {
                         return c;
                     }
                 }
+                UNREACHABLE();
             } else { // path case
                 DTRACE(std::cout << "path case" << std::endl;);
                 appointed = true;
@@ -1865,7 +1891,8 @@ namespace nlsat {
                 // std::cout << "search loop" << std::endl;
                 pick_next_var(); // pick next boolean or arithmetic variable
                 TRACE("nlsat_bug", std::cout << "xk: x" << m_xk << " bk: b" << m_bk << "\n";);
-
+                // m_assignment.display(std::cout);
+                // std::cout << std::endl;
                 DTRACE(
                     std::cout << "stage: " << m_xk << std::endl;
                     std::cout << "level: " << m_scope_lvl << std::endl;
@@ -2096,6 +2123,8 @@ namespace nlsat {
                 m_bvalues[i] = l_undef;
             }
             m_assignment.reset();
+            m_csys.init_vars(num_vars());
+            m_csys.init();
         }
 
         lbool check(literal_vector& assumptions) {
