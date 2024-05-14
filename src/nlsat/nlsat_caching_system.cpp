@@ -88,7 +88,8 @@ namespace nlsat {
         }
 
         bool is_atom_enabled(bool_var b) const {
-            return b >= m_atom_caching_enabled.size() ? false : m_atom_caching_enabled[b];
+            // return b >= m_atom_caching_enabled.size() ? false : m_atom_caching_enabled[b];
+            return false;
         }
 
         interval_set * get_atom_set(bool_var b) const {

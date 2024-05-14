@@ -88,3 +88,20 @@ var order: [x, y]
 2024.5.14
 一种可能是resolve花费了太长的时间，把resolve变成之前的之后，cpr1可以做到秒解。
 
+2024.5.14
+先不要尝试用原来的resolve，还是使用updated version，一个问题是resolve里面学习子句之后，process的顺序问题 （又或者说每次block case之后都涉及到的process顺序问题）。
+
+比如
+v3 = 2 or v3 = -2
+v3 > 0
+lemma: v3 != 2 or 4v4 >= 9
+这个时候我们发现是block（考虑lemma和之前的clause infeasible），会优先decide v3 = 2
+ **sort watched clauses by literals of max var occurance**
+
+
+# Versions
+|Version|Description|
+|-|-|
+|5.13| simplest version no bug|
+|5.14| disable cache, use original resolve|
+|-|-|

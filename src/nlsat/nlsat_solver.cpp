@@ -474,6 +474,22 @@ namespace nlsat {
             return max;
         }
 
+        unsigned max_literal_num(clause const &c) const {
+            var x = max_var(c);
+            if (x == null_var)
+                return 1;
+            unsigned res = 0;
+            for(literal l: c) {
+                atom const *a = m_atoms[l.var()];
+                if (a == nullptr)
+                    continue;
+                if(a->max_var() == x) {
+                    res++;
+                }
+            }
+            return res;
+        }
+
         // -----------------------
         //
         // Variable, Atoms, Clauses & Assumption creation
@@ -1431,6 +1447,10 @@ namespace nlsat {
             save_set_updt_trail(xk_set);
             interval_set_ref new_set(m_ism);
             TRACE("nlsat_inf_set", std::cout << "updating infeasible set\n"; m_ism.display(std::cout, xk_set) << "\n"; m_ism.display(std::cout, s) << "\n";);
+
+            DTRACE(std::cout << "updating infeasible set for var " << m_xk << "\n"; m_ism.display(std::cout, xk_set) << "\n"; m_ism.display(std::cout, s) << "\n";);
+
+
             new_set = m_ism.mk_union(s, xk_set);
             TRACE("nlsat_inf_set", std::cout << "new infeasible set:\n"; m_ism.display(std::cout, new_set) << "\n";);
             SASSERT(!m_ism.is_full(new_set));
@@ -1495,6 +1515,7 @@ namespace nlsat {
            If satisfy_learned is true, then learned clauses are satisfied even if m_lazy > 0
         */
         bool process_arith_clause(clause const & cls, bool satisfy_learned) {
+            DTRACE(std::cout << "process arith clause: "; display(std::cout, cls); std::cout << std::endl;);
             if (!satisfy_learned && m_lazy >= 2 && cls.is_learned()) {
                 TRACE("nlsat", std::cout << "skip learned\n";);
                 return true; // ignore lemmas in super lazy mode
@@ -1820,8 +1841,10 @@ namespace nlsat {
         void select_witness() {
             scoped_anum w(m_am);
             if(appointed) {
+                DTRACE(std::cout << "use appointed value" << std::endl;);
                 m_am.set(w, m_appointed_value);
             } else {
+                DTRACE(std::cout << "do not have appointed, pick value from infeasible set" << std::endl;);
                 SASSERT(!m_ism.is_full(m_infeasible[m_xk]));
                 m_ism.peek_in_complement(m_infeasible[m_xk], m_is_int[m_xk], w, m_randomize);
             }
@@ -1923,11 +1946,12 @@ namespace nlsat {
                 detect_unsat = false;
                 process_clauses();
                 if(detect_unsat) { // just conclude unsat for this instance
+                    // std::cout << "detect unsat" << std::endl;
                     return l_false;
                 } else if (conflict_clause == nullptr) { // consistent
                     choose_value();
                 } else { // conflict
-                    if (!resolve_origin(*conflict_clause)) { // resolve empty clause or detect unsat
+                    if (!resolve(*conflict_clause)) { // resolve empty clause or detect unsat
                         return l_false;              
                     } else { // resolve succeed, choose value for current variable
                         choose_value();
@@ -2506,11 +2530,12 @@ namespace nlsat {
                   tout << "xk: "; if (m_xk != null_var) m_display_var(tout, m_xk); else tout << "<null>"; tout << "\n";
                   tout << "scope_lvl: " << scope_lvl() << "\n";
                   tout << "current assignment\n"; display_assignment(tout););
-
-            // std::cout << "resolve, conflicting clause:\n"; display(std::cout, *conflict_clause) << "\n";
-            // std::cout << "xk: "; if (m_xk != null_var) m_display_var(std::cout, m_xk); else std::cout << "<null>"; std::cout << "\n";
-            // std::cout << "scope_lvl: " << scope_lvl() << "\n";
-            // std::cout << "current assignment\n"; display_assignment(std::cout);
+            DTRACE(
+                std::cout << "resolve, conflicting clause:\n"; display(std::cout, *conflict_clause) << "\n";
+                std::cout << "xk: "; if (m_xk != null_var) m_display_var(std::cout, m_xk); else std::cout << "<null>"; std::cout << "\n";
+                std::cout << "scope_lvl: " << scope_lvl() << "\n";
+                std::cout << "current assignment\n"; display_assignment(std::cout);
+            );
             
             m_num_marks = 0;
             m_lemma.reset();
@@ -2652,8 +2677,10 @@ namespace nlsat {
                     return true;
                 }
                 new_cls = mk_clause(sz, m_lemma.data(), true, m_lemma_assumptions.get());
-                
             }
+            DTRACE(std::cout << "new clause:\n";
+                display(std::cout, *new_cls) << std::endl;
+            );
             NLSAT_VERBOSE(display(verbose_stream(), *new_cls) << "\n";);
             if (!process_clause(*new_cls, true)) {
                 TRACE("nlsat", tout << "new clause triggered another conflict, restarting conflict resolution...\n";
@@ -3400,6 +3427,41 @@ namespace nlsat {
             }
         };
 
+        struct hybrid_lt {
+            unsigned_vector & m_degrees, & m_max_occurs;
+            hybrid_lt(unsigned_vector & occ, unsigned_vector & deg): m_max_occurs(occ), m_degrees(deg) {}
+            bool operator()(unsigned i1, unsigned i2) const {
+                if (m_max_occurs[i1] < m_max_occurs[i2])
+                    return true;
+                if (m_max_occurs[i1] > m_max_occurs[i2])
+                    return false;
+                if (m_degrees[i1] < m_degrees[i2])
+                    return true;
+                if (m_degrees[i1] > m_degrees[i2])
+                    return false;
+                return i1 < i2;
+            }
+        };
+
+        unsigned_vector       m_max_literal_nums;
+
+        void sort_watched_clauses(unsigned sz, clause ** cs) {
+            if(sz <= 1) {
+                return;
+            }
+            m_cs_degrees.reset();
+            m_cs_p.reset();
+            m_max_literal_nums.reset();
+            for (unsigned i = 0; i < sz; i++) {
+                m_cs_p.push_back(i);
+                m_cs_degrees.push_back(degree(*(cs[i])));
+                m_max_literal_nums.push_back(max_literal_num(*(cs[i])));
+            }
+            // std::sort(m_cs_p.begin(), m_cs_p.end(), degree_lt(m_cs_degrees));
+            std::sort(m_cs_p.begin(), m_cs_p.end(), hybrid_lt(m_max_literal_nums, m_cs_degrees));
+            apply_permutation(sz, cs, m_cs_p.data());
+        }
+
         unsigned_vector m_cs_degrees;
         unsigned_vector m_cs_p;
         void sort_clauses_by_degree(unsigned sz, clause ** cs) {
@@ -3422,7 +3484,8 @@ namespace nlsat {
             unsigned num = num_vars();
             for (unsigned i = 0; i < num; i++) {
                 clause_vector & ws = m_watches[i];
-                sort_clauses_by_degree(ws.size(), ws.data());
+                sort_watched_clauses(ws.size(), ws.data());
+                // sort_clauses_by_degree(ws.size(), ws.data());
             }
         }
 
