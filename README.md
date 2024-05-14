@@ -83,9 +83,8 @@ var order: [x, y]
 
 2024.5.13
 
-开启了clause decision之后一些instance有退步，寻找原因。
+开启了clause decision之后一些instance有退步，寻找原因 (poly/cpr1)。
 
-一定情况下开启updated model （避免拉长子句）
-
-## 尝试增加traditional和updated的切换机制
+2024.5.14
+一种可能是resolve花费了太长的时间，把resolve变成之前的之后，cpr1可以做到秒解。
 
