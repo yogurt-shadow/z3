@@ -6,19 +6,22 @@
 #include "nlsat/nlsat_interval_set.h"
 
 namespace nlsat {
-    class caching_system {
-    private:
-        atom_vector            const &m_atoms;
-        clause_vector          const &m_clauses;
-        vector<var_vector>     const &m_var_literals;
-        vector<var_vector>     const &m_literal_clauses;
-
+    class nlsat_caching_system {
     public:
-        caching_system(atom_vector const &_atoms, clause_vector const &_clauses, vector<var_vector> const &var_literals, vector<var_vector> const &literal_clauses):
-            m_atoms(_atoms), m_clauses(_clauses), m_var_literals(var_literals), m_literal_clauses(literal_clauses) {}
-
-        ~caching_system() {}
-
-        
+        struct imp;
+    private:
+        imp   *m_imp;
+    
+    public:
+        nlsat_caching_system(interval_set_manager &ism, pmanager &pm, atom_vector const &_atoms, clause_vector const &_clauses);
+        ~nlsat_caching_system();
+        void init();
+        void init_vars(unsigned);
+        bool is_atom_enabled(bool_var) const;
+        void disable_atom(bool_var);
+        interval_set* get_atom_set(bool_var) const;
+        void cache_atom_set(bool_var, interval_set *);
+        void enlarge_atom(bool_var);
+        void disable_var_atoms(var);
     };
 };

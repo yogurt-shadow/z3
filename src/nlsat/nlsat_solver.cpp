@@ -33,6 +33,7 @@ Revision History:
 #include "nlsat/nlsat_evaluator.h"
 #include "nlsat/nlsat_explain.h"
 #include "nlsat/nlsat_params.hpp"
+#include "nlsat/nlsat_caching_system.h"
 #include <iostream>
 
 #define NLSAT_EXTRA_VERBOSE
@@ -226,6 +227,7 @@ namespace nlsat {
         
         bool                   appointed;
         scoped_anum            m_appointed_value;
+        nlsat_caching_system   m_csys;
 
         imp(solver& s, ctx& c):
             m_ctx(c),
@@ -251,7 +253,8 @@ namespace nlsat {
             m_lemma(s),
             m_lazy_clause(s),
             m_lemma_assumptions(m_asm),
-            m_appointed_value(m_am)
+            m_appointed_value(m_am),
+            m_csys(m_ism, m_pm, m_atoms, m_clauses)
             {
             updt_params(c.m_params);
             reset_statistics();
@@ -486,7 +489,8 @@ namespace nlsat {
             m_justifications.setx(b, null_justification, null_justification);
             m_bwatches      .setx(b, clause_vector(), clause_vector());
             m_dead          .setx(b, false, true);
-            m_atom_set_cached.setx(b, nullptr, nullptr);
+            // m_atom_set_cached.setx(b, nullptr, nullptr);
+            m_csys.enlarge_atom(b);
             return b;
         }
 
@@ -1073,6 +1077,7 @@ namespace nlsat {
             else if (m_xk != null_var) {
                 m_xk--;
                 m_assignment.reset(m_xk);
+                m_csys.disable_var_atoms(m_xk);
             }
         }
 
@@ -1467,6 +1472,22 @@ namespace nlsat {
             save_updt_eq_trail(m_var2eq[x]);
             m_var2eq[x] = a;
         }
+
+        interval_set * get_atom_infeasible_set(bool_var b, clause const &cls) {
+            // m_assignment.display(std::cout);
+            // std::cout << std::endl;
+            SASSERT(m_atoms[b] != nullptr);
+            interval_set_ref curr_st(m_ism);
+            if(m_csys.is_atom_enabled(b)) {
+                curr_st = m_csys.get_atom_set(b);
+            } else {
+                curr_st = m_evaluator.infeasible_intervals(m_atoms[b], false, &cls);
+                m_csys.cache_atom_set(b, curr_st);
+            }
+            // display_atom(std::cout, b); std::cout << std::endl;
+            // m_ism.display(std::cout, curr_st); std::cout << std::endl;
+            return curr_st;
+        }
         
         /**
            \brief Process a clause that contains nonlinear arithmetic literals
@@ -1500,7 +1521,7 @@ namespace nlsat {
                 atom * a   = m_atoms[b];
                 SASSERT(a != nullptr);
                 interval_set_ref curr_set(m_ism);
-                curr_set = m_atom_set_cached[b];
+                curr_set = get_atom_infeasible_set(b, cls);
                 if(l.sign()) {
                     curr_set = m_ism.mk_complement(curr_set);
                 }
@@ -1582,7 +1603,7 @@ namespace nlsat {
                 atom * a   = m_atoms[b];
                 SASSERT(a != nullptr);
                 interval_set_ref curr_set(m_ism);
-                curr_set = m_atom_set_cached[b];
+                curr_set = get_atom_infeasible_set(b, cls);
                 if(l.sign()) {
                     curr_set = m_ism.mk_complement(curr_set);
                 }
@@ -1660,10 +1681,7 @@ namespace nlsat {
                 }
                 atom * a   = m_atoms[l.var()];
                 interval_set_ref curr_st(m_ism);
-                curr_st = m_evaluator.infeasible_intervals(a, false, &c);
-                m_ism.inc_ref(curr_st);
-                m_ism.dec_ref(m_atom_set_cached[l.var()]);
-                m_atom_set_cached[l.var()] = curr_st;
+                curr_st = get_atom_infeasible_set(l.var(), c);
                 if(l.sign()) {
                     curr_st = m_ism.mk_complement(curr_st);
                 }
@@ -1698,18 +1716,7 @@ namespace nlsat {
             return out;
         }
 
-        interval_set_vector                      m_atom_set_cached;
-        bool                                     m_enable_updated = true;
-
-        clause * process_arith_clauses(clause_vector const &cs) {
-            DTRACE(
-                std::cout << "process arith clauses" << std::endl;
-            );
-            detect_unsat = false;
-            return m_enable_updated ? process_arith_clauses_updated(cs) : process_arith_clauses_origin(cs);
-        }
-
-        clause * process_arith_clauses_origin(clause_vector const &cs) {
+        clause * process_arith_clause_origin(clause_vector const& cs) {
             for(clause *c: cs) {
                 if(!process_arith_clause(*c, false)) {
                     return c;
@@ -1717,6 +1724,7 @@ namespace nlsat {
             }
             return nullptr;
         }
+
 
         clause * process_arith_clauses_updated(clause_vector const &cs) {
             DTRACE(
@@ -1734,12 +1742,12 @@ namespace nlsat {
                 m_ism.display(std::cout, curr_set) << std::endl;
             );
 
-            for(clause * c: cs) {
-                if(!process_arith_clause(*c, false)) {
-                    return c;
-                }
-                return nullptr;
-            }
+            // for(clause *c: cs) {
+            //     if(!process_arith_clause(*c, false)) {
+            //         return c;
+            //     }
+            // }
+            // return nullptr;
 
             if(m_ism.is_full(curr_set)) { // full case
                 DTRACE(std::cout << "full case" << std::endl;);
@@ -1756,6 +1764,7 @@ namespace nlsat {
                         return c;
                     }
                 }
+                UNREACHABLE();
             } else { // path case
                 DTRACE(std::cout << "path case" << std::endl;);
                 appointed = true;
@@ -1854,13 +1863,15 @@ namespace nlsat {
             }
         }
 
+        bool m_enabled_updated = true;
+
         clause * conflict_clause;
 
         void process_clauses() {
             if(m_xk == null_var) {
                 conflict_clause = process_boolean_clauses(m_bwatches[m_bk]);
             } else {
-                conflict_clause = process_arith_clauses(m_watches[m_xk]);
+                conflict_clause = m_enabled_updated ? process_arith_clauses_updated(m_watches[m_xk]) : process_arith_clause_origin(m_watches[m_xk]);
             }
         }
 
@@ -1873,11 +1884,6 @@ namespace nlsat {
         // ----------------------------------------------------
         // we conclude unsat and return false for search function
         bool detect_unsat;
-
-        std::chrono::steady_clock::time_point m_start_time, m_end_time;
-
-
-        const double SWITCH_THRESHOLD = 0.8;
 
         /**
            \brief main procedure
@@ -1896,21 +1902,16 @@ namespace nlsat {
             m_xk = null_var;
             m_conflicts = 0;
             m_step = 0;
-            m_start_time = std::chrono::steady_clock::now();
 
             while (true) { // while loop for new variable processing
                 m_step ++;
-                // if(m_xk != null_var && m_xk >= num_vars() * SWITCH_THRESHOLD) {
-                //     m_enable_updated = true;
-                // } else {
-                //     m_enable_updated = false;
-                // }
                 CASSERT("nlsat", check_satisfied());
                 DTRACE(std::cout << "search loop\n";);
                 // std::cout << "search loop" << std::endl;
                 pick_next_var(); // pick next boolean or arithmetic variable
                 TRACE("nlsat_bug", std::cout << "xk: x" << m_xk << " bk: b" << m_bk << "\n";);
-
+                // m_assignment.display(std::cout);
+                // std::cout << std::endl;
                 DTRACE(
                     std::cout << "stage: " << m_xk << std::endl;
                     std::cout << "level: " << m_scope_lvl << std::endl;
@@ -1926,7 +1927,7 @@ namespace nlsat {
                 } else if (conflict_clause == nullptr) { // consistent
                     choose_value();
                 } else { // conflict
-                    if (!resolve(*conflict_clause)) { // resolve empty clause or detect unsat
+                    if (!resolve_origin(*conflict_clause)) { // resolve empty clause or detect unsat
                         return l_false;              
                     } else { // resolve succeed, choose value for current variable
                         choose_value();
@@ -1934,10 +1935,11 @@ namespace nlsat {
                     if (m_conflicts >= m_max_conflicts)
                         return l_undef;
                 }
-                m_end_time = std::chrono::steady_clock::now();
-                std::chrono::duration<double> dura = m_end_time - m_start_time;
-                m_total_time = dura.count();
             }
+        }
+
+        bool resolve(clause const &cls) {
+            return m_enabled_updated ? resolve_updated(cls) : resolve_origin(cls);
         }
 
         void choose_value() {
@@ -2144,6 +2146,8 @@ namespace nlsat {
                 m_bvalues[i] = l_undef;
             }
             m_assignment.reset();
+            m_csys.init_vars(num_vars());
+            m_csys.init();
         }
 
         lbool check(literal_vector& assumptions) {
@@ -2490,14 +2494,6 @@ namespace nlsat {
             }
         }
 
-        bool resolve(clause const & conflict) {
-            if(m_first_conflict_stage == null_var) {
-                m_first_conflict_stage = m_xk;
-            }
-            // return m_enable_updated ? resolve_updated(conflict) : resolve_origin(conflict);
-            return resolve_origin(conflict);
-        }
-
         bool resolve_origin(clause const & conflict) {
             clause const * conflict_clause = &conflict;
             m_lemma_assumptions = nullptr;
@@ -2671,12 +2667,12 @@ namespace nlsat {
             return true;
         }
 
-        bool process_clause(clause const & cls, bool learned) {
-            if (cls.size() == 0) {
-                return false;
+        bool process_clause(clause const &cls, bool learned) {
+            if(max_var(cls) == null_var) {
+                return process_boolean_clause(cls);
+            } else {
+                return process_arith_clause(cls, learned);
             }
-            var v = max_var(cls.size(), cls.data());
-            return v == null_var ? process_boolean_clause(cls) : process_arith_clause(cls, learned);
         }
 
 
@@ -3064,13 +3060,10 @@ namespace nlsat {
         unsigned                         m_sum_conflict_stages;
         unsigned                         m_sum_conflict_scopes;
         unsigned                         m_step;
-        double                           m_total_time;
-        var                              m_first_conflict_stage = null_var;
 
 
         void collect_statistics(statistics & st) {
-            st.update("nlsat arith vars", num_vars());
-            st.update("nlsat first conflict stage", m_first_conflict_stage);
+            st.update("nlsat steps", m_step);
             st.update("nlsat conflicts", m_conflicts);
             st.update("nlsat propagations", m_propagations);
             st.update("nlsat decisions", m_decisions);
@@ -3080,11 +3073,10 @@ namespace nlsat {
             st.update("nlsat sum conflict scopes", m_sum_conflict_scopes);
             st.update("nlsat conflict stage average", m_conflicts == 0 ? 0 : 1.0 * m_sum_conflict_stages / m_conflicts);
             st.update("nlsat conflict scope average", m_conflicts == 0 ? 0 : 1.0 * m_sum_conflict_scopes / m_conflicts);
-            st.update("nlsat steps", m_step);
-            st.update("nlsat average time", m_step == 0 ? 0 : m_total_time / m_step);
         }
 
         void reset_statistics() {
+            m_step                   = 0;
             m_sum_conflict_stages    = 0;
             m_conflicts              = 0;
             m_propagations           = 0;

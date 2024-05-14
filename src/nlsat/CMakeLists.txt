@@ -6,6 +6,7 @@ z3_add_component(nlsat
     nlsat_interval_set.cpp
     nlsat_solver.cpp
     nlsat_types.cpp
+    nlsat_caching_system.cpp
   COMPONENT_DEPENDENCIES
     polynomial
     sat
