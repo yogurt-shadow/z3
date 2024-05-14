@@ -106,3 +106,5 @@ var order: [x, y]
 ## 尝试增加traditional和updated的切换机制
 
 测试每次遇到conflict时候的progress （多少decision，多少stage）
+
+5.13: 首要目标，提升速度，speed up （step per second）

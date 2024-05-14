@@ -1668,6 +1668,9 @@ namespace nlsat {
                     curr_st = m_ism.mk_complement(curr_st);
                 }
                 res_st = m_ism.mk_intersection(res_st, curr_st);
+                if(m_ism.is_empty(res_st)) {
+                    return res_st;
+                }
             }
             m_ism.inc_ref(res_st);
             return res_st;
@@ -1678,6 +1681,10 @@ namespace nlsat {
             for(clause *c: cs) {
                 curr_st = get_clause_infset(*c);
                 res_st = m_ism.mk_union(curr_st, res_st);
+                if(m_ism.is_full(res_st)) {
+                    m_ism.inc_ref(res_st);
+                    return res_st;
+                }
             }
             m_ism.inc_ref(res_st);
             return res_st;
@@ -1692,7 +1699,7 @@ namespace nlsat {
         }
 
         interval_set_vector                      m_atom_set_cached;
-        bool                                     m_enable_updated = false;
+        bool                                     m_enable_updated = true;
 
         clause * process_arith_clauses(clause_vector const &cs) {
             DTRACE(
@@ -1726,6 +1733,13 @@ namespace nlsat {
                 std::cout << "infeasible set: ";
                 m_ism.display(std::cout, curr_set) << std::endl;
             );
+
+            for(clause * c: cs) {
+                if(!process_arith_clause(*c, false)) {
+                    return c;
+                }
+                return nullptr;
+            }
 
             if(m_ism.is_full(curr_set)) { // full case
                 DTRACE(std::cout << "full case" << std::endl;);
@@ -1862,6 +1876,9 @@ namespace nlsat {
 
         std::chrono::steady_clock::time_point m_start_time, m_end_time;
 
+
+        const double SWITCH_THRESHOLD = 0.8;
+
         /**
            \brief main procedure
         */
@@ -1882,6 +1899,12 @@ namespace nlsat {
             m_start_time = std::chrono::steady_clock::now();
 
             while (true) { // while loop for new variable processing
+                m_step ++;
+                // if(m_xk != null_var && m_xk >= num_vars() * SWITCH_THRESHOLD) {
+                //     m_enable_updated = true;
+                // } else {
+                //     m_enable_updated = false;
+                // }
                 CASSERT("nlsat", check_satisfied());
                 DTRACE(std::cout << "search loop\n";);
                 // std::cout << "search loop" << std::endl;
@@ -1911,7 +1934,6 @@ namespace nlsat {
                     if (m_conflicts >= m_max_conflicts)
                         return l_undef;
                 }
-                m_step ++;
                 m_end_time = std::chrono::steady_clock::now();
                 std::chrono::duration<double> dura = m_end_time - m_start_time;
                 m_total_time = dura.count();
@@ -2469,7 +2491,11 @@ namespace nlsat {
         }
 
         bool resolve(clause const & conflict) {
-            return m_enable_updated ? resolve_updated(conflict) : resolve_origin(conflict);
+            if(m_first_conflict_stage == null_var) {
+                m_first_conflict_stage = m_xk;
+            }
+            // return m_enable_updated ? resolve_updated(conflict) : resolve_origin(conflict);
+            return resolve_origin(conflict);
         }
 
         bool resolve_origin(clause const & conflict) {
@@ -3039,9 +3065,12 @@ namespace nlsat {
         unsigned                         m_sum_conflict_scopes;
         unsigned                         m_step;
         double                           m_total_time;
+        var                              m_first_conflict_stage = null_var;
 
 
         void collect_statistics(statistics & st) {
+            st.update("nlsat arith vars", num_vars());
+            st.update("nlsat first conflict stage", m_first_conflict_stage);
             st.update("nlsat conflicts", m_conflicts);
             st.update("nlsat propagations", m_propagations);
             st.update("nlsat decisions", m_decisions);
