@@ -613,6 +613,9 @@ namespace nlsat {
         void del(atom * a) {
             if (a == nullptr)
                 return;
+            DTRACE(std::cout << "delete atom ";
+                display(std::cout, *a) << std::endl;
+            );
             TRACE("nlsat_verbose", display(std::cout << "del: b" << a->m_bool_var << " " << a->ref_count() << " ", *a) << "\n";);
             if (a->is_ineq_atom())
                 del(to_ineq_atom(a));
@@ -1093,7 +1096,6 @@ namespace nlsat {
             else if (m_xk != null_var) {
                 m_xk--;
                 m_assignment.reset(m_xk);
-                m_csys.disable_var_atoms(m_xk);
             }
         }
 
@@ -1974,6 +1976,7 @@ namespace nlsat {
                 }
             } else {
                 select_witness();
+                m_csys.disable_second_var_atoms(m_xk);
             }
         }
 

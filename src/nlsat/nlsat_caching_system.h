@@ -22,6 +22,6 @@ namespace nlsat {
         interval_set* get_atom_set(bool_var) const;
         void cache_atom_set(bool_var, interval_set *);
         void enlarge_atom(bool_var);
-        void disable_var_atoms(var);
+        void disable_second_var_atoms(var);
     };
 };

@@ -11,7 +11,7 @@ namespace nlsat {
         pmanager               & m_pm;
         bool_vector            m_atom_caching_enabled;
         // var -> atom
-        vector<var_vector>     m_var_atoms;
+        vector<var_vector>     m_second_var_atoms;
         // atom -> vars
         vector<var_vector>     m_atom_vars;
 
@@ -25,8 +25,8 @@ namespace nlsat {
             m_atom_caching_set.clear();
             m_atom_caching_enabled.resize(m_atoms.size(), false);
             m_atom_caching_set.resize(m_atoms.size(), nullptr);
-            m_var_atoms.clear();
-            m_var_atoms.resize(num_vars, var_vector());
+            m_second_var_atoms.clear();
+            m_second_var_atoms.resize(num_vars, var_vector());
             m_atom_vars.clear();
             collect_var_atoms();
         }
@@ -35,7 +35,8 @@ namespace nlsat {
             num_vars = x;
         }
 
-        void collect_atom_vars(atom const *a, var_vector &vec) {
+        void collect_atom_vars(atom const *a, var_vector &vec, var &second_var) {
+            second_var = null_var;
             vec.clear();
             if(a->is_root_atom()) {
                 m_pm.vars(to_root_atom(a)->p(), vec);
@@ -50,10 +51,23 @@ namespace nlsat {
                     }
                 }
             }
+            if(vec.size() <= 1) {
+                return;
+            }
+            var first_var = std::max(vec[0], vec[1]);
+            second_var = std::min(vec[0], vec[1]);
+            for(unsigned i = 2; i < vec.size(); i++) {
+                if(vec[i] > first_var) {
+                    second_var = first_var;
+                    first_var = vec[i];
+                } else if(vec[i] > second_var) {
+                    second_var = vec[i];
+                }
+            }
         }
 
         void collect_var_atoms() {
-            m_var_atoms.resize(num_vars);
+            m_second_var_atoms.resize(num_vars);
             m_atom_vars.resize(m_atoms.size());
             for (unsigned i = 0; i < m_atoms.size(); ++i) {
                 atom * a = m_atoms[i];
@@ -61,17 +75,18 @@ namespace nlsat {
                     continue;
                 }
                 var_vector vec;
-                collect_atom_vars(a, vec);
+                var second_var;
+                collect_atom_vars(a, vec, second_var);
                 m_atom_vars[i] = vec;
-                for(var v: vec) {
-                    m_var_atoms[v].push_back(i);
+                if(second_var != null_var) {
+                    m_second_var_atoms[second_var].push_back(i);
                 }
             }
         }
 
-        void disable_var_atoms(var v) {
-            for (unsigned i = 0; i < m_var_atoms[v].size(); ++i) {
-                disable_atom(m_var_atoms[v][i]);
+        void disable_second_var_atoms(var v) {
+            for (unsigned i = 0; i < m_second_var_atoms[v].size(); ++i) {
+                disable_atom(m_second_var_atoms[v][i]);
             }
         }
 
@@ -88,8 +103,7 @@ namespace nlsat {
         }
 
         bool is_atom_enabled(bool_var b) const {
-            // return b >= m_atom_caching_enabled.size() ? false : m_atom_caching_enabled[b];
-            return false;
+            return b >= m_atom_caching_enabled.size() ? false : m_atom_caching_enabled[b];
         }
 
         interval_set * get_atom_set(bool_var b) const {
@@ -142,7 +156,7 @@ namespace nlsat {
         m_imp->init_vars(x);
     }
 
-    void nlsat_caching_system::disable_var_atoms(var v) {
-        m_imp->disable_var_atoms(v);
+    void nlsat_caching_system::disable_second_var_atoms(var v) {
+        m_imp->disable_second_var_atoms(v);
     }
 };

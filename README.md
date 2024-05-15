@@ -98,6 +98,17 @@ lemma: v3 != 2 or 4v4 >= 9
 这个时候我们发现是block（考虑lemma和之前的clause infeasible），会优先decide v3 = 2
  **sort watched clauses by literals of max var occurance**
 
+2024.5.15
+测试一下conflict、decision和stage的个数，可以间接反应我们的算法的效率。
+以及时间散点图。
+
+
+/pub/data/wangzh/smt_benchmark/QF_NRA/hycomp/simple_ballistics_reach.01.seq_lazy_linear_enc_global_3.smt2 （cpr3）
+这个例子origin用了0.2s，updated解不出来，而且只有6个arith和4个bool。
+
+能不能考虑改进缓存机制
+1. infeasible set的缓存
+2. reprocess的时候缓存（比如，不需要再重新loop一遍所有的literal）
 
 # Versions
 |Version|Description|
