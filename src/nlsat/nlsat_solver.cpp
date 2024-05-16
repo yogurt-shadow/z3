@@ -254,7 +254,7 @@ namespace nlsat {
             m_lazy_clause(s),
             m_lemma_assumptions(m_asm),
             m_appointed_value(m_am),
-            m_csys(m_ism, m_pm, m_atoms, m_clauses)
+            m_csys(s, m_ism, m_pm, m_atoms, m_clauses)
             {
             updt_params(c.m_params);
             reset_statistics();
@@ -505,8 +505,6 @@ namespace nlsat {
             m_justifications.setx(b, null_justification, null_justification);
             m_bwatches      .setx(b, clause_vector(), clause_vector());
             m_dead          .setx(b, false, true);
-            // m_atom_set_cached.setx(b, nullptr, nullptr);
-            m_csys.enlarge_atom(b);
             return b;
         }
 
@@ -588,6 +586,7 @@ namespace nlsat {
             m_atoms[b] = nullptr;
             m_bvalues[b] = l_undef;
             m_bid_gen.recycle(b);
+            m_csys.delete_atom(b);
         }
 
         void del(ineq_atom * a) {
@@ -681,6 +680,9 @@ namespace nlsat {
                 m_atoms[b] = atom;
                 atom->m_bool_var = b;
                 TRACE("nlsat_verbose", display(std::cout << "create: b" << atom->m_bool_var << " ", *atom) << "\n";);
+                if(during_search) {
+                    m_csys.register_atom(b);
+                }
                 return b;
             }
         }
@@ -737,6 +739,9 @@ namespace nlsat {
             m_atoms[b] = new_atom;
             new_atom->m_bool_var = b;
             m_pm.inc_ref(new_atom->p());
+            if(during_search) {
+                m_csys.register_atom(b);
+            }
             return b;
         }
 
@@ -1501,13 +1506,17 @@ namespace nlsat {
             SASSERT(m_atoms[b] != nullptr);
             interval_set_ref curr_st(m_ism);
             if(m_csys.is_atom_enabled(b)) {
+                DTRACE(std::cout << "previously cached" << std::endl;);
                 curr_st = m_csys.get_atom_set(b);
             } else {
+                DTRACE(std::cout << "not cached, compute this time" << std::endl;);
                 curr_st = m_evaluator.infeasible_intervals(m_atoms[b], false, &cls);
                 m_csys.cache_atom_set(b, curr_st);
             }
-            // display_atom(std::cout, b); std::cout << std::endl;
-            // m_ism.display(std::cout, curr_st); std::cout << std::endl;
+            DTRACE(
+                display_atom(std::cout, b); std::cout << std::endl;
+                m_ism.display(std::cout, curr_st); std::cout << std::endl;
+            );
             return curr_st;
         }
         
@@ -1980,7 +1989,12 @@ namespace nlsat {
             }
         }
 
+        // we only register atom for caching system when during search
+        // otherwise we may re-registered original atoms, and even encounter unregistered arithmetic variables
+        bool during_search = false;
+
         lbool search_check() {
+            during_search = true;
             lbool r = l_undef;
             while (true) {
                 r = search();
@@ -2081,7 +2095,8 @@ namespace nlsat {
             collect_pure_bools();
             collect_watched_vars();
             DTRACE(display_clauses(std::cout, m_clauses) << std::endl;);
-
+            // in case variables are reordered
+            m_csys.init();
             lbool r = search_check();
             CTRACE("nlsat_model", r == l_true, std::cout << "model before restore order\n"; display_assignment(std::cout););
             if (reordered) {
@@ -2174,7 +2189,6 @@ namespace nlsat {
             }
             m_assignment.reset();
             m_csys.init_vars(num_vars());
-            m_csys.init();
         }
 
         lbool check(literal_vector& assumptions) {

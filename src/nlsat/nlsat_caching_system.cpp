@@ -1,4 +1,5 @@
 #include "nlsat/nlsat_caching_system.h"
+#include "nlsat/nlsat_solver.h"
 
 namespace nlsat {
     struct nlsat_caching_system::imp {
@@ -14,8 +15,9 @@ namespace nlsat {
         vector<var_vector>     m_second_var_atoms;
         // atom -> vars
         vector<var_vector>     m_atom_vars;
+        solver                  & m_solver;
 
-        imp(interval_set_manager & ism, pmanager & pm, atom_vector const &ats, clause_vector const &cls): m_ism(ism), m_pm(pm), m_atoms(ats), m_clauses(cls) 
+        imp(solver & s, interval_set_manager & ism, pmanager & pm, atom_vector const &ats, clause_vector const &cls): m_ism(ism), m_pm(pm), m_atoms(ats), m_clauses(cls) , m_solver(s)
         {
             // std::cout << "init imp done" << std::endl;
         }
@@ -38,8 +40,14 @@ namespace nlsat {
         void collect_atom_vars(atom const *a, var_vector &vec, var &second_var) {
             second_var = null_var;
             vec.clear();
+            if(a == nullptr) {
+                return;
+            }
             if(a->is_root_atom()) {
                 m_pm.vars(to_root_atom(a)->p(), vec);
+                if(!vec.contains(to_root_atom(a)->x())) {
+                    vec.push_back(to_root_atom(a)->x());
+                }
             } else {
                 for(unsigned j = 0; j < to_ineq_atom(a)->size(); j++) {
                     var_vector vec2;
@@ -71,9 +79,6 @@ namespace nlsat {
             m_atom_vars.resize(m_atoms.size());
             for (unsigned i = 0; i < m_atoms.size(); ++i) {
                 atom * a = m_atoms[i];
-                if(a == nullptr) {
-                    continue;
-                }
                 var_vector vec;
                 var second_var;
                 collect_atom_vars(a, vec, second_var);
@@ -85,6 +90,7 @@ namespace nlsat {
         }
 
         void disable_second_var_atoms(var v) {
+            DTRACE(std::cout << "disable second var " << v << std::endl;);
             for (unsigned i = 0; i < m_second_var_atoms[v].size(); ++i) {
                 disable_atom(m_second_var_atoms[v][i]);
             }
@@ -98,12 +104,18 @@ namespace nlsat {
         }
 
         void disable_atom(bool_var b) {
+            DTRACE(std::cout << "disable atom " << b << std::endl;);
             enlarge_atom(b);
             m_atom_caching_enabled[b] = false;
         }
 
         bool is_atom_enabled(bool_var b) const {
             return b >= m_atom_caching_enabled.size() ? false : m_atom_caching_enabled[b];
+            // return false;
+        }
+
+        void delete_atom(bool_var b) {
+            disable_atom(b);
         }
 
         interval_set * get_atom_set(bool_var b) const {
@@ -114,14 +126,31 @@ namespace nlsat {
             while (m_atom_caching_set.size() <= b) {
                 m_atom_caching_set.push_back(nullptr);
                 m_atom_caching_enabled.push_back(false);
+                m_atom_vars.push_back(var_vector());
             }
+        }
+
+        void register_atom(bool_var b) {
+            DTRACE(std::cout << "register atom " << b << std::endl;
+                m_solver.display(std::cout, b) << std::endl;
+            );
+            enlarge_atom(b);
+            var_vector vec;
+            var second_var;
+            collect_atom_vars(m_atoms[b], vec, second_var);
+            m_atom_vars[b] = vec;
+            if(second_var != null_var) {
+                DTRACE(std::cout << "second var is " << second_var << std::endl;);
+                m_second_var_atoms[second_var].push_back(b);
+            }
+            DTRACE(std::cout << "done register atom " << b << std::endl;);
         }
 
         ~imp() {}
     };
 
-    nlsat_caching_system::nlsat_caching_system(interval_set_manager &ism, pmanager &pm, atom_vector const &as, clause_vector const &cs) {
-        m_imp = new imp(ism, pm, as, cs);
+    nlsat_caching_system::nlsat_caching_system(solver &s, interval_set_manager &ism, pmanager &pm, atom_vector const &as, clause_vector const &cs) {
+        m_imp = new imp(s, ism, pm, as, cs);
     }
 
     nlsat_caching_system::~nlsat_caching_system() {
@@ -148,8 +177,8 @@ namespace nlsat {
         m_imp->cache_atom_set(b, s);
     }
 
-    void nlsat_caching_system::enlarge_atom(bool_var b) {
-        m_imp->enlarge_atom(b);
+    void nlsat_caching_system::register_atom(bool_var b) {
+        m_imp->register_atom(b);
     }
 
     void nlsat_caching_system::init_vars(unsigned x) {
@@ -158,5 +187,9 @@ namespace nlsat {
 
     void nlsat_caching_system::disable_second_var_atoms(var v) {
         m_imp->disable_second_var_atoms(v);
+    }
+
+    void nlsat_caching_system::delete_atom(bool_var b) {
+        m_imp->delete_atom(b);
     }
 };

@@ -107,7 +107,8 @@ lemma: v3 != 2 or 4v4 >= 9
 这个例子origin用了0.2s，updated解不出来，而且只有6个arith和4个bool。
 
 能不能考虑改进缓存机制
-1. infeasible set的缓存
+1. infeasible set的缓存 (second var)
+5.16: 修复了bug，为search过程中的new atom register
 2. reprocess的时候缓存（比如，不需要再重新loop一遍所有的literal）
 
 # Versions
