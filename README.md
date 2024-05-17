@@ -116,4 +116,11 @@ lemma: v3 != 2 or 4v4 >= 9
 |-|-|
 |5.13| simplest version no bug|
 |5.14| disable cache, use original resolve|
+|5.16| infeasible cache, resolve updated|
 |-|-|
+
+![conflict](pict/conflict.png)![decision](pict/decision.png)![stage](pict/stage.png)
+
+
+2024.5.17
+调查一下decision的情况，为什么会出现退步。
