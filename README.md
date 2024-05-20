@@ -124,3 +124,24 @@ lemma: v3 != 2 or 4v4 >= 9
 
 2024.5.17
 调查一下decision的情况，为什么会出现退步。
+一种猜想是由于witness导致的，我们能否不根据整体的feasible set来select witness，而是选择一个最靠前的路径？
+
+现在的问题是如何通过clause infeasile来获取所有的feasible path。
+
+example1:
+x >= 0 \/ x <= -1.4
+x <= 0 \/ x >= 1.4
+clause feasible: (-oo, -1.4] U [1.4, +oo)
+
+example2:
+x <= 0 \/ x >= 43.64
+x >= 6.64 \/ x >= 21.14
+clause feasible: [43.64, +oo)
+
+Theorem 0. Each witness in the clause's feasible set corresponds to a feasible path.
+
+Theorem 1. if literal's feasible set intersects empty with clause's feasible set, then the literal is unsat. (x<=0 in Ex.2>)
+
+Theorem 2. if literal's feasible set is a subset of clause's feasible set, then the literal is sat.
+
+Try version using disabled witness path, but select witness from updt_infeasible set.

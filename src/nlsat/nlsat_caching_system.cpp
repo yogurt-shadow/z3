@@ -90,7 +90,7 @@ namespace nlsat {
         }
 
         void disable_second_var_atoms(var v) {
-            DTRACE(std::cout << "disable second var " << v << std::endl;);
+            // DTRACE(std::cout << "disable second var " << v << std::endl;);
             for (unsigned i = 0; i < m_second_var_atoms[v].size(); ++i) {
                 disable_atom(m_second_var_atoms[v][i]);
             }
@@ -104,7 +104,7 @@ namespace nlsat {
         }
 
         void disable_atom(bool_var b) {
-            DTRACE(std::cout << "disable atom " << b << std::endl;);
+            // DTRACE(std::cout << "disable atom " << b << std::endl;);
             enlarge_atom(b);
             m_atom_caching_enabled[b] = false;
         }
@@ -131,9 +131,9 @@ namespace nlsat {
         }
 
         void register_atom(bool_var b) {
-            DTRACE(std::cout << "register atom " << b << std::endl;
-                m_solver.display(std::cout, b) << std::endl;
-            );
+            // DTRACE(std::cout << "register atom " << b << std::endl;
+            //     m_solver.display(std::cout, b) << std::endl;
+            // );
             enlarge_atom(b);
             var_vector vec;
             var second_var;
@@ -143,7 +143,7 @@ namespace nlsat {
                 DTRACE(std::cout << "second var is " << second_var << std::endl;);
                 m_second_var_atoms[second_var].push_back(b);
             }
-            DTRACE(std::cout << "done register atom " << b << std::endl;);
+            // DTRACE(std::cout << "done register atom " << b << std::endl;);
         }
 
         ~imp() {}
