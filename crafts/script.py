@@ -40,8 +40,8 @@ def generate_smt2():
     # ; [-1002, -5], [-1001, -4], ..., [-4, 993], ..., [2002, 3002]
     # ; [2500, 2600]
 
-    start_left, start_right = -1000, -1
-    for i in range(3):
+    start_left, start_right = -3000, -1
+    for i in range(10):
         r_list = []
         left, right = start_left, start_right
         while True:
@@ -61,10 +61,9 @@ def generate_smt2():
     res += "(check-sat)\n(exit)\n"
     return res
 
-
 if __name__ == "__main__":
+    output = sys.argv[1]
     smt2 = generate_smt2()
-    output = "craft1.smt2"
     if os.path.exists(output):
         os.remove(output)
     with open(output, 'w') as f:
